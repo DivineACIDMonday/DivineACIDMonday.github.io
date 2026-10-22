@@ -1,0 +1,31 @@
+{
+ "name": "Divine Monday \u00d7 UJAM",
+ "short_name": "DM \u00d7 UJAM",
+ "description": "Music machines made for UJAM plugins. Totally free. No AI inside.",
+ "id": "./",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#101219",
+ "theme_color": "#101219",
+ "icons": [
+  {
+   "src": "/divine-music-machine-v7/icons/home-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "/divine-music-machine-v7/icons/home-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "/divine-music-machine-v7/icons/home-maskable.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
