@@ -1,8 +1,8 @@
 {
- "name": "Divine Monday \u00d7 UJAM",
- "short_name": "DM \u00d7 UJAM",
+ "name": "Divine Monday × UJAM",
+ "short_name": "DM × UJAM",
  "description": "Music machines made for UJAM plugins. Totally free. No AI inside.",
- "id": "./",
+ "id": "/ujam/",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",

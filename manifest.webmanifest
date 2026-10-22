@@ -2,7 +2,7 @@
  "name": "Divine Monday Music Machines",
  "short_name": "Divine Monday",
  "description": "Tracks arranged in one click. Totally free. No AI inside.",
- "id": "./",
+ "id": "/",
  "start_url": "./index.html",
  "scope": "./index.html",
  "display": "standalone",
