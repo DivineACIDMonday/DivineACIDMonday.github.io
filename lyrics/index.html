@@ -15,6 +15,11 @@ main{max-width:880px;margin:0 auto;padding-block:max(28px,env(safe-area-inset-to
 header{display:flex;flex-direction:column;gap:6px;text-align:center;align-items:center}
 .by{font:600 13px var(--body);letter-spacing:.22em;text-transform:uppercase;color:var(--soft)}
 h1{font:800 clamp(40px,7vw,72px)/.95 var(--display);margin:0;letter-spacing:-.02em}h1 span{color:var(--gold)}
+.tag{font:600 italic 20px var(--body);color:var(--gold);margin:2px 0 0}
+.badges{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:-6px}
+.pa{background:#000;color:#fff;border:3px solid #fff;outline:2px solid #000;padding:5px 9px 6px;text-align:center;font:900 13px/1 Arial,Helvetica,sans-serif;letter-spacing:.02em;transform:rotate(-2deg)}.pa b{display:block;font-size:17px;letter-spacing:.06em}.pa i{display:block;font-style:normal;background:#fff;color:#000;margin:4px -9px -6px;padding:4px 6px;font-size:12px;letter-spacing:.08em}
+.seal{width:78px;height:78px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE59A,var(--gold) 55%,#B8892A);color:#2A1E05;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font:800 10px/1.05 var(--body);letter-spacing:.06em;text-transform:uppercase;box-shadow:0 0 0 3px #17140A,0 0 0 5px var(--gold);transform:rotate(8deg)}.seal b{font:800 22px/1 var(--display);letter-spacing:0}
+.credits{border-top:1px solid var(--line);padding-top:14px;color:var(--soft);font-size:14px;line-height:1.7}.credits b{color:var(--ink);font-weight:600}
 .sub{color:var(--soft);margin:4px 0 0;max-width:56ch;line-height:1.45}
 .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
 .g{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:10px 16px;font:600 15px var(--body);cursor:pointer}
@@ -52,7 +57,7 @@ footer{text-align:center;color:var(--faint);font-size:13px;line-height:1.6}foote
 .plain{max-width:640px;width:100%;max-height:70vh;overflow:auto;white-space:pre-wrap;font:500 18px/1.6 var(--body);color:var(--ink);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:18px;padding:24px}
 </style></head><body>
 <main>
-  <header><div class="by">Divine Monday</div><h1>Divine Lyric <span>Oracle</span></h1><p class="sub">Pick a genre and ask. The oracle writes you a whole song of glorious nonsense, and a robot sings it on the beat. Bring your own MIDI melody if you like, and take the vocal home for your track.</p></header>
+  <header><div class="by">Divine Monday</div><h1>Divine Lyric <span>Oracle</span></h1><p class="tag">Hits nobody asked for.</p><p class="sub">Pick a genre and ask. The oracle writes you a whole song of glorious nonsense, and a robot sings it on the beat. Bring your own MIDI melody if you like, and take the vocal home for your track.</p></header>
   <div class="row" role="group" aria-label="Genre" id="genres"></div>
   <div class="row"><button class="ask" id="ask" type="button">⚄ Ask for a song</button></div>
   <div class="row">
@@ -73,7 +78,7 @@ footer{text-align:center;color:var(--faint);font-size:13px;line-height:1.6}foote
   <div><p class="status" id="status">Ask for a song first.</p><div class="bar" id="bar" hidden><i></i></div></div>
   <article class="sheet" id="sheet" aria-live="polite"><p class="title">Your song appears here</p><p class="meta">Tap any line later to roll that line again.</p></article>
   <p class="hint">Tap a line to roll it again. A chorus changes everywhere it is sung. Downloads hold only the voice, starting on beat 1 of bar 1, ready to drop into your track.</p>
-  <footer><b>No AI inside.</b> Every line comes from word lists and fixed patterns; the robot voice is eSpeak (meSpeak, GPL), and MP3s are made with lamejs (LGPL), all right in your browser.<br>No tracking, no cookies; nothing you make leaves this device.<br>Also by Divine Monday: <a href="../oracle/">Divine Name Oracle</a> · © 2026 Divine Monday</footer>
+  <footer><b>A parody.</b> Any resemblance to meaningful lyrics is purely coincidental. Any line that makes sense is a bug.<br><b>No AI inside.</b> Every line comes from word lists and fixed patterns; the robot voice is eSpeak (meSpeak, GPL), and MP3s are made with lamejs (LGPL), all right in your browser.<br>No tracking, no cookies; nothing you make leaves this device.<br>Also by Divine Monday: <a href="../oracle/">Divine Name Oracle</a> · © 2026 Divine Monday</footer>
 </main>
 <div class="over" id="karaOver" hidden><button class="btn x" id="karaClose" type="button">Close</button><div class="k-title" id="kTitle"></div><div class="k-sec" id="kSec"></div><div class="k-prev" id="kPrev"></div><div class="k-line" id="kLine"><div class="ball" id="ball" hidden></div></div><div class="k-next" id="kNext"></div></div>
 <div class="over" id="plainOver" hidden><button class="btn x" id="plainClose" type="button">Close</button><div class="plain" id="plainText"></div></div>
@@ -136,14 +141,16 @@ const linesOf = (p) => (p.ref ? p.ref.lines : p.lines);
 function render() {
   const el = $('#sheet'); el.innerHTML = ''; if (!song) return;
   const h = document.createElement('h2'); h.className = 'title'; h.textContent = song.title; const m = document.createElement('p'); m.className = 'meta'; m.textContent = GENRES[song.genre].name + ' · written by the Divine Lyric Oracle';
-  el.append(h, m); let k = 0;
+  const bd = document.createElement('div'); bd.className = 'badges'; bd.innerHTML = '<div class="pa" role="img" aria-label="Parental advisory: meaningless content"><b>PARENTAL</b>ADVISORY<i>MEANINGLESS CONTENT</i></div><div class="seal" role="img" aria-label="100% certified nonsense"><b>100%</b>certified<br>nonsense</div>';
+  el.append(h, m, bd); let k = 0;
   song.parts.forEach((p) => { const sec = document.createElement('section'); sec.className = 'part' + (p.cho ? ' cho' : ''); const lab = document.createElement('h3'); lab.textContent = p.label; sec.append(lab);
     linesOf(p).forEach((ln) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'ln'; b.dataset.k = k++; b.dataset.id = ln.id; b.title = 'Tap to roll this line again';
       const m2 = ln.text.match(/^(.*?)(\s*\([^)]*\))$/); if (m2) { b.append(document.createTextNode(m2[1])); const s = document.createElement('span'); s.className = 'ad'; s.textContent = m2[2]; b.append(s); } else b.textContent = ln.text;
       b.onclick = () => { if (playing) stopAll(); const n = line(ln.kind); ln.text = n.text; take = null; render(); }; sec.append(b); });
     el.append(sec); });
+  const cr = document.createElement('p'); cr.className = 'credits'; cr.innerHTML = '<b>Written by:</b> nobody · <b>Produced by:</b> a toaster · <b>Sung by:</b> a robot who believes in itself'; el.append(cr);
 }
-function asText() { return song.title + '\n\n' + song.parts.map((p) => '[' + p.label + ']\n' + linesOf(p).map((l) => l.text).join('\n')).join('\n\n') + '\n\nWritten by the Divine Lyric Oracle'; }
+function asText() { return song.title + '\n\n' + song.parts.map((p) => '[' + p.label + ']\n' + linesOf(p).map((l) => l.text).join('\n')).join('\n\n') + '\n\nWritten by: nobody · Produced by: a toaster · Sung by: a robot who believes in itself\nParental advisory: meaningless content. 100% certified nonsense, by the Divine Lyric Oracle.'; }
 
 /* ----- the melody: one syllable per note ----- */
 function rnd(seed) { let a = seed >>> 0 || 1; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
