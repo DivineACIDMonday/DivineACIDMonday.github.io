@@ -65,7 +65,7 @@ footer b{color:var(--soft);font-weight:600}
     <div class="acts"><button class="roll" id="roll" type="button">⚄ Ask the oracle</button><button class="ghost" id="copy" type="button" disabled>Copy</button><button class="ghost" id="snd" type="button" title="Sound on or off">🔊</button></div>
   </section>
   <section class="hist" aria-label="Your last names"><h2>Your last names</h2><div id="list"><p class="empty">Your names appear here.</p></div></section>
-  <footer><b>No AI inside.</b> Every name comes from five word lists and fixed rules, right in your browser.<br>No tracking, no cookies; the names you have seen stay on this device only, so they never come back.<br>Also by Divine Monday: <a href="../lyrics/" style="color:var(--soft)">Divine Lyric Oracle</a> · © 2026 Divine Monday</footer>
+  <footer><b>No AI inside.</b> Every name comes from five word lists and fixed rules, right in your browser.<br>No cookies, only an anonymous visit counter (GoatCounter, no personal data); the names you have seen stay on this device only, so they never come back.<br>Also by Divine Monday: <a href="../lyrics/" style="color:var(--soft)">Divine Lyric Oracle</a> · © 2026 Divine Monday</footer>
 </main>
 <div class="toast" id="toast" role="status"></div>
 <script>
@@ -151,4 +151,5 @@ $('#roll').onclick = ask; $('#copy').onclick = () => last && copy(last);
 document.addEventListener('keydown', (e) => { if ((e.key === ' ' || e.key === 'Enter') && e.target === document.body) { e.preventDefault(); ask(); } });
 reels.forEach((r) => rest(r, r.cur)); window.addEventListener('resize', () => reels.forEach((r) => rest(r, r.cur)));
 </script>
+<script>(function(){try{if(!/\.github\.io$/.test(location.hostname))return;var q=new URLSearchParams({p:location.pathname,t:document.title,s:screen.width+','+screen.height,rnd:Math.random().toString(36).slice(2)});if(document.referrer&&document.referrer.indexOf(location.hostname)<0)q.set('r',document.referrer.split('?')[0]);var u='https://divine-monday.goatcounter.com/count?'+q;if(!(navigator.sendBeacon&&navigator.sendBeacon(u)))new Image().src=u;}catch(e){}})();</script>
 </body></html>
