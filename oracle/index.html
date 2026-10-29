@@ -49,7 +49,7 @@ footer b{color:var(--soft);font-weight:600}
 .toast{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font:600 14px var(--body);opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
 @media (max-width:640px){.wheels{grid-template-columns:1fr 1fr}.r1{grid-column:1;grid-row:1}.r4{grid-column:2;grid-row:1}.r3{grid-column:1/3;grid-row:2}.r2{grid-column:1;grid-row:3}.r5{grid-column:2;grid-row:3}.r3 .win{height:132px}.strip div{font-size:18px}}
-@media (prefers-reduced-motion:reduce){.strip{transition:none!important}}
+
 </style></head><body>
 <main>
   <header><div class="by">Divine Monday</div><h1>Divine Name <span>Oracle</span></h1><p class="sub">Five wheels of hand picked words turn and stop on a name. Ask as often as you like; the oracle never gives you the same name twice.</p></header>
@@ -98,15 +98,19 @@ function rows(r) { return Math.round(r.el.parentElement.clientHeight / H); }
 function paint(r, list, hitIndex) { r.el.innerHTML = ''; list.forEach((w, i) => { const d = document.createElement('div'); d.textContent = w; if (i === hitIndex) d.className = 'hit'; r.el.append(d); }); }
 function rest(r, word) { const k = rows(r), mid = Math.floor(k / 2), at = r.words.indexOf(word); const list = []; for (let i = -mid; i <= k - mid; i++) list.push(r.words[(at + i + r.words.length) % r.words.length]); paint(r, list, mid); r.el.style.transition = 'none'; r.el.style.transform = 'translateY(0)'; r.cur = word; }
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// the reels turn by script, frame by frame, so they spin the same in every browser (Safari on iPhone included)
+const ease = (u) => { const c = 1.25; return 1 + (c + 1) * Math.pow(u - 1, 3) + c * Math.pow(u - 1, 2); };
 function spin(r, word, ms) { return new Promise((res) => {
-  if (reduce) { rest(r, word); res(); return; }
-  const k = rows(r), mid = Math.floor(k / 2), n = 14 + Math.floor(Math.random() * 6), list = [];
+  if (reduce) ms = Math.min(ms, 420);
+  const k = rows(r), mid = Math.floor(k / 2), n = reduce ? 3 : 14 + Math.floor(Math.random() * 6), list = [];
   const at0 = r.words.indexOf(r.cur); for (let i = -mid; i < 0; i++) list.push(r.words[(at0 + i + r.words.length) % r.words.length]); list.push(r.cur);
   for (let i = 0; i < n; i++) list.push(r.words[Math.floor(Math.random() * r.words.length)]);
   const target = list.length; list.push(word); const at = r.words.indexOf(word); for (let i = 1; i <= k; i++) list.push(r.words[(at + i) % r.words.length]);
-  paint(r, list, target); r.el.style.transition = 'none'; r.el.style.transform = 'translateY(0)'; r.el.offsetHeight;
-  r.el.style.transition = 'transform ' + ms + 'ms cubic-bezier(.15,.85,.25,1.02)'; r.el.style.transform = 'translateY(' + (-(target - mid) * H) + 'px)';
-  setTimeout(() => { rest(r, word); tick(); res(); }, ms + 20);
+  paint(r, list, target); r.el.style.transition = 'none'; r.el.style.transform = 'translate3d(0,0,0)';
+  const dist = (target - mid) * H, t0 = performance.now();
+  const step = (now) => { const u = Math.min(1, (now - t0) / ms); r.el.style.transform = 'translate3d(0,' + (-dist * ease(u)).toFixed(1) + 'px,0)';
+    if (u < 1) requestAnimationFrame(step); else { rest(r, word); tick(); res(); } };
+  requestAnimationFrame(step);
 }); }
 let ac = null; function tick() { try { if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime; o.type = 'triangle'; o.frequency.setValueAtTime(1800, t); o.frequency.exponentialRampToValueAtTime(900, t + 0.03); g.gain.setValueAtTime(0.06, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05); o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + 0.06); } catch (e) { /* silent is fine */ } }
 
