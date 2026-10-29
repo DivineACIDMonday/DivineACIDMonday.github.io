@@ -62,7 +62,7 @@ footer b{color:var(--soft);font-weight:600}
   </section>
   <section class="answer" aria-live="polite">
     <p class="name" id="name">Ask the oracle</p>
-    <div class="acts"><button class="roll" id="roll" type="button">⚄ Ask the oracle</button><button class="ghost" id="copy" type="button" disabled>Copy</button></div>
+    <div class="acts"><button class="roll" id="roll" type="button">⚄ Ask the oracle</button><button class="ghost" id="copy" type="button" disabled>Copy</button><button class="ghost" id="snd" type="button" title="Sound on or off">🔊</button></div>
   </section>
   <section class="hist" aria-label="Your last names"><h2>Your last names</h2><div id="list"><p class="empty">Your names appear here.</p></div></section>
   <footer><b>No AI inside.</b> Every name comes from five word lists and fixed rules, right in your browser.<br>No tracking, no cookies; the names you have seen stay on this device only, so they never come back.<br>© 2026 Divine Monday</footer>
@@ -109,6 +109,24 @@ function spin(r, word, ms) { return new Promise((res) => {
   setTimeout(() => { rest(r, word); tick(); res(); }, ms + 20);
 }); }
 let ac = null; function tick() { try { if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime; o.type = 'triangle'; o.frequency.setValueAtTime(1800, t); o.frequency.exponentialRampToValueAtTime(900, t + 0.03); g.gain.setValueAtTime(0.06, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05); o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + 0.06); } catch (e) { /* silent is fine */ } }
+
+// a small heavenly choir when the name arrives: detuned voices through "aah" formants, with a soft hall around them
+let soundOn = mem.get('oracle-sound', true), hall = null;
+function hallOf(ctx) { if (hall) return hall; const len = ctx.sampleRate * 3.2, buf = ctx.createBuffer(2, len, ctx.sampleRate); for (let c = 0; c < 2; c++) { const d = buf.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); } const cv = ctx.createConvolver(); cv.buffer = buf; const g = ctx.createGain(); g.gain.value = 0.9; cv.connect(g); g.connect(ctx.destination); hall = cv; return cv; }
+function choir() {
+  if (!soundOn) return; try { if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); const ctx = ac, t = ctx.currentTime + 0.02, out = ctx.createGain(), dry = ctx.createGain();
+    out.gain.setValueAtTime(0.0001, t); out.gain.linearRampToValueAtTime(0.11, t + 0.45); out.gain.setValueAtTime(0.11, t + 1.3); out.gain.exponentialRampToValueAtTime(0.0001, t + 3.4);
+    dry.gain.value = 0.5; out.connect(dry); dry.connect(ctx.destination); out.connect(hallOf(ctx));
+    const vowel = [[800, 6, 1], [1150, 8, 0.5], [2900, 10, 0.25]];
+    const chords = [[60, 64, 67, 72, 76], [62, 66, 69, 74, 78], [57, 64, 69, 72, 76], [65, 69, 72, 77, 79]], ch = chords[Math.floor(Math.random() * chords.length)];
+    ch.forEach((m, k) => { const f = 440 * Math.pow(2, (m - 69) / 12); [-7, 0, 6].forEach((cents) => { const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f * Math.pow(2, cents / 1200);
+      const vib = ctx.createOscillator(), vg = ctx.createGain(); vib.frequency.value = 4.6 + Math.random(); vg.gain.value = f * 0.004; vib.connect(vg); vg.connect(o.frequency);
+      const v = ctx.createGain(); v.gain.value = 0.06 / (1 + k * 0.15);
+      vowel.forEach(([ff, q, a]) => { const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = ff; bp.Q.value = q; const ag = ctx.createGain(); ag.gain.value = a; o.connect(bp); bp.connect(ag); ag.connect(v); });
+      v.connect(out); const st = t + k * 0.05; o.start(st); vib.start(st); o.stop(t + 3.6); vib.stop(t + 3.6); }); });
+  } catch (e) { /* silent is fine */ }
+}
+function soundLabel() { const b = $('#snd'); b.textContent = soundOn ? '🔊' : '🔇'; b.setAttribute('aria-label', soundOn ? 'Sound on' : 'Sound off'); b.setAttribute('aria-pressed', soundOn ? 'true' : 'false'); }
 const hist = []; let busy = false, last = null;
 function wheelOf(word, i) { return [NW.W1, NW.W2, M, NW.W4, NW.W5][i].includes(word); }
 async function ask() {
@@ -117,11 +135,14 @@ async function ask() {
   document.querySelectorAll('.reel').forEach((el, i) => { el.classList.toggle('used', !!target[i]); el.classList.toggle('idle', !target[i]); });
   await Promise.all(reels.map((r, i) => spin(r, target[i] || r.words[Math.floor(Math.random() * r.words.length)], 650 + i * 140)));
   const nm = $('#name'); nm.innerHTML = ''; if (b.lead) { const s = document.createElement('span'); s.className = 'lead'; s.textContent = b.lead + ' '; nm.append(s); } nm.append(document.createTextNode(b.base));
+  choir();
   last = b.full; $('#copy').disabled = false; hist.unshift(b.full); hist.length = Math.min(hist.length, 10); renderList(); busy = false; $('#roll').disabled = false; $('#roll').focus();
 }
 function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 1400); }
 async function copy(t) { try { await navigator.clipboard.writeText(t); toast('Copied: ' + t); } catch (e) { const r = document.createRange(); r.selectNodeContents($('#name')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Selected; press copy on your keyboard'); } }
 function renderList() { const el = $('#list'); el.innerHTML = ''; hist.forEach((n) => { const row = document.createElement('div'); row.className = 'row'; const s = document.createElement('span'); s.textContent = n; const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Copy'; b.setAttribute('aria-label', 'Copy ' + n); b.onclick = () => copy(n); row.append(s, b); el.append(row); }); }
+$('#snd').onclick = () => { soundOn = !soundOn; mem.set('oracle-sound', soundOn); soundLabel(); };
+soundLabel();
 $('#roll').onclick = ask; $('#copy').onclick = () => last && copy(last);
 document.addEventListener('keydown', (e) => { if ((e.key === ' ' || e.key === 'Enter') && e.target === document.body) { e.preventDefault(); ask(); } });
 reels.forEach((r) => rest(r, r.cur)); window.addEventListener('resize', () => reels.forEach((r) => rest(r, r.cur)));
