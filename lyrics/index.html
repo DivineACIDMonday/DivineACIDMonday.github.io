@@ -1,58 +1,84 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Divine Lyric Oracle</title>
-<meta name="description" content="Ask the oracle for a song. Five genres of glorious nonsense, sung by a robot that tries its very best. No AI, nothing leaves your browser. By Divine Monday.">
+<meta name="description" content="Ask the oracle for a song. Five genres of glorious nonsense, sung on the beat by a robot that believes in itself. Load your own MIDI melody, take the vocal home as WAV or MP3. No AI, nothing leaves your browser. By Divine Monday.">
 <meta name="author" content="Divine Monday"><meta name="theme-color" content="#0E0F16">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230E0F16'/%3E%3Cpath d='M24 44V18l20-4v26' fill='none' stroke='%23F0C25A' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='20' cy='44' r='6' fill='%23F0C25A'/%3E%3Ccircle cx='40' cy='40' r='6' fill='%23F0C25A'/%3E%3C/svg%3E">
-<meta property="og:type" content="website"><meta property="og:site_name" content="Divine Monday"><meta property="og:title" content="Divine Lyric Oracle"><meta property="og:description" content="Ask the oracle for a song. Five genres of glorious nonsense, sung by a robot that tries its very best. No AI, nothing leaves your browser. By Divine Monday."><meta property="og:url" content="https://divineacidmonday.github.io/lyrics/"><meta property="og:image" content="https://divineacidmonday.github.io/lyrics/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Divine Lyric Oracle"><meta name="twitter:description" content="Ask the oracle for a song. Five genres of glorious nonsense, sung by a robot that tries its very best. No AI, nothing leaves your browser. By Divine Monday."><meta name="twitter:image" content="https://divineacidmonday.github.io/lyrics/og.png"><link rel="canonical" href="https://divineacidmonday.github.io/lyrics/">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Divine Monday"><meta property="og:title" content="Divine Lyric Oracle"><meta property="og:description" content="Ask the oracle for a song. Five genres of glorious nonsense, sung on the beat by a robot that believes in itself. Load your own MIDI melody, take the vocal home as WAV or MP3. No AI, nothing leaves your browser. By Divine Monday."><meta property="og:url" content="https://divineacidmonday.github.io/lyrics/"><meta property="og:image" content="https://divineacidmonday.github.io/lyrics/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Divine Lyric Oracle"><meta name="twitter:description" content="Ask the oracle for a song. Five genres of glorious nonsense, sung on the beat by a robot that believes in itself. Load your own MIDI melody, take the vocal home as WAV or MP3. No AI, nothing leaves your browser. By Divine Monday."><meta name="twitter:image" content="https://divineacidmonday.github.io/lyrics/og.png"><link rel="canonical" href="https://divineacidmonday.github.io/lyrics/">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* layout: the oracle on top, genre chips, one big ask, then the lyric sheet like a printed song sheet */
 :root{--bg:#0E0F16;--panel:#161824;--line:#2A2D3E;--ink:#EEEDF6;--soft:#9C99B3;--faint:#5E5B75;--gold:#F0C25A;--rose:#E07BB0;
 --display:'Bricolage Grotesque',system-ui,sans-serif;--body:Figtree,system-ui,sans-serif;color-scheme:dark}
-*{box-sizing:border-box}
+*{box-sizing:border-box}[hidden]{display:none!important}
 html,body{margin:0;background:radial-gradient(ellipse at 50% 20%,#1A1C2B 0,var(--bg) 60%) fixed,var(--bg);color:var(--ink);font-family:var(--body);font-size:16px}
-main{max-width:860px;margin:0 auto;padding-block:max(28px,env(safe-area-inset-top,0px)) max(40px,env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+main{max-width:880px;margin:0 auto;padding-block:max(28px,env(safe-area-inset-top,0px)) max(40px,env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
 header{display:flex;flex-direction:column;gap:6px;text-align:center;align-items:center}
 .by{font:600 13px var(--body);letter-spacing:.22em;text-transform:uppercase;color:var(--soft)}
 h1{font:800 clamp(40px,7vw,72px)/.95 var(--display);margin:0;letter-spacing:-.02em}h1 span{color:var(--gold)}
-.sub{color:var(--soft);margin:4px 0 0;max-width:54ch;line-height:1.45}
-.genres{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.sub{color:var(--soft);margin:4px 0 0;max-width:56ch;line-height:1.45}
+.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
 .g{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:10px 16px;font:600 15px var(--body);cursor:pointer}
 .g[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.ask{align-self:center;border:none;border-radius:999px;background:var(--gold);color:#17140A;font:800 21px var(--display);padding:16px 40px;cursor:pointer;box-shadow:0 10px 30px rgba(240,194,90,.25)}
-.ctl{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
-.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:11px 18px;font:600 15px var(--body);cursor:pointer}
+.ask{border:none;border-radius:999px;background:var(--gold);color:#17140A;font:800 21px var(--display);padding:16px 40px;cursor:pointer;box-shadow:0 10px 30px rgba(240,194,90,.25)}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:11px 16px;font:600 15px var(--body);cursor:pointer;white-space:nowrap}
 .btn.sing{background:var(--rose);border-color:var(--rose);color:#1B0E16;font-weight:700}
-select{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:10px 14px;font:500 14px var(--body);max-width:100%}
-button:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.field{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 8px 6px 14px;font:600 14px var(--body);color:var(--soft)}
+.field input[type=number]{width:62px;border:none;background:transparent;color:var(--ink);font:700 16px var(--body);text-align:center}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px dashed var(--gold);color:var(--gold);border-radius:999px;padding:8px 8px 8px 14px;font:600 14px var(--body);max-width:100%}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}.chip button{border:none;background:none;color:var(--gold);font-size:18px;cursor:pointer;padding:0 6px}
+label.tog{display:inline-flex;align-items:center;gap:6px;color:var(--soft);font:600 14px var(--body);cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 button:disabled{opacity:.4;cursor:default}
+.status{color:var(--soft);font-size:14px;text-align:center;min-height:20px}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;max-width:360px;margin:6px auto 0}.bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .15s}
 .sheet{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:28px clamp(18px,4vw,44px) 32px;display:flex;flex-direction:column;gap:22px}
 .title{font:800 clamp(28px,4.6vw,44px)/1.05 var(--display);margin:0;text-wrap:balance}
 .meta{color:var(--soft);font-size:14px;margin-top:-14px}
-.part h3{font:600 12px var(--body);letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin:0 0 6px}
-.part.cho h3{color:var(--gold)}
+.part h3{font:600 12px var(--body);letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin:0 0 6px}.part.cho h3{color:var(--gold)}
 .ln{display:block;width:100%;text-align:left;background:none;border:none;color:var(--ink);font:500 clamp(18px,2.4vw,21px)/1.5 var(--body);padding:1px 6px;margin-left:-6px;border-radius:8px;cursor:pointer}
-.ln:hover{background:rgba(255,255,255,.04)}
-.part.cho .ln{font-weight:700}
-.ln .ad{color:var(--rose);font-weight:500}
+.ln:hover{background:rgba(255,255,255,.04)}.part.cho .ln{font-weight:700}.ln .ad{color:var(--rose);font-weight:500}
 .ln.now{background:rgba(240,194,90,.14);color:var(--gold)}
 .hint{color:var(--faint);font-size:13px;text-align:center}
-.note{color:var(--soft);font-size:14px;text-align:center;min-height:20px}
 footer{text-align:center;color:var(--faint);font-size:13px;line-height:1.6}footer b{color:var(--soft);font-weight:600}footer a{color:var(--soft)}
-.toast{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font:600 14px var(--body);opacity:0;transition:opacity .2s;pointer-events:none}.toast.on{opacity:1}
+.toast{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font:600 14px var(--body);opacity:0;transition:opacity .2s;pointer-events:none;z-index:60}.toast.on{opacity:1}
+.over{position:fixed;inset:0;z-index:50;background:radial-gradient(ellipse at 50% 40%,#22243A 0,#07080D 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:max(24px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px))}
+.over .x{position:absolute;top:max(16px,env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px))}
+.k-title{font:800 clamp(20px,3vw,30px) var(--display);color:var(--gold);text-align:center}
+.k-sec{font:600 13px var(--body);letter-spacing:.2em;text-transform:uppercase;color:var(--soft)}
+.k-prev,.k-next{font:600 clamp(18px,2.6vw,26px)/1.3 var(--display);color:var(--faint);text-align:center;min-height:1.3em;max-width:90vw}
+.k-line{position:relative;font:800 clamp(30px,6vw,64px)/1.25 var(--display);text-align:center;max-width:94vw;padding-top:48px}
+.k-line .w{--p:0;background:linear-gradient(90deg,var(--gold) calc(var(--p)*100%),#FFFFFF calc(var(--p)*100%));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ball{position:absolute;width:22px;height:22px;border-radius:50%;background:var(--rose);box-shadow:0 0 18px var(--rose);left:0;top:0;transform:translate(-50%,0);pointer-events:none}
+.plain{max-width:640px;width:100%;max-height:70vh;overflow:auto;white-space:pre-wrap;font:500 18px/1.6 var(--body);color:var(--ink);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:18px;padding:24px}
 </style></head><body>
 <main>
-  <header><div class="by">Divine Monday</div><h1>Divine Lyric <span>Oracle</span></h1><p class="sub">Pick a genre and ask. The oracle writes you a whole song of glorious nonsense, and a robot sings it as well as it possibly can.</p></header>
-  <div class="genres" role="group" aria-label="Genre" id="genres"></div>
-  <button class="ask" id="ask" type="button">⚄ Ask for a song</button>
-  <div class="ctl"><button class="btn sing" id="sing" type="button" disabled>▶ Sing it</button><select id="voice" aria-label="Voice"></select><button class="btn" id="copy" type="button" disabled>Copy</button><button class="btn" id="snd" type="button" title="Choir on or off">🔊</button></div>
-  <p class="note" id="note"></p>
+  <header><div class="by">Divine Monday</div><h1>Divine Lyric <span>Oracle</span></h1><p class="sub">Pick a genre and ask. The oracle writes you a whole song of glorious nonsense, and a robot sings it on the beat. Bring your own MIDI melody if you like, and take the vocal home for your track.</p></header>
+  <div class="row" role="group" aria-label="Genre" id="genres"></div>
+  <div class="row"><button class="ask" id="ask" type="button">⚄ Ask for a song</button></div>
+  <div class="row">
+    <label class="field" for="bpm">Tempo <input type="number" id="bpm" min="50" max="220" value="76"> bpm</label>
+    <button class="btn" id="midiBtn" type="button">♪ Load MIDI melody</button><input type="file" id="midiFile" accept=".mid,.midi,audio/midi" hidden>
+    <span class="chip" id="midiChip" hidden><span id="midiName"></span><button type="button" id="midiClear" aria-label="Forget the MIDI melody">×</button></span>
+  </div>
+  <div class="row">
+    <button class="btn sing" id="sing" type="button" disabled>▶ Sing it</button>
+    <label class="tog"><input type="checkbox" id="beatOn" checked> Beat</label>
+    <button class="btn" id="kara" type="button" disabled>🎤 Karaoke</button>
+    <button class="btn" id="plain" type="button" disabled>Plain text</button>
+    <button class="btn" id="copy" type="button" disabled>Copy</button>
+    <button class="btn" id="wav" type="button" disabled>⬇ WAV</button>
+    <button class="btn" id="mp3" type="button" disabled>⬇ MP3</button>
+    <button class="btn" id="snd" type="button" title="Choir on or off">🔊</button>
+  </div>
+  <div><p class="status" id="status">Ask for a song first.</p><div class="bar" id="bar" hidden><i></i></div></div>
   <article class="sheet" id="sheet" aria-live="polite"><p class="title">Your song appears here</p><p class="meta">Tap any line later to roll that line again.</p></article>
-  <p class="hint">Tap a line to roll it again. A chorus changes everywhere it is sung.</p>
-  <footer><b>No AI inside.</b> Every line comes from word lists and fixed patterns, right in your browser.<br>The robot only uses voices that live on your own device, so your lyrics never leave it. No tracking, no cookies.<br>Also by Divine Monday: <a href="../oracle/">Divine Name Oracle</a> · © 2026 Divine Monday</footer>
+  <p class="hint">Tap a line to roll it again. A chorus changes everywhere it is sung. Downloads hold only the voice, starting on beat 1 of bar 1, ready to drop into your track.</p>
+  <footer><b>No AI inside.</b> Every line comes from word lists and fixed patterns; the robot voice is eSpeak (meSpeak, GPL), and MP3s are made with lamejs (LGPL), all right in your browser.<br>No tracking, no cookies; nothing you make leaves this device.<br>Also by Divine Monday: <a href="../oracle/">Divine Name Oracle</a> · © 2026 Divine Monday</footer>
 </main>
+<div class="over" id="karaOver" hidden><button class="btn x" id="karaClose" type="button">Close</button><div class="k-title" id="kTitle"></div><div class="k-sec" id="kSec"></div><div class="k-prev" id="kPrev"></div><div class="k-line" id="kLine"><div class="ball" id="ball" hidden></div></div><div class="k-next" id="kNext"></div></div>
+<div class="over" id="plainOver" hidden><button class="btn x" id="plainClose" type="button">Close</button><div class="plain" id="plainText"></div></div>
 <div class="toast" id="toast" role="status"></div>
+<script src="mespeak.bundle.js"></script><script src="singer.js"></script><script src="lame.min.js"></script>
 <script>
 const W = {"W1":["Silent","Velvet","Cosmic","Hollow","Distant","Quiet","Secret","Hidden","Gentle","Tender","Dusty","Misty","Foggy","Hazy","Smoky","Dreamy","Sleepy","Lonely","Ancient","Faded","Fragile","Frozen","Silky","Satin","Woolen","Feathered","Mossy","Sandy","Salty","Sunken","Drowned","Buried","Forgotten","Haunted","Sacred","Holy","Divine","Pagan","Mystic","Mythic","Lunar","Solar","Stellar","Astral","Celestial","Orbital","Nocturnal","Twilight","Moonlit","Starlit","Candlelit","Lamplit","Shadowed","Veiled","Masked","Muted","Whispered","Soft","Warm","Cold","Cool","Icy","Frosty","Humid","Tropical","Arctic","Polar","Desert","Coastal","Oceanic","Tidal","Rainy","Stormy","Windy","Cloudy","Sunny","Shady","Dim","Pale","Hazed","Ghostly","Spectral","Phantom","Elusive","Endless","Infinite","Eternal","Timeless","Ageless","Vintage","Antique","Rustic","Wooden","Paper","Canvas","Leather","Linen","Cotton","Porcelain","Marble","Granite","Stone","Concrete","Rusted","Tarnished","Weathered","Worn","Broken","Cracked","Shattered","Scattered","Tangled","Woven","Knotted","Folded","Crumpled","Polished","Lacquered","Gilded","Plated","Enameled","Frosted","Clouded","Blurred","Grainy","Noisy","Static","Analog","Vinyl","Tape","Hollowed","Echoing","Resonant","Sonic","Tonal","Modal","Harmonic","Melodic","Lyrical","Poetic","Romantic","Wistful","Nostalgic","Melancholy","Somber","Solemn","Serene","Tranquil","Placid","Calm","Still","Peaceful","Mellow","Lazy","Idle","Hypnotic","Floating","Weightless","Airy","Ethereal","Bodiless","Formless","Shapeless","Nameless","Faceless","Wordless","Soundless","Restless","Sleepless","Homeless","Careless","Fearless","Reckless","Lawless","Boundless","Bottomless","Starless","Sunless","Moonless","Tideless","Windless","Painless","Gracious","Graceful","Elegant","Noble","Royal","Regal","Imperial","Majestic","Grand","Humble","Modest","Simple","Pure","Clean","Clear","Bright","Luminous","Radiant","Glowing","Shining","Gleaming","Glimmering","Shimmering","Sparkling","Twinkling","Flickering","Fading","Waning","Waxing","Rising","Setting","Falling","Drifting","Wandering","Lost","Found","Chosen","Blessed","Cursed","Wicked","Gothic","Baroque","Rococo","Victorian","Futurist","Retro","Modern","Atomic","Quantum","Digital","Virtual","Synthetic","Plastic","Chrome","Mirrored","Liquid","Molten","Smoldering","Ashen","Charred","Gossamer","Lucid","Sunlit","Ornate","Velveteen","Opaline","Wintry","Dreamlike"],"W2":["Kinetic","Fluid","Linear","Rapid","Swift","Quick","Fast","Slow","Steady","Stable","Shaky","Wobbly","Jittery","Nervous","Frantic","Manic","Hyper","Electric","Magnetic","Dynamic","Pulsing","Throbbing","Thumping","Pounding","Rolling","Spinning","Turning","Twisting","Swirling","Whirling","Looping","Cycling","Rotating","Orbiting","Bouncing","Jumping","Leaping","Skipping","Hopping","Dancing","Swinging","Swaying","Rocking","Shaking","Rattling","Stomping","Marching","Running","Racing","Rushing","Chasing","Hunting","Climbing","Soaring","Flying","Gliding","Sliding","Slipping","Rippling","Flowing","Streaming","Pouring","Flooding","Surging","Crashing","Breaking","Bursting","Exploding","Erupting","Igniting","Burning","Blazing","Flaming","Firing","Charging","Driving","Pushing","Pulling","Lifting","Dropping","Sinking","Diving","Plunging","Tumbling","Spiraling","Ascending","Descending","Accelerating","Bending","Stretching","Expanding","Shrinking","Unfolding","Opening","Closing","Breathing","Beating","Ticking","Clicking","Snapping","Popping","Cracking","Buzzing","Humming","Droning","Ringing","Chiming","Clanging","Booming","Roaring","Howling","Screaming","Shouting","Calling","Singing","Chanting","Grooving","Funky","Jazzy","Bluesy","Soulful","Punchy","Snappy","Crisp","Tight","Loose","Sloppy","Lean","Heavy","Light","Dense","Sparse","Thick","Thin","Wide","Narrow","Deep","Shallow","High","Low","Loud","Raw","Rough","Smooth","Sharp","Blunt","Hard","Tough","Solid","Brittle","Elastic","Rubber","Bouncy","Agile","Nimble","Lithe","Fleet","Brisk","Lively","Vivid","Vibrant","Wild","Feral","Savage","Fierce","Bold","Brave","Daring","Furious","Angry","Hungry","Thirsty","Greedy","Eager","Hasty","Urgent","Pressing","Relentless","Tireless","Unstoppable","Overdriven","Distorted","Saturated","Compressed","Amplified","Boosted","Pumped","Juiced","Wired","Charged","Loaded","Primed","Locked","Synced","Phased","Shifted","Displaced","Detuned","Pitched","Bent","Warped","Skewed","Tilted","Angled","Crooked","Zigzag","Jagged","Staggered","Stuttered","Stammered","Glitched","Fractured","Splintered","Shredded","Chopped","Sliced","Diced","Cut","Spliced","Mixed","Blended","Fused","Merged","Bonded","Linked","Chained","Coupled","Paired","Doubled","Tripled","Layered","Stacked","Piled","Packed","Crowded","Swarming","Teeming","Bustling","Hustling","Busy","Awake","Alert","Alive","Living","Pulsating","Radiating","Vibrating","Oscillating","Resonating","Modulating","Alternating","Repeating","Recurring","Returning","Reversing","Inverted","Flipped","Rotated","Translated","Scaled","Stretched","Quantized","Shuffled","Syncopated","Offbeat","Upbeat","Downbeat","Backbeat","Polyrhythmic","Strutting","Swaggering","Prowling","Stalking","Creeping","Crawling","Lurking","Sneaking","Rambling","Roaming","Roving","Travelling","Journeying","Voyaging","Sailing","Cruising","Coasting","Freewheeling","Barreling","Hurtling","Careening","Rocketing","Launching","Blasting","Thundering","Rumbling","Grinding","Churning","Pumping","Hammering","Drilling"],"W3":["Crimson","Scarlet","Ruby","Cherry","Rose","Coral","Salmon","Peach","Apricot","Amber","Honey","Golden","Gold","Saffron","Mustard","Lemon","Lime","Olive","Moss","Jade","Emerald","Mint","Sage","Forest","Pine","Teal","Cyan","Aqua","Turquoise","Azure","Cobalt","Sapphire","Navy","Indigo","Ultramarine","Violet","Purple","Lilac","Lavender","Mauve","Plum","Orchid","Magenta","Fuchsia","Pink","Blush","Ivory","Cream","Pearl","Silver","Platinum","Steel","Iron","Copper","Bronze","Brass","Rust","Ochre","Umber","Sienna","Sepia","Tan","Beige","Khaki","Taupe","Ash","Smoke","Charcoal","Graphite","Onyx","Obsidian","Ebony","Jet","Ink","Black","White","Grey","Gray","Snow","Chalk","Bone","Milk","Neon","Ultraviolet","Infrared","Fluorescent","Pastel","Matte","Glossy","Metallic","Iridescent","Opal","Prism","Spectrum","Rainbow","Holographic","Sunset","Sunrise","Dusk","Dawn","Midnight","Noon","Evening","Morning","Autumn","Winter","Summer","Spring","Harvest","Ember","Flame","Fire","Ice","Frost","Storm","Thunder","Lightning","Rain","Cloud","Mist","Fog","Haze","Shadow","Dark","Hot","Burnt","Smoked","Toasted","Roasted","Baked","Sunburnt","Rosewood","Mahogany","Walnut","Cedar","Oak","Birch","Bamboo","Coffee","Cocoa","Chocolate","Caramel","Vanilla","Cinnamon","Ginger","Pepper","Paprika","Tangerine","Orange","Citrus","Grape","Berry","Wine","Burgundy","Claret","Maroon","Garnet","Topaz","Citrine","Quartz","Diamond","Crystal","Glass","Amethyst","Tourmaline","Malachite","Lapis","Celadon","Vermilion","Carmine","Cadmium","Cinnabar","Woad","Henna","Kohl","Tar","Oil","Petrol","Velour","Suede","Denim","Tweed","Silk","Lace","Gauze","Acid","Toxic","Radioactive","Nuclear","Plasma","Laser","Tropic","Jungle","Savanna","Tundra","Ocean","Sea","River","Lake","Harbor","Island","Coastline","Canyon","Valley","Mountain","Alpine","Glacier","Volcanic","Lava","Magma","Sulfur","Mercury","Nickel","Zinc","Tin","Lead","Titanium","Uranium","Moonstone","Sunstone","Bloodstone","Firestone","Starstone","Skyline","Highland","Lowland","Northern","Southern","Eastern","Western","Inner","Outer","Upper","Lower","First","Last","Second","Third","Final","Early","Late","Lucky","Dear","Sweet","Bitter","Sour","Spicy","Free","Lone","Twin","Double","Single","Half","Full","Empty","Open","Closed"],"W4":["Echo","Grid","Mirror","Window","Door","Gate","Bridge","Tower","Wall","Arch","Dome","Pillar","Column","Stair","Ladder","Corridor","Hallway","Tunnel","Cave","Chamber","Vault","Cellar","Attic","Balcony","Terrace","Garden","Courtyard","Plaza","Square","Circle","Spiral","Helix","Cube","Sphere","Cone","Pyramid","Lens","Frame","Panel","Tile","Brick","Block","Beam","Wire","Cable","Chain","Rope","Thread","Ribbon","Strip","Band","Ring","Loop","Knot","Web","Net","Mesh","Lattice","Matrix","Array","Pattern","Mosaic","Collage","Fresco","Portrait","Sketch","Outline","Silhouette","Contour","Profile","Shape","Figure","Form","Body","Shell","Husk","Seed","Root","Branch","Leaf","Petal","Stem","Thorn","Vine","Tree","Field","Meadow","Hill","Peak","Ridge","Cliff","Shore","Beach","Dune","Reef","Wave","Tide","Current","Stream","Creek","Brook","Pond","Lagoon","Bay","Gulf","Strait","Channel","Canal","Harbour","Pier","Dock","Lighthouse","Beacon","Lantern","Candle","Torch","Flare","Spark","Star","Comet","Meteor","Planet","Moon","Sun","Galaxy","Nebula","Orbit","Satellite","Rocket","Station","Engine","Motor","Turbine","Piston","Gear","Wheel","Lever","Pulley","Hinge","Valve","Pipe","Tube","Hose","Pump","Tank","Barrel","Drum","Bell","Gong","Cymbal","Horn","Flute","Harp","Lyre","Organ","Piano","Violin","Cello","Guitar","Banjo","Bass","Synth","Sampler","Sequencer","Oscillator","Filter","Mixer","Speaker","Amplifier","Radio","Antenna","Receiver","Transmitter","Dial","Switch","Button","Knob","Fader","Slider","Meter","Gauge","Clock","Watch","Compass","Map","Atlas","Globe","Chart","Diagram","Blueprint","Model","Sculpture","Statue","Monument","Temple","Shrine","Altar","Chapel","Cathedral","Palace","Castle","Fortress","Citadel","Market","Bazaar","Arcade","Gallery","Museum","Library","Archive","Theater","Cinema","Studio","Stage","Arena","Stadium","Circus","Carnival","Parade","Motel","Hotel","Diner","Cafe","Bar","Club","Lounge","Ballroom","Disco","Garage","Warehouse","Factory","Foundry","Workshop","Mill","Farm","Ranch","Prairie","Oasis","Mirage","Horizon","Highway","Avenue","Boulevard","Street","Alley","Lane","Road","Path","Trail","Track","Rail","Railway","Platform","Terminal","Airport","Runway","Hangar","Cockpit","Cabin","Capsule","Pod","Module","Unit","Cell","Atom","Molecule","Fossil","Relic","Totem","Mask","Crown","Throne","Sword","Shield","Arrow","Anchor","Sail","Mast","Hull","Raft","Canoe","Ship","Boat","Ferry","Submarine","Train","Tram","Bus","Taxi","Bicycle","Skateboard","Kite","Balloon","Feather","Wing","Claw","Fang","Tail","Eye","Hand","Heart","Vein"],"W5":["Drift","Phase","Flux","Pulse","Signal","Frequency","Wavelength","Amplitude","Resonance","Harmony","Melody","Rhythm","Tempo","Groove","Swing","Shuffle","Cadence","Chord","Scale","Mode","Key","Tone","Timbre","Noise","Silence","Feedback","Delay","Reverb","Chorus","Flanger","Tremolo","Vibrato","Sustain","Decay","Release","Attack","Envelope","Gain","Drive","Fuzz","Overtone","Undertone","Fundamental","Interval","Octave","Unison","Dissonance","Tension","Balance","Symmetry","Gravity","Momentum","Inertia","Velocity","Motion","Friction","Pressure","Density","Entropy","Energy","Power","Force","Charge","Voltage","Circuit","Logic","Code","Algorithm","Protocol","Sequence","Series","Cycle","Iteration","Recursion","Fractal","Chaos","Order","System","Network","Structure","Process","Function","Variable","Constant","Equation","Formula","Theorem","Paradox","Theory","Hypothesis","Dimension","Plane","Vector","Axis","Angle","Curve","Arc","Line","Point","Vertex","Node","Edge","Border","Boundary","Limit","Threshold","Margin","Distance","Depth","Height","Width","Length","Volume","Mass","Weight","Measure","Ratio","Proportion","Fraction","Digit","Number","Zero","Infinity","Origin","Genesis","Exodus","Omen","Oracle","Prophecy","Destiny","Fate","Fortune","Chance","Luck","Hazard","Risk","Promise","Oath","Vow","Pact","Treaty","Accord","Truce","Rebellion","Revolution","Evolution","Mutation","Transition","Transformation","Metamorphosis","Rebirth","Renaissance","Revival","Awakening","Dream","Vision","Illusion","Memory","Reverie","Nostalgia","Longing","Desire","Passion","Devotion","Rapture","Bliss","Euphoria","Ecstasy","Trance","Hypnosis","Meditation","Prayer","Ritual","Ceremony","Mystery","Riddle","Enigma","Cipher","Glyph","Rune","Symbol","Sign","Token","Whisper","Rumor","Story","Legend","Myth","Fable","Saga","Chronicle","Anthem","Hymn","Ballad","Lullaby","Serenade","Requiem","Elegy","Ode","Sonnet","Verse","Refrain","Motif","Theme","Variation","Fugue","Canon","Prelude","Interlude","Overture","Finale","Encore","Coda","Epilogue","Prologue","Chapter","Episode","Moment","Instant","Season","Era","Epoch","Age","Century","Decade","Hour","Minute","Daybreak","Nightfall","Eclipse","Solstice","Equinox","Zenith","Apex","Summit","Abyss","Void","Vacuum","Ether","Aura","Halo","Spirit","Soul","Ghost","Shade","Specter","Presence","Absence","Departure","Arrival","Return","Escape","Exile","Journey","Voyage","Odyssey","Quest","Mission","Expedition","Pilgrimage","Passage","Crossing","Migration","Flight","Fall","Rise","Ascent","Descent","Collapse","Surrender","Victory","Glory","Honor","Grace","Mercy","Freedom","Liberty","Justice","Wisdom","Truth","Faith","Hope","Love","Joy","Fear","Rage","Grief","Sorrow","Comfort","Shelter","Refuge","Haven","Sanctuary","Paradise","Utopia","Nowhere","Elsewhere","Somewhere","Anywhere"],"PREP":["Through","Under","Beyond","Into","On","Across","Inside","Above","Below","Behind","Over","Beneath","Within","After","Before","Past","Toward","Around","Along","Against","Among","Beside","Upon","Amid"],"VERBS":["burn","fall","call","break","dance","run","hold","feel","dream","drive","fly","hide","shine","fade","cry","sing","breathe","wait","stay","leave","chase","follow","lose","find","need","want","touch","kiss","miss","pray","shout","whisper","scream","bleed","drown","float","sink","rise","turn","spin","shake","move","lie","steal","give","take","make","wake","sleep","crash","bend","melt","freeze","glow","light","ride","swim","climb","jump","roll","slide","drift","wander","return","remember","forget","believe","deny","surrender","explode","collapse","ignite","unfold","unravel","echo","hum","ring","knock","open","close","carry","drag","push","pull","paint","draw","write","erase","build","bloom","wither","grow","howl","roar","crawl","walk","talk","laugh","smile","weep","sigh","fight","win","shatter","heal","hurt","save","waste","spend","count","sell","buy","hunt","feed","cook","bake","microwave","vacuum","iron","fold","text","email","google","reboot","download","upload","stream","swipe","scroll","refresh"],"DOUBLE":["begin","cut","drop","forget","grab","hit","plan","run","shop","skip","slip","spin","stop","swim","trip","win"],"LN":["heart","night","baby","love","eyes","city","car","phone","kitchen","toaster","umbrella","spaghetti","fire","rain","dancefloor","telephone","midnight","sunrise","highway","mirror","ocean","starlight","heartbeat","lighter","jacket","sneakers","taxi","elevator","vending machine","supermarket","parking lot","karaoke bar","disco ball","microwave","fridge","sofa","bathtub","shower curtain","lampshade","cactus","goldfish","pigeon","seagull","hamster","unicorn","dolphin","tiger","butterfly","cucumber","banana","pineapple","croissant","sandwich","pancake","meatball","noodle","cereal","teacup","spoon","fork","blender","washing machine","laundry","pillow","blanket","mattress","alarm clock","calendar","postcard","envelope","suitcase","passport","ticket","train station","airport","bus stop","roundabout","traffic light","cathedral","castle","volcano","glacier","island","desert","jungle","meadow","river","lighthouse","rocket","satellite","planet","comet","galaxy","moonlight","thunder","lightning","hurricane","snowflake","raindrop","shadow","silence","feeling","memory","promise","secret","dream","heartbreak","goodbye","hello","tomorrow","yesterday","forever","weekend","Monday","Tuesday","Friday","Sunday","summer","winter","autumn","spring","paradise","heaven","gravity","destiny","wifi","password","battery","charger","keyboard","printer","spreadsheet","inbox"],"FEEL":["lonely","broken","golden","electric","beautiful","dangerous","restless","reckless","crazy","wild","fragile","tender","endless","burning","frozen","shining","fading","falling","flying","sleepless","hopeless","helpless","shameless","fearless","breathless","timeless","heartless","careless","perfect","holy","silent","violent","velvet","neon","cosmic","tropical","radioactive","slightly damp","extremely beige"]};
 const $ = (s) => document.querySelector(s), R = (a) => a[Math.floor(Math.random() * a.length)], chance = (p) => Math.random() < p;
@@ -63,36 +89,37 @@ const DOUBLE = new Set(W.DOUBLE);
 function ing(v) { if (DOUBLE.has(v)) return v + v.slice(-1) + 'ing'; if (/ie$/.test(v)) return v.slice(0, -2) + 'ying'; if (/[^e]e$/.test(v)) return v.slice(0, -1) + 'ing'; return v + 'ing'; }
 function s3(v) { if (/(s|sh|ch|x|z)$/.test(v)) return v + 'es'; if (/[^aeiou]y$/.test(v)) return v.slice(0, -1) + 'ies'; return v + 's'; }
 const an = (w) => (/^[aeiou]/i.test(w) ? 'an ' : 'a ') + w;
-function fill(t, T) { return t.replace(/\{(\w)\}/g, (_, k) => ({ A: adj(), M: mid(), N: noun(), V: verb(), G: ing(verb()), S: s3(verb()), P: R(PREP), T: T, a: an(adj()), n: an(noun()) })[k]); }
+function fill(t) { return t.replace(/\{(\w)\}/g, (_, k) => ({ A: adj(), M: mid(), N: noun(), V: verb(), G: ing(verb()), S: s3(verb()), P: R(PREP), a: an(adj()), n: an(noun()) })[k]); }
 const VERSE = ['{G} through the {A} {N}', 'I {V} your {M} {N}', 'we were {G} {P} the {N}', 'you {V} like {a} {N}', 'every {N} is {a} {N}', 'take me to the {M} {N}', "don't {V} the {N} tonight", '{A} {N}, {A} {N}', 'I saw you {G} in the {N}', "there's {n} in my {N}", 'the {N} keeps {G}', '{P} the {A} {N} we {V}', 'and the {N} said "{V}"', 'my {N} is {A} again', 'call me when the {N} is {A}', 'we {V}, we {V}, we {V} the {N}', 'nobody {S} like {n}', 'oh {A} {N}, why do you {V}', '{G}, {G}, {G} in the {M} light', 'I left my {N} at the {N}', "you're the {N} of my {N}", 'tonight the {N} is {G}', 'under {M} skies I {V}', 'with {n} in my hand', '{M} {N} on {a} day', 'I never {V} the {N} before', 'mama said the {N} would {V}', 'somewhere {n} is {G} for you', 'we are {A}, we are {A}', 'your {N} tastes like {N}'];
 const PRE = ['and I {V}, and I {V}', '{G} higher, {G} higher', "can't you feel the {N}", 'here it comes, the {A} {N}', 'one more {N}, one more time', 'hold on to the {N}'];
 const SHORT = ['{V} me, {V} me', '{A} {N} tonight', 'all night, all {N}', 'never {V} again', 'oh oh, the {N}', '{M}, {M}, {M}'];
 const GENRES = {
-  ballad: { name: 'Ballad', ad: ['(oh)', '(oh oh)', '(my love)', '(ooh)', '(forever)'], form: ['Verse 1', 'Chorus', 'Verse 2', 'Chorus', 'Bridge', 'Chorus', 'Outro'], pitch: [0.8, 1.2, 1.5, 1.1, 0.9, 1.4, 1.7, 1.0], rate: 0.8, gap: 120 },
-  euro: { name: 'Eurovision', ad: ['(la la la)', '(hey!)', '(oh oh oh)', '(boom bang)', '(douze points)', '(everybody!)'], form: ['Verse 1', 'Pre chorus', 'Chorus', 'Verse 2', 'Pre chorus', 'Chorus', 'Key change!', 'Outro'], pitch: [1.3, 1.6, 1.8, 1.6, 1.3, 1.8, 2, 1.6], rate: 1.3, gap: 40 },
-  grunt: { name: 'Grunting', ad: ['(BLEGH)', '(UGH)', '(RAAAH)', '(HUH!)'], form: ['Verse 1', 'Chorus', 'Verse 2', 'Chorus', 'Breakdown', 'Chorus'], pitch: [0, 0.05, 0, 0.1, 0], rate: 0.7, gap: 60 },
-  pop: { name: 'Pop', ad: ['(yeah)', '(oh oh)', '(uh huh)', '(woo)', '(baby)'], form: ['Verse 1', 'Pre chorus', 'Chorus', 'Verse 2', 'Pre chorus', 'Chorus', 'Bridge', 'Chorus', 'Chorus'], pitch: [1, 1.2, 1.4, 1.2], rate: 1.05, gap: 60 },
-  spoken: { name: 'Spoken word', ad: [], form: ['I', 'II', 'III', 'IV'], pitch: [1], rate: 0.9, gap: 0 }
+  ballad: { name: 'Ballad', bpm: 76, scale: 'major', range: [50, 55], ad: ['(oh)', '(oh oh)', '(my love)', '(ooh)', '(forever)'], form: ['Verse 1', 'Chorus', 'Verse 2', 'Chorus', 'Bridge', 'Chorus', 'Outro'] },
+  euro: { name: 'Eurovision', bpm: 128, scale: 'major', range: [52, 57], ad: ['(la la la)', '(hey!)', '(oh oh oh)', '(boom bang)', '(douze points)', '(everybody!)'], form: ['Verse 1', 'Pre chorus', 'Chorus', 'Verse 2', 'Pre chorus', 'Chorus', 'Key change!', 'Outro'] },
+  grunt: { name: 'Grunting', bpm: 100, scale: 'minor', range: [43, 46], ad: ['(BLEGH)', '(UGH)', '(RAAAH)', '(HUH!)'], form: ['Verse 1', 'Chorus', 'Verse 2', 'Chorus', 'Breakdown', 'Chorus'] },
+  pop: { name: 'Pop', bpm: 112, scale: 'minor', range: [50, 55], ad: ['(yeah)', '(oh oh)', '(uh huh)', '(woo)', '(baby)'], form: ['Verse 1', 'Pre chorus', 'Chorus', 'Verse 2', 'Pre chorus', 'Chorus', 'Bridge', 'Chorus', 'Chorus'] },
+  spoken: { name: 'Spoken word', bpm: 90, scale: 'minor', range: [48, 50], ad: [], form: ['I', 'II', 'III', 'IV'] }
 };
-let genre = 'ballad', song = null;
-// the title comes from the five wheels of the Divine Name Oracle
+let genre = 'ballad', song = null, midi = null, take = null;
 function title() { const A0 = W.W1.concat(W.W2), N0 = W.W4.concat(W.W5); const r = Math.random(); let t = r < 0.4 ? R(A0) + ' ' + R(N0) : r < 0.55 ? R(W.W3) + ' ' + R(N0) : R(A0) + ' ' + R(W.W3) + ' ' + R(N0); const q = Math.random(); if (q < 0.16) t = R(W.PREP) + ' the ' + t; else if (q < 0.3) t = 'The ' + t; return t; }
 const cap = (x) => x.charAt(0).toUpperCase() + x.slice(1);
+let uid = 0;
 function line(kind) {
   const G = GENRES[genre], T = song.title.toLowerCase(); let t;
   if (kind === 'verse') t = fill(R(VERSE)); else if (kind === 'pre') t = fill(R(PRE)); else if (kind === 'short') t = fill(R(SHORT));
   else if (kind === 'title') t = T; else if (kind === 'titlead') t = T + ' ' + (G.ad.length ? R(G.ad) : '');
   else if (kind === 'ohtitle') t = R(['oh ', 'and ', 'take me ', '']) + T;
-  else if (kind === 'break') t = R(['{V}!', '{N}!', 'get {A}!', '{V} the {N}!', 'down!']).replace(/\{(\w)\}/g, (_, k) => fill('{' + k + '}'));
+  else if (kind === 'break') t = fill(R(['{V}!', '{N}!', 'get {A}!', '{V} the {N}!', 'down!']));
   else if (kind === 'spoken') { t = fill(R(VERSE)); if (chance(0.35)) t += '...'; }
   else t = fill(R(VERSE));
   if (kind === 'verse' && G.ad.length && chance(0.22)) t += ' ' + R(G.ad);
-  t = cap(t.trim()); if (genre === 'grunt' && (kind === 'title' || kind === 'titlead' || kind === 'ohtitle' || kind === 'break' || kind === 'short')) t = t.toUpperCase();
-  return { kind, text: t };
+  t = cap(t.trim()); if (genre === 'grunt' && /title|break|short/.test(kind)) t = t.toUpperCase();
+  return { kind, text: t, id: ++uid, seed: (Math.random() * 1e9) | 0 };
 }
 function makeChorus() { return { label: 'Chorus', cho: true, lines: [line('title'), line('verse'), line('titlead'), line(genre === 'grunt' ? 'short' : chance(0.5) ? 'short' : 'ohtitle')] }; }
 function ask() {
-  stopSing(); song = { title: title(), genre, parts: [] }; const G = GENRES[genre]; let chorus = null;
+  stopAll(); song = { title: title(), genre, parts: [], key: null }; const G = GENRES[genre]; let chorus = null;
+  song.key = { root: G.range[0] + Math.floor(Math.random() * (G.range[1] - G.range[0] + 1)), scale: G.scale === 'major' && chance(0.3) ? 'minor' : G.scale };
   G.form.forEach((lab) => {
     if (lab === 'Chorus') { if (!chorus) chorus = makeChorus(); song.parts.push(chorus); }
     else if (lab === 'Key change!') { if (!chorus) chorus = makeChorus(); song.parts.push({ label: 'Chorus (key change!)', cho: true, key: true, ref: chorus }); }
@@ -103,52 +130,185 @@ function ask() {
     else if (genre === 'spoken') song.parts.push({ label: lab, lines: Array.from({ length: 3 + Math.floor(Math.random() * 3) }, () => line('spoken')).concat(lab === 'IV' ? [line('title')] : []) });
     else song.parts.push({ label: lab, lines: [line('verse'), line('verse'), line('verse'), line('verse')] });
   });
-  render(); choir(); $('#sing').disabled = !voices().length; $('#copy').disabled = false;
+  take = null; render(); choir(); ['sing', 'kara', 'plain', 'copy', 'wav', 'mp3'].forEach((id) => { $('#' + id).disabled = false; }); status(midi ? 'Ready. The robot will sing your MIDI melody.' : 'Ready. Press Sing it.');
 }
-function linesOf(p) { return p.ref ? p.ref.lines : p.lines; }
+const linesOf = (p) => (p.ref ? p.ref.lines : p.lines);
 function render() {
   const el = $('#sheet'); el.innerHTML = ''; if (!song) return;
   const h = document.createElement('h2'); h.className = 'title'; h.textContent = song.title; const m = document.createElement('p'); m.className = 'meta'; m.textContent = GENRES[song.genre].name + ' · written by the Divine Lyric Oracle';
   el.append(h, m); let k = 0;
   song.parts.forEach((p) => { const sec = document.createElement('section'); sec.className = 'part' + (p.cho ? ' cho' : ''); const lab = document.createElement('h3'); lab.textContent = p.label; sec.append(lab);
-    linesOf(p).forEach((ln) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'ln'; b.dataset.k = k++; b.title = 'Tap to roll this line again';
+    linesOf(p).forEach((ln) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'ln'; b.dataset.k = k++; b.dataset.id = ln.id; b.title = 'Tap to roll this line again';
       const m2 = ln.text.match(/^(.*?)(\s*\([^)]*\))$/); if (m2) { b.append(document.createTextNode(m2[1])); const s = document.createElement('span'); s.className = 'ad'; s.textContent = m2[2]; b.append(s); } else b.textContent = ln.text;
-      b.onclick = () => { const n = line(ln.kind); ln.text = n.text; render(); }; sec.append(b); });
+      b.onclick = () => { if (playing) stopAll(); const n = line(ln.kind); ln.text = n.text; take = null; render(); }; sec.append(b); });
     el.append(sec); });
 }
 function asText() { return song.title + '\n\n' + song.parts.map((p) => '[' + p.label + ']\n' + linesOf(p).map((l) => l.text).join('\n')).join('\n\n') + '\n\nWritten by the Divine Lyric Oracle'; }
-// ----- the robot sings: one word at a time, each on its own pitch; only voices that live on this device -----
-const SINGERS = /^(Good News|Bad News|Cellos|Bells|Pipe Organ|Organ|Bahh|Hysterical|Whisper|Wobble|Boing|Zarvox|Trinoids|Jester|Superstar)$/;
-function voices() { try { return speechSynthesis.getVoices().filter((v) => v.localService && /^en/i.test(v.lang)); } catch (e) { return []; } }
-function fillVoices() {
-  const sel = $('#voice'), vs = voices(), keep = sel.value; sel.innerHTML = '';
-  if (!vs.length) { const o = document.createElement('option'); o.textContent = 'No voice on this device'; sel.append(o); sel.disabled = true; $('#sing').disabled = true; $('#note').textContent = window.speechSynthesis ? 'This browser has no voice stored on your device, so the robot stays quiet here.' : ''; return; }
-  sel.disabled = false; vs.sort((a, b) => (SINGERS.test(b.name) - SINGERS.test(a.name)) || a.name.localeCompare(b.name));
-  vs.forEach((v) => { const o = document.createElement('option'); o.value = v.name; o.textContent = (SINGERS.test(v.name) ? '♪ ' : '') + v.name; sel.append(o); }); if (keep && vs.some((v) => v.name === keep)) sel.value = keep;
-  if (song) $('#sing').disabled = false;
+
+/* ----- the melody: one syllable per note ----- */
+function rnd(seed) { let a = seed >>> 0 || 1; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const SCALES = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10] };
+function deg2midi(d, key) { const s = SCALES[key.scale], o = Math.floor(d / 7), i = ((d % 7) + 7) % 7; return key.root + 12 * o + s[i]; }
+function tokens(text) { return text.split(/\s+/).map((raw) => ({ raw, say: raw.replace(/[^A-Za-z']/g, '').replace(/^'+|'+$/g, '') })).filter((t) => t.raw); }
+function lineSyllables(ln) { const out = []; tokens(ln.text).forEach((t, wi) => { if (!t.say) return; const n = Singer.syllables(t.say); for (let s = 0; s < n; s++) out.push({ word: t.say.toLowerCase(), nSyl: n, syl: s, wi }); }); return out; }
+function melodyFor(ln, part, li, sy) {
+  const r = rnd(ln.seed), n = sy.length, G = GENRES[song.genre]; let step = n > 14 ? 0.25 : 0.5; const slot = n * step > 7 ? Math.ceil((n * step + 1) / 4) * 4 : 8;
+  const lens = new Array(n).fill(step); let room = slot - 1 - n * step;
+  for (let i = 0; i < n && room >= 0.5; i++) if (r() < 0.25) { lens[i] += 0.5; room -= 0.5; }
+  lens[n - 1] += Math.max(0, Math.min(room, 2));
+  let d = part.cho ? 4 : part.label.startsWith('Pre') ? 3 : 2; const out = []; let t = 0;
+  for (let i = 0; i < n; i++) {
+    if (song.genre === 'grunt') d = r() < 0.7 ? 0 : 4;
+    else if (i) { const mv = [-2, -1, -1, 0, 1, 1, 2][Math.floor(r() * 7)]; d = Math.max(0, Math.min(9, d + mv)); }
+    if (i === n - 1 && song.genre !== 'grunt') d = [0, 2, 4, 7].reduce((a, b) => (Math.abs(b - d) < Math.abs(a - d) ? b : a));
+    out.push({ beat: t, beats: lens[i], midi: deg2midi(d, song.key) + (part.key ? 2 : 0) }); t += lens[i];
+  }
+  return { notes: out, slot };
 }
-if (window.speechSynthesis) { fillVoices(); speechSynthesis.onvoiceschanged = fillVoices; } else fillVoices();
-let singing = false, singTimer = null;
-function stopSing() { singing = false; clearTimeout(singTimer); try { speechSynthesis.cancel(); } catch (e) { /* fine */ } document.querySelectorAll('.ln.now').forEach((x) => x.classList.remove('now')); $('#sing').textContent = '▶ Sing it'; }
-function sing() {
-  if (singing) { stopSing(); return; } if (!song) return; const v = voices().find((x) => x.name === $('#voice').value) || voices()[0]; if (!v) return;
-  const G = GENRES[song.genre], q = []; let k = 0;
-  song.parts.forEach((p) => { const lift = p.key ? 0.25 : 0; linesOf(p).forEach((ln) => { const idx = k++; const txt = ln.text.replace(/[()"!.,]/g, ' ').toLowerCase();
-    if (song.genre === 'spoken') { q.push({ t: txt, p: 1, r: G.rate, idx, after: ln.text.endsWith('...') ? 1400 : 700 }); return; }
-    txt.split(/\s+/).filter(Boolean).forEach((w, i) => q.push({ t: w, p: Math.min(2, G.pitch[(i + idx) % G.pitch.length] + lift), r: G.rate, idx, after: G.gap })); q[q.length - 1].after += 260; }); });
-  singing = true; $('#sing').textContent = '■ Stop'; let i = 0;
-  const next = () => { if (!singing) return; if (i >= q.length) { stopSing(); return; } const it = q[i++];
-    document.querySelectorAll('.ln.now').forEach((x) => x.classList.remove('now')); const el = document.querySelector('.ln[data-k="' + it.idx + '"]'); if (el) el.classList.add('now');
-    const u = new SpeechSynthesisUtterance(it.t); u.voice = v; u.lang = v.lang; u.pitch = it.p; u.rate = it.r; u.volume = 1;
-    let done = false; const go = () => { if (done) return; done = true; singTimer = setTimeout(next, it.after); }; u.onend = go; u.onerror = go; speechSynthesis.speak(u); };
-  next();
+// returns {notes:[...for Singer], lines:[{id, words:[{start,end}] }], total, bpm}
+function arrange() {
+  const bpm = midi ? midi.bpm : Math.max(50, Math.min(220, +$('#bpm').value || GENRES[song.genre].bpm)), BT = 60 / bpm, notes = [], lines = [];
+  const allLines = []; song.parts.forEach((p) => linesOf(p).forEach((ln, li) => allLines.push({ ln, p, li })));
+  if (midi) {
+    const queue = []; allLines.forEach((L, k) => lineSyllables(L.ln).forEach((s) => queue.push(Object.assign({ line: k }, s))));
+    if (!queue.length) return null; const M = midi.notes, wordsT = new Map();
+    M.forEach((nt, i) => {
+      const s = queue[i % queue.length], next = M[i + 1], gap = next ? next.beat - nt.beat : 99;
+      const dur = gap < 1.2 ? gap * BT : Math.min(gap * BT, (nt.beats + 0.25) * BT), lineEnd = gap >= 1.2 || !next;
+      notes.push({ word: s.word, nSyl: s.nSyl, syl: s.syl, midi: nt.midi, start: nt.beat * BT, dur, lineEnd });
+      if (i < queue.length) { const key = s.line + ':' + s.wi, w = wordsT.get(key) || { line: s.line, wi: s.wi, start: nt.beat * BT, end: 0 }; w.end = nt.beat * BT + dur; wordsT.set(key, w); }
+    });
+    allLines.forEach((L, k) => { const ws = []; wordsT.forEach((w) => { if (w.line === k) ws[w.wi] = w; }); lines.push({ id: L.ln.id, label: L.p.label, words: ws }); });
+    const last = notes[notes.length - 1]; return { notes, lines, total: last.start + last.dur + 2.5, bpm };
+  }
+  let beat = 4; // one empty bar first, the voice starts on bar 2
+  allLines.forEach((L) => {
+    const sy = lineSyllables(L.ln), ws = [];
+    if (song.genre === 'spoken') {
+      let t = beat * BT; tokens(L.ln.text).forEach((tk, wi) => { if (!tk.say) return; const x = Singer.speak(tk.say), d = x.length / Singer.SR; notes.push({ word: tk.say, spoken: true, start: t }); ws[wi] = { start: t, end: t + d }; t += d + 0.06; });
+      const used = t - beat * BT + (/\.\.\.$/.test(L.ln.text) ? 1.2 : 0.5); lines.push({ id: L.ln.id, label: L.p.label, words: ws }); beat += Math.max(8, Math.ceil(used / BT / 4) * 4); return;
+    }
+    const mel = melodyFor(L.ln, L.p, L.li, sy);
+    sy.forEach((s, i) => { const nt = mel.notes[i], st = (beat + nt.beat) * BT, dur = nt.beats * BT; notes.push({ word: s.word, nSyl: s.nSyl, syl: s.syl, midi: nt.midi, start: st, dur, lineEnd: i === sy.length - 1 });
+      const w = ws[s.wi] || { start: st, end: 0 }; w.end = st + dur; ws[s.wi] = w; });
+    lines.push({ id: L.ln.id, label: L.p.label, words: ws }); beat += mel.slot;
+  });
+  return { notes, lines, total: beat * BT + 2.5, bpm };
 }
-// ----- the choir when a song arrives (from the Name Oracle) -----
+
+/* ----- MIDI in ----- */
+function parseMidi(buf) {
+  const d = new Uint8Array(buf); let i = 0; const u32 = () => (d[i++] << 24 | d[i++] << 16 | d[i++] << 8 | d[i++]) >>> 0, u16 = () => d[i++] << 8 | d[i++];
+  const vlq = () => { let v = 0, b; do { b = d[i++]; v = (v << 7) | (b & 0x7f); } while (b & 0x80); return v; };
+  if (String.fromCharCode(d[0], d[1], d[2], d[3]) !== 'MThd') throw new Error('not a MIDI file');
+  i = 8; u16(); const ntr = u16(), ppq = u16(); let tempo = 500000; const notes = [];
+  for (let tr = 0; tr < ntr; tr++) {
+    while (String.fromCharCode(d[i], d[i + 1], d[i + 2], d[i + 3]) !== 'MTrk') { i += 8 + ((d[i + 4] << 24 | d[i + 5] << 16 | d[i + 6] << 8 | d[i + 7]) >>> 0); if (i >= d.length) break; }
+    i += 4; const len = u32(), end = i + len; let tick = 0, run = 0; const on = {};
+    while (i < end) {
+      tick += vlq(); let b = d[i];
+      if (b === 0xFF) { const typ = d[i + 1]; i += 2; const ln = vlq(); if (typ === 0x51 && ln === 3) tempo = d[i] << 16 | d[i + 1] << 8 | d[i + 2]; i += ln; continue; }
+      if (b === 0xF0 || b === 0xF7) { i++; i += vlq(); continue; }
+      if (b & 0x80) { run = b; i++; } const st = run & 0xF0, n = (st === 0xC0 || st === 0xD0) ? 1 : 2, a = d[i], v = d[i + 1]; i += n;
+      if (st === 0x90 && v > 0) on[a] = tick; else if ((st === 0x80 || st === 0x90) && on[a] != null) { notes.push({ tick: on[a], len: tick - on[a], p: a }); delete on[a]; }
+    }
+    i = end;
+  }
+  notes.sort((a, b) => a.tick - b.tick || b.p - a.p);
+  const mono = []; notes.forEach((n) => { const last = mono[mono.length - 1]; if (last && n.tick === last.tick) return; if (last && last.tick + last.len > n.tick) last.len = n.tick - last.tick; mono.push(Object.assign({}, n)); });
+  const main = mono.filter((n) => n.len / ppq >= 0.15).map((n) => ({ beat: n.tick / ppq, beats: n.len / ppq, midi: n.p }));
+  if (!main.length) throw new Error('no notes'); const sorted = main.map((n) => n.midi).sort((a, b) => a - b), med = sorted[Math.floor(sorted.length / 2)], sh = Math.round((53 - med) / 12) * 12;
+  main.forEach((n) => { n.midi += sh; }); return { bpm: Math.round(60e6 / tempo * 100) / 100, notes: main };
+}
+$('#midiBtn').onclick = () => $('#midiFile').click();
+$('#midiFile').onchange = async () => { const f = $('#midiFile').files[0]; if (!f) return; try { midi = parseMidi(await f.arrayBuffer()); midi.name = f.name; $('#midiName').textContent = f.name + ' · ' + midi.notes.length + ' notes · ' + midi.bpm + ' bpm'; $('#midiChip').hidden = false; $('#bpm').value = Math.round(midi.bpm); $('#bpm').disabled = true; take = null; status('MIDI melody loaded: the robot sings its ' + midi.notes.length + ' notes at ' + midi.bpm + ' bpm.'); } catch (e) { toast('That file has no melody the robot can read.'); } $('#midiFile').value = ''; };
+$('#midiClear').onclick = () => { midi = null; $('#midiChip').hidden = true; $('#bpm').disabled = false; $('#bpm').value = GENRES[genre].bpm; take = null; status('The robot makes its own melody again.'); };
+$('#bpm').onchange = () => { take = null; };
+
+/* ----- singing, playing, the beat ----- */
+let ac = null, playing = false, srcs = [], startAt = 0, raf = 0;
+function status(t, p) { $('#status').textContent = t; const b = $('#bar'); if (p == null) b.hidden = true; else { b.hidden = false; b.firstElementChild.style.width = Math.round(p * 100) + '%'; } }
+async function getTake() {
+  if (take) return take; const plan = arrange(); if (!plan) { toast('Nothing to sing.'); return null; }
+  status('The robot is warming up…', 0); const v = await Singer.render(plan.notes, plan.total, (p) => status('The robot is warming up… ' + Math.round(p * 100) + '%', p));
+  const n = v.lead.length, voc = new Float32Array(n); let mx = 1e-9; for (let i = 0; i < n; i++) { voc[i] = v.lead[i] + 0.22 * v.dbl[i]; mx = Math.max(mx, Math.abs(voc[i])); } for (let i = 0; i < n; i++) voc[i] *= 0.89 / mx;
+  take = { plan, voc, sr: v.sr }; status(''); return take;
+}
+function beatBuffer(ctx, plan) {
+  const sr = ctx.sampleRate, n = Math.ceil(plan.total * sr), b = ctx.createBuffer(1, n, sr), d = b.getChannelData(0), BT = 60 / plan.bpm;
+  const kl = Math.floor(0.25 * sr), hl = Math.floor(0.04 * sr);
+  for (let k = 0; k * BT < plan.total - 0.3; k++) { const o = Math.round(k * BT * sr); for (let i = 0; i < kl && o + i < n; i++) { const t = i / sr; d[o + i] += Math.sin(2 * Math.PI * (50 * t + 90 * (1 - Math.exp(-t * 25)) / 25)) * Math.exp(-t * 12) * 0.7; }
+    const o2 = Math.round((k + 0.5) * BT * sr); for (let i = 0; i < hl && o2 + i < n; i++) d[o2 + i] += (Math.random() * 2 - 1) * Math.exp(-i / sr * 90) * 0.18; }
+  return b;
+}
+function ensureAC() { if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); return ac; }
+let irBuf = null;
+function hallIR(ctx) { if (irBuf) return irBuf; const len = Math.floor(ctx.sampleRate * 1.8); irBuf = ctx.createBuffer(2, len, ctx.sampleRate); for (let c = 0; c < 2; c++) { const d = irBuf.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); } return irBuf; }
+async function play(karaoke) {
+  if (playing) { stopAll(); return; } const ctx = ensureAC(); $('#sing').disabled = true; const tk = await getTake(); $('#sing').disabled = false; if (!tk) return;
+  const vb = ctx.createBuffer(1, tk.voc.length, tk.sr); vb.copyToChannel(tk.voc, 0);
+  const vs = ctx.createBufferSource(); vs.buffer = vb; const dry = ctx.createGain(); dry.gain.value = 1; const cv = ctx.createConvolver(); cv.buffer = hallIR(ctx); const wet = ctx.createGain(); wet.gain.value = 0.12;
+  vs.connect(dry); dry.connect(ctx.destination); vs.connect(cv); cv.connect(wet); wet.connect(ctx.destination); srcs = [vs];
+  if ($('#beatOn').checked) { const bs = ctx.createBufferSource(); bs.buffer = beatBuffer(ctx, tk.plan); const bg = ctx.createGain(); bg.gain.value = 0.45; bs.connect(bg); bg.connect(ctx.destination); srcs.push(bs); }
+  startAt = ctx.currentTime + 0.12; srcs.forEach((s) => s.start(startAt)); playing = true; $('#sing').textContent = '■ Stop'; vs.onended = () => { if (playing) stopAll(); };
+  if (karaoke) openKara(); cancelAnimationFrame(raf); raf = requestAnimationFrame(follow);
+}
+function stopAll() { playing = false; srcs.forEach((s) => { try { s.stop(); } catch (e) { /* done */ } }); srcs = []; cancelAnimationFrame(raf); $('#sing').textContent = '▶ Sing it'; document.querySelectorAll('.ln.now').forEach((x) => x.classList.remove('now')); }
+let curLine = -1;
+function follow() {
+  if (!playing || !take) return; const t = ac.currentTime - startAt, L = take.plan.lines; let li = -1;
+  for (let i = 0; i < L.length; i++) { const ws = L[i].words.filter(Boolean); if (ws.length && ws[0].start - 0.35 <= t) li = i; }
+  if (li !== curLine) { curLine = li; document.querySelectorAll('.ln.now').forEach((x) => x.classList.remove('now')); if (li >= 0) document.querySelectorAll('.ln[data-id="' + L[li].id + '"]').forEach((x) => x.classList.add('now')); if (!$('#karaOver').hidden) karaLine(li); }
+  if (!$('#karaOver').hidden && li >= 0) karaTick(t, L[li]);
+  if (!$('#karaOver').hidden && li < 0) { const f = L.find((x) => x.words.some(Boolean)); if (f) { const s0 = f.words.filter(Boolean)[0].start; $('#kSec').textContent = 'Starts in ' + Math.max(0, Math.ceil(s0 - t)) + ' s'; } }
+  raf = requestAnimationFrame(follow);
+}
+/* ----- karaoke: the words fill up and a ball hops along ----- */
+function openKara() { $('#karaOver').hidden = false; $('#kTitle').textContent = song.title; curLine = -2; }
+function lineText(id) { for (const p of song.parts) for (const l of linesOf(p)) if (l.id === id) return l.text; return ''; }
+function karaLine(li) {
+  const L = take.plan.lines, el = $('#kLine'); el.querySelectorAll('.w,.sp').forEach((x) => x.remove()); const ball = $('#ball');
+  $('#kPrev').textContent = li > 0 ? lineText(L[li - 1].id) : ''; $('#kNext').textContent = li + 1 < L.length ? lineText(L[li + 1].id) : ''; $('#kSec').textContent = li >= 0 ? L[li].label : '';
+  if (li < 0) { ball.hidden = true; return; }
+  tokens(lineText(L[li].id)).forEach((tk, wi) => { const s = document.createElement('span'); s.className = 'w'; s.dataset.wi = wi; s.textContent = tk.raw; el.append(s); const sp = document.createElement('span'); sp.className = 'sp'; sp.textContent = ' '; el.append(sp); });
+  ball.hidden = false;
+}
+function karaTick(t, line) {
+  const el = $('#kLine'), spans = [...el.querySelectorAll('.w')], box = el.getBoundingClientRect(), ws = line.words; let cur = -1;
+  spans.forEach((s) => { const w = ws[+s.dataset.wi]; if (!w) { s.style.setProperty('--p', 1); return; } const p = Math.max(0, Math.min(1, (t - w.start) / Math.max(0.05, w.end - w.start))); s.style.setProperty('--p', p); if (t >= w.start) cur = +s.dataset.wi; });
+  const idx = spans.map((s) => +s.dataset.wi).filter((i) => ws[i]); if (!idx.length) return;
+  let a = idx[0], b = null; for (let k = 0; k < idx.length; k++) if (ws[idx[k]].start <= t) { a = idx[k]; b = idx[k + 1] != null ? idx[k + 1] : null; }
+  const ra = spans.find((s) => +s.dataset.wi === a).getBoundingClientRect(); const ax = ra.left + ra.width / 2 - box.left, ay = ra.top - box.top - 30;
+  let x = ax, y = ay;
+  if (t < ws[idx[0]].start) { y = ay - 40 * Math.abs(Math.sin((t * 4) * Math.PI)); }
+  else if (b != null) { const rb = spans.find((s) => +s.dataset.wi === b).getBoundingClientRect(), bx = rb.left + rb.width / 2 - box.left, by = rb.top - box.top - 30, u = Math.max(0, Math.min(1, (t - ws[a].start) / Math.max(0.05, ws[b].start - ws[a].start))); x = ax + (bx - ax) * u; y = ay + (by - ay) * u - 46 * Math.sin(Math.PI * u); }
+  const ball = $('#ball'); ball.style.left = x + 'px'; ball.style.top = y + 'px';
+}
+$('#karaClose').onclick = () => { $('#karaOver').hidden = true; stopAll(); };
+$('#kara').onclick = () => { if (playing) { openKara(); curLine = -2; } else play(true); };
+$('#sing').onclick = () => play(false);
+$('#plain').onclick = () => { $('#plainText').textContent = asText(); $('#plainOver').hidden = false; };
+$('#plainClose').onclick = () => { $('#plainOver').hidden = true; };
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!$('#karaOver').hidden) { $('#karaOver').hidden = true; stopAll(); } $('#plainOver').hidden = true; } });
+
+/* ----- downloads: only the voice, from beat 1 of bar 1, at 44.1 kHz ----- */
+async function at44(tk) { const off = new OfflineAudioContext(1, Math.ceil(tk.voc.length / tk.sr * 44100), 44100), b = off.createBuffer(1, tk.voc.length, tk.sr); b.copyToChannel(tk.voc, 0); const s = off.createBufferSource(); s.buffer = b; s.connect(off.destination); s.start(0); return (await off.startRendering()).getChannelData(0); }
+function fileBase(tk) { return 'DM_' + song.title.replace(/[^A-Za-z0-9]+/g, '') + '_' + GENRES[song.genre].name.replace(/\s/g, '') + '_Vocal_' + Math.round(tk.plan.bpm) + 'bpm'; }
+function save(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); }
+function i16(x) { const o = new Int16Array(x.length); for (let i = 0; i < x.length; i++) o[i] = Math.max(-1, Math.min(1, x[i])) * 32767; return o; }
+$('#wav').onclick = async () => { const tk = await getTake(); if (!tk) return; status('Making the WAV…'); const x = i16(await at44(tk)), n = x.length, b = new ArrayBuffer(44 + 2 * n), v = new DataView(b), s = (o, t) => [...t].forEach((c, k) => v.setUint8(o + k, c.charCodeAt(0)));
+  s(0, 'RIFF'); v.setUint32(4, 36 + 2 * n, true); s(8, 'WAVE'); s(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 44100, true); v.setUint32(28, 88200, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); s(36, 'data'); v.setUint32(40, 2 * n, true); new Int16Array(b, 44).set(x);
+  save(new Blob([b], { type: 'audio/wav' }), fileBase(tk) + '.wav'); status('WAV ready: only the voice, starting on beat 1.'); };
+$('#mp3').onclick = async () => { const tk = await getTake(); if (!tk) return; status('Making the MP3…', 0); const x = i16(await at44(tk)), enc = new lamejs.Mp3Encoder(1, 44100, 192), parts = [];
+  for (let i = 0; i < x.length; i += 1152 * 40) { for (let j = i; j < Math.min(x.length, i + 1152 * 40); j += 1152) { const c = enc.encodeBuffer(x.subarray(j, j + 1152)); if (c.length) parts.push(c); } status('Making the MP3…', i / x.length); await new Promise((r) => setTimeout(r, 0)); }
+  const f = enc.flush(); if (f.length) parts.push(f); save(new Blob(parts, { type: 'audio/mpeg' }), fileBase(tk) + '.mp3'); status('MP3 ready: only the voice. Most players add a tiny gap at the start of an MP3; for exact timing use the WAV.'); };
+
+/* ----- the choir when a song arrives ----- */
 const mem = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* fine */ } } };
-let soundOn = mem.get('lyric-sound', true), ac = null, hall = null;
+let soundOn = mem.get('lyric-sound', true), hall = null;
 function hallOf(ctx) { if (hall) return hall; const len = ctx.sampleRate * 3.2, buf = ctx.createBuffer(2, len, ctx.sampleRate); for (let c = 0; c < 2; c++) { const d = buf.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); } const cv = ctx.createConvolver(); cv.buffer = buf; const g = ctx.createGain(); g.gain.value = 0.9; cv.connect(g); g.connect(ctx.destination); hall = cv; return cv; }
 function choir() {
-  if (!soundOn) return; try { if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); const ctx = ac, t = ctx.currentTime + 0.02, out = ctx.createGain(), dry = ctx.createGain();
+  if (!soundOn) return; try { const ctx = ensureAC(), t = ctx.currentTime + 0.02, out = ctx.createGain(), dry = ctx.createGain();
     out.gain.setValueAtTime(0.0001, t); out.gain.linearRampToValueAtTime(0.5, t + 0.45); out.gain.setValueAtTime(0.5, t + 1.3); out.gain.exponentialRampToValueAtTime(0.0001, t + 3.4); dry.gain.value = 1; out.connect(dry); dry.connect(ctx.destination); out.connect(hallOf(ctx));
     const vowel = [[800, 6, 1], [1150, 8, 0.5], [2900, 10, 0.25]], ch = R([[60, 64, 67, 72, 76], [62, 66, 69, 74, 78], [57, 64, 69, 72, 76], [65, 69, 72, 77, 79]]);
     ch.forEach((m, k) => { const f = 440 * Math.pow(2, (m - 69) / 12); [-7, 0, 6].forEach((cents) => { const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f * Math.pow(2, cents / 1200);
@@ -158,9 +318,9 @@ function choir() {
   } catch (e) { /* silent is fine */ }
 }
 function soundLabel() { const b = $('#snd'); b.textContent = soundOn ? '🔊' : '🔇'; b.setAttribute('aria-label', soundOn ? 'Choir on' : 'Choir off'); b.setAttribute('aria-pressed', soundOn ? 'true' : 'false'); }
-function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 1400); }
-async function copy() { try { await navigator.clipboard.writeText(asText()); toast('Lyrics copied'); } catch (e) { const r = document.createRange(); r.selectNodeContents($('#sheet')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Selected; press copy on your keyboard'); } }
-Object.entries(GENRES).forEach(([k, g]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'g'; b.textContent = g.name; b.setAttribute('aria-pressed', k === genre ? 'true' : 'false'); b.onclick = () => { genre = k; document.querySelectorAll('.g').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); }; $('#genres').append(b); });
-$('#ask').onclick = ask; $('#sing').onclick = sing; $('#copy').onclick = copy; $('#snd').onclick = () => { soundOn = !soundOn; mem.set('lyric-sound', soundOn); soundLabel(); }; soundLabel();
+function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 1800); }
+async function copy() { try { await navigator.clipboard.writeText(asText()); toast('Lyrics copied'); } catch (e) { toast('Copy did not work here; use Plain text and select it.'); } }
+Object.entries(GENRES).forEach(([k, g]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'g'; b.textContent = g.name; b.setAttribute('aria-pressed', k === genre ? 'true' : 'false'); b.onclick = () => { genre = k; document.querySelectorAll('.g').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); if (!midi) $('#bpm').value = g.bpm; }; $('#genres').append(b); });
+$('#ask').onclick = ask; $('#copy').onclick = copy; $('#snd').onclick = () => { soundOn = !soundOn; mem.set('lyric-sound', soundOn); soundLabel(); }; soundLabel();
 </script>
 </body></html>
