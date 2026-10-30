@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Divine Voice Recorder</title>
+<meta name="robots" content="noindex">
+<style>
+:root{--bg:#14151E;--card:#1E2030;--line:#33364A;--ink:#F3F1EA;--soft:#A9A8B8;--acc:#F2994A;--ok:#5BC08A;--bad:#E5675A}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+[hidden]{display:none!important}
+main{max-width:560px;margin:0 auto;padding:12px 16px 120px}
+h1{font-size:20px;margin:6px 0 12px}
+h1 b{color:var(--acc)}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.tabs button{padding:10px 4px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--soft);font-weight:700;font-size:15px}
+.tabs button small{display:block;font-weight:500;font-size:12px}
+.tabs button[aria-pressed=true]{background:var(--acc);color:#14151E;border-color:var(--acc)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sp{flex:1}
+button{font:inherit;cursor:pointer}
+.btn{padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:#272A3D;color:var(--ink);font-weight:700}
+.btn.big{flex:1;padding:16px}
+.btn.ok{background:var(--ok);color:#14151E;border-color:var(--ok)}
+.btn:disabled{opacity:.4}
+.prog{height:8px;border-radius:4px;background:#2A2D40;overflow:hidden;margin:8px 0 2px}
+.prog i{display:block;height:100%;background:var(--acc)}
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:14px 0 6px}
+.chip{background:#272A3D;border-radius:12px;padding:12px 2px 8px;text-align:center}
+.chip b{display:block;font-size:24px;letter-spacing:.5px}
+.chip small{color:var(--soft);font-size:12px}
+.chip.on{outline:3px solid var(--acc)}
+.free{font-size:22px;font-weight:700;margin:14px 0}
+.note{font-size:15px;color:var(--soft)}
+.note b{color:var(--ink);font-size:18px}
+.rec{width:96px;height:96px;border-radius:50%;border:4px solid var(--ink);background:var(--bad);display:block;margin:14px auto 8px;box-shadow:0 0 0 0 rgba(229,103,90,.6)}
+.rec.live{animation:pulse 1s infinite}
+.rec.stop{border-radius:22px;width:80px;height:80px}
+@keyframes pulse{70%{box-shadow:0 0 0 18px rgba(229,103,90,0)}}
+.count{text-align:center;font-size:28px;font-weight:800;min-height:38px}
+canvas{width:100%;height:70px;display:block;background:#171826;border-radius:10px;margin:8px 0}
+.meter{height:10px;border-radius:5px;background:#2A2D40;overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--ok);transition:width .05s}
+.msg{min-height:22px;font-size:14px;color:var(--soft);text-align:center}
+.msg.warn{color:var(--acc)}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:5px;margin-top:10px}
+.list button{height:40px;border-radius:9px;border:1px solid var(--line);background:#272A3D;color:var(--soft);font-size:13px}
+.list button.done{background:#24412F;color:var(--ok)}
+.list button.cur{outline:2px solid var(--acc)}
+.dl{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--bg) 30%)}
+.dl .btn{width:100%;max-width:528px;display:block;margin:0 auto;background:var(--acc);color:#14151E;border:0;padding:16px}
+.tip{font-size:14px;color:var(--soft)}
+.tip b{color:var(--ink)}
+.notes3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.notes3 div{background:#272A3D;border-radius:12px;padding:8px;text-align:center}
+.notes3 b{display:block;font-size:20px}
+.notes3 button{width:34px;height:30px;border-radius:8px;border:1px solid var(--line);background:#1E2030;color:var(--ink)}
+</style>
+</head>
+<body>
+<main>
+<h1>Divine <b>Voice</b> Recorder</h1>
+<div class="tabs" id="tabs"></div>
+
+<section class="card" id="setup" hidden>
+  <div style="font-weight:800;font-size:18px">Eerst je bereik</div>
+  <p class="tip">Zing een lange <b>"aah"</b>, rustig, zonder te persen.</p>
+  <div class="row"><button class="btn big" id="lowBtn">🎤 Laagste toon</button><button class="btn big" id="highBtn">🎤 Hoogste toon</button></div>
+  <div class="msg" id="rangeMsg"></div>
+  <div class="notes3" id="notes3"></div>
+  <p class="tip">Tip: <b>koptelefoon op</b>, anders hoort de microfoon de klik.</p>
+</section>
+
+<section class="card" id="work">
+  <div class="row"><span class="note" id="lineNo"></span><span class="sp"></span><span class="note" id="pitchInfo"></span></div>
+  <div class="prog"><i id="progBar"></i></div>
+  <div id="prompt"></div>
+  <p class="tip" id="how"></p>
+  <div class="count" id="count"></div>
+  <button class="rec" id="recBtn" aria-label="Opnemen"></button>
+  <div class="meter"><i id="meter"></i></div>
+  <canvas id="wave" width="1000" height="140"></canvas>
+  <div class="msg" id="msg"></div>
+  <div class="row">
+    <button class="btn" id="prevBtn" aria-label="Vorige">‹</button>
+    <button class="btn big" id="playBtn" disabled>▶ Luister</button>
+    <button class="btn big ok" id="goodBtn" disabled>✓ Goed</button>
+    <button class="btn" id="nextBtn" aria-label="Volgende">›</button>
+  </div>
+  <details style="margin-top:12px"><summary class="tip">Alle regels</summary><div class="list" id="list"></div></details>
+</section>
+
+<section class="card tip">
+  <b>Zo werkt het</b><br>
+  1. Druk op de rode knop.<br>
+  2. Je hoort de toon en 4 klikken.<br>
+  3. Zing op elke klik daarna één lettergreep, aan elkaar, op die ene toon.<br>
+  4. Luister, dan ✓ Goed of opnieuw opnemen.<br>
+  Alles blijft bewaard in deze telefoon, ook als je de pagina sluit.
+  <div class="row" style="margin-top:10px"><button class="btn" id="redoRange">Bereik opnieuw meten</button></div>
+</section>
+</main>
+<div class="dl"><button class="btn" id="dlBtn">⬇ Download</button></div>
+
+<script>
+'use strict';
+/* ---------------- recording list ----------------
+   our phoneme labels (same as the singer engine) */
+const V = ['a','ae','ai','ao','au','e','ei','er','i','ii','oo','ou','u','uu'];
+const VS = {a:['ah','father'],ae:['a','cat'],ai:['igh','high'],ao:['uh','cup'],au:['ow','now'],e:['eh','bed'],ei:['ay','day'],er:['er','her'],i:['i','sit'],ii:['ee','see'],oo:['aw','saw'],ou:['oh','go'],u:['oo','book'],uu:['oo','moon']};
+const CS = {b:'b',ch:'ch',d:'d',dh:'th',f:'f',g:'g',h:'h',j:'j',k:'k',l:'l',m:'m',n:'n',ng:'ng',p:'p',r:'r',s:'s',sh:'sh',t:'t',th:'th',v:'v',w:'w',y:'y',z:'z'};
+const CH = {dh:'this',th:'thin',j:'jam',g:'go',ch:'chin',sh:'she',ng:'sing',y:'yes'};
+const ONS = ['b','ch','d','dh','f','g','h','j','k','l','m','n','p','r','s','sh','t','th','v','w','y','z'];
+const NOCODA = {h:1,w:1,y:1};
+const CLUS_ON = [['b','l'],['b','r'],['d','r'],['f','l'],['f','r'],['g','l'],['g','r'],['k','l'],['k','r'],['k','w'],['p','l'],['p','r'],['s','k'],['s','k','r'],['s','l'],['s','m'],['s','n'],['s','p'],['s','p','l'],['s','p','r'],['s','t'],['s','t','r'],['s','w'],['t','r'],['t','w'],['th','r']];
+const CLUS_CO = [['n','d'],['n','t'],['n','z'],['s','t'],['t','s'],['k','s'],['l','d'],['m','z'],['ng','k'],['r','d'],['r','t'],['f','t'],['k','t'],['d','z']];
+const groups = [V.slice(0,4),V.slice(4,8),V.slice(8,11),V.slice(11)];
+function buildList(){
+  const L=[]; let r=0; const rot=(k)=>V[(r+k)%V.length];
+  // vowels gliding into each other
+  for(const g of groups) L.push(g.map(v=>[[],v,[]]));
+  // every consonant before every vowel, legato, last syllable closed
+  for(const c of ONS) for(const g of groups){ const s=g.map(v=>[[c],v,[]]); if(!NOCODA[c]) s[s.length-1][2]=[c]; L.push(s); }
+  // ng only at the end
+  L.push(['a','ae','i','ao'].map(v=>[[],v,['ng']])); L.push(['e','oo','u','ou'].map(v=>[[],v,['ng']]));
+  // clusters at the start
+  for(const cl of CLUS_ON){ L.push([0,1,2,3].map(k=>[cl,rot(k),[]])); r+=3; }
+  // clusters at the end
+  const fr=['b','d','k','m'];
+  for(const cl of CLUS_CO){ L.push([0,1,2,3].map(k=>[[fr[k]],rot(k),cl])); r+=3; }
+  return L;
+}
+const LIST = buildList();
+const FREE = [
+  'Twinkle twinkle little star, how I wonder what you are',
+  'Row row row your boat, gently down the stream',
+  'Mary had a little lamb, its fleece was white as snow',
+  'Amazing grace, how sweet the sound',
+  'Swing low, sweet chariot, coming for to carry me home',
+  'Oh my darling, oh my darling, oh my darling Clementine',
+  'Home, home on the range, where the deer and the antelope play',
+  'Michael row the boat ashore, hallelujah',
+  'Should auld acquaintance be forgot, and never brought to mind',
+  'Down in the valley, the valley so low',
+  'Adem 3 keer rustig in en uit (voor de ademgeluiden)'
+];
+const spell = (s)=>s[0].map(c=>CS[c]).join('')+VS[s[1]][0]+s[2].map(c=>CS[c]).join('');
+const hint = (s)=>{ const cs=s[0].concat(s[2]).map(c=>CH[c]).filter(Boolean); return VS[s[1]][1]+(cs.length?' · '+cs[0]:''); };
+
+/* ---------------- state ---------------- */
+const TABS=[['low','Laag'],['mid','Midden'],['high','Hoog'],['free','Vrij']];
+const BPM=90, BEAT=60/BPM;
+const store={get:(k,d)=>{try{const v=localStorage.getItem('dvr-'+k);return v==null?d:JSON.parse(v);}catch(e){return d;}},set:(k,v)=>{try{localStorage.setItem('dvr-'+k,JSON.stringify(v));}catch(e){}}};
+const st={tab:store.get('tab','mid'),idx:store.get('idx',{low:0,mid:0,high:0,free:0}),range:store.get('range',null),notes:store.get('notes',null),done:store.get('done',{}),take:null,rec:false};
+const $=(s)=>document.querySelector(s);
+const NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const nn=(m)=>NAMES[m%12]+(Math.floor(m/12)-1);
+const mtof=(m)=>440*Math.pow(2,(m-69)/12);
+
+/* ---------------- storage of takes (IndexedDB) ---------------- */
+let DB=null;
+function db(){ if(DB) return Promise.resolve(DB); return new Promise((ok,no)=>{ const r=indexedDB.open('divine-voice',1); r.onupgradeneeded=()=>r.result.createObjectStore('takes'); r.onsuccess=()=>{DB=r.result;ok(DB);}; r.onerror=()=>no(r.error); }); }
+async function put(k,v){ const d=await db(); return new Promise((ok,no)=>{ const t=d.transaction('takes','readwrite'); t.objectStore('takes').put(v,k); t.oncomplete=ok; t.onerror=()=>no(t.error); }); }
+async function get(k){ const d=await db(); return new Promise((ok)=>{ const r=d.transaction('takes').objectStore('takes').get(k); r.onsuccess=()=>ok(r.result); r.onerror=()=>ok(null); }); }
+async function keys(){ const d=await db(); return new Promise((ok)=>{ const r=d.transaction('takes').objectStore('takes').getAllKeys(); r.onsuccess=()=>ok(r.result||[]); r.onerror=()=>ok([]); }); }
+
+/* ---------------- audio ---------------- */
+let ctx=null, stream=null, src=null, proc=null, chunks=null, chunkT0=0, onLevel=null;
+async function audio(){
+  if(!ctx){ ctx=new (window.AudioContext||window.webkitAudioContext)(); }
+  if(ctx.state!=='running') await ctx.resume();
+  if(!stream){
+    stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1}});
+    src=ctx.createMediaStreamSource(stream); proc=ctx.createScriptProcessor(4096,1,1);
+    const mute=ctx.createGain(); mute.gain.value=0; src.connect(proc); proc.connect(mute); mute.connect(ctx.destination);
+    proc.onaudioprocess=(e)=>{ const x=e.inputBuffer.getChannelData(0); if(chunks){ if(!chunks.length) chunkT0=(e.playbackTime!=null?e.playbackTime:ctx.currentTime)-x.length/ctx.sampleRate; chunks.push(new Float32Array(x)); }
+      if(onLevel){ let m=0; for(let i=0;i<x.length;i+=4) m=Math.max(m,Math.abs(x[i])); onLevel(m); } };
+    try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
+  }
+}
+function click(t,acc){ const o=ctx.createOscillator(), g=ctx.createGain(); o.frequency.value=acc?1600:1100; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(acc?0.5:0.3,t+0.002); g.gain.exponentialRampToValueAtTime(0.0001,t+0.05); o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t+0.06); }
+function tone(t,dur,m){ const o=ctx.createOscillator(), o2=ctx.createOscillator(), g=ctx.createGain(); o.type='triangle'; o.frequency.value=mtof(m); o2.frequency.value=mtof(m); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.16,t+0.04); g.gain.setValueAtTime(0.16,t+dur-0.08); g.gain.linearRampToValueAtTime(0.0001,t+dur); o.connect(g); o2.connect(g); g.connect(ctx.destination); o.start(t); o2.start(t); o.stop(t+dur); o2.stop(t+dur); }
+const join=(cs)=>{ let n=0; for(const c of cs) n+=c.length; const y=new Float32Array(n); let o=0; for(const c of cs){ y.set(c,o); o+=c.length; } return y; };
+const wait=(s)=>new Promise(r=>setTimeout(r,s*1000));
+
+/* pitch of a sung "aah": autocorrelation, median over frames */
+function pitchOf(x,sr){ const W=2048, out=[]; for(let s=0;s+W<x.length;s+=1024){ let e=0; for(let i=0;i<W;i++) e+=x[s+i]*x[s+i]; if(Math.sqrt(e/W)<0.01) continue;
+  let best=0,bl=0; for(let L=Math.floor(sr/1000);L<Math.floor(sr/60);L++){ let a=0; for(let i=0;i<W-L;i+=2) a+=x[s+i]*x[s+i+L]; if(a>best){best=a;bl=L;} } if(bl&&best/e>0.3) out.push(69+12*Math.log2(sr/bl/440)); }
+  if(out.length<3) return null; out.sort((a,b)=>a-b); return Math.round(out[Math.floor(out.length/2)]); }
+
+/* ---------------- wav + zip ---------------- */
+function wav(x,sr){ const n=x.length, b=new ArrayBuffer(44+n*2), v=new DataView(b); const w=(o,s)=>{for(let i=0;i<s.length;i++) v.setUint8(o+i,s.charCodeAt(i));};
+  w(0,'RIFF'); v.setUint32(4,36+n*2,true); w(8,'WAVE'); w(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true); v.setUint32(24,sr,true); v.setUint32(28,sr*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true); w(36,'data'); v.setUint32(40,n*2,true);
+  for(let i=0;i<n;i++) v.setInt16(44+i*2,Math.max(-1,Math.min(1,x[i]))*32767,true); return new Uint8Array(b); }
+const CRC=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1; t[n]=c>>>0; } return t; })();
+const crc32=(u)=>{ let c=0xFFFFFFFF; for(let i=0;i<u.length;i++) c=CRC[(c^u[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; };
+function zip(files){ const parts=[], cen=[]; let off=0; const enc=new TextEncoder();
+  for(const [name,data] of files){ const nm=enc.encode(name), c=crc32(data), h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true); h.setUint16(4,20,true); h.setUint32(14,c,true); h.setUint32(18,data.length,true); h.setUint32(22,data.length,true); h.setUint16(26,nm.length,true);
+    parts.push(new Uint8Array(h.buffer),nm,data);
+    const cd=new DataView(new ArrayBuffer(46)); cd.setUint32(0,0x02014b50,true); cd.setUint16(4,20,true); cd.setUint16(6,20,true); cd.setUint32(16,c,true); cd.setUint32(20,data.length,true); cd.setUint32(24,data.length,true); cd.setUint16(28,nm.length,true); cd.setUint32(42,off,true);
+    cen.push(new Uint8Array(cd.buffer),nm); off+=30+nm.length+data.length; }
+  let cl=0; for(const c of cen) cl+=c.length; const e=new DataView(new ArrayBuffer(22)); e.setUint32(0,0x06054b50,true); e.setUint16(8,files.length,true); e.setUint16(10,files.length,true); e.setUint32(12,cl,true); e.setUint32(16,off,true);
+  return new Blob(parts.concat(cen,[new Uint8Array(e.buffer)]),{type:'application/zip'}); }
+
+/* ---------------- screens ---------------- */
+const items=()=>st.tab==='free'?FREE:LIST;
+const key=(tab,i)=>tab+'/'+String(i+1).padStart(3,'0');
+const curMidi=()=>st.notes?st.notes[st.tab==='free'?'mid':st.tab]:null;
+function renderTabs(){ const T=$('#tabs'); T.innerHTML=''; for(const [k,lab] of TABS){ const n=k==='free'?FREE.length:LIST.length, d=Object.keys(st.done).filter(x=>x.startsWith(k+'/')).length;
+  const b=document.createElement('button'); b.setAttribute('aria-pressed',st.tab===k); b.innerHTML=lab+'<small>'+d+' / '+n+'</small>'; b.onclick=()=>{ if(st.rec) return; st.tab=k; store.set('tab',k); render(); }; T.append(b); } }
+function renderSetup(){ const show=!st.notes||st.redo; $('#setup').hidden=!show; $('#work').hidden=show;
+  const r=st.range||{}; $('#rangeMsg').textContent=(r.low?'Laagste: '+nn(r.low):'')+(r.low&&r.high?' · ':'')+(r.high?'Hoogste: '+nn(r.high):'');
+  const N=$('#notes3'); N.innerHTML=''; if(st.notes){ for(const [k,lab] of TABS.slice(0,3)){ const d=document.createElement('div'); d.innerHTML='<small>'+lab+'</small><b>'+nn(st.notes[k])+'</b>';
+      const m=document.createElement('button'); m.textContent='−'; m.onclick=()=>{st.notes[k]--;store.set('notes',st.notes);renderSetup();preview(st.notes[k]);};
+      const p=document.createElement('button'); p.textContent='+'; p.onclick=()=>{st.notes[k]++;store.set('notes',st.notes);renderSetup();preview(st.notes[k]);};
+      d.append(m,' ',p); N.append(d); }
+    const go=document.createElement('button'); go.className='btn ok'; go.style.gridColumn='1/4'; go.textContent='✓ Klaar, ga opnemen'; go.onclick=()=>{st.redo=false;render();}; N.append(go); } }
+async function preview(m){ await audio(); tone(ctx.currentTime+0.05,0.8,m); }
+async function measure(which){ st.redo=true; try{ await audio(); }catch(e){ $('#rangeMsg').textContent='Geen toegang tot de microfoon. Sta het toe in je browser.'; return; }
+  const b=which==='low'?$('#lowBtn'):$('#highBtn'), was=b.textContent; b.textContent='🎤 Zing nu… 3 sec'; b.disabled=true; chunks=[]; await wait(3); const x=join(chunks); chunks=null; b.textContent=was; b.disabled=false;
+  const m=pitchOf(x,ctx.sampleRate); if(m==null){ $('#rangeMsg').textContent='Ik hoorde geen toon. Nog een keer, iets harder.'; return; }
+  st.range=Object.assign({},st.range,{[which]:m}); store.set('range',st.range);
+  if(st.range.low&&st.range.high){ let lo=st.range.low+3, hi=st.range.high-3; if(hi-lo<6){ const c=Math.round((st.range.low+st.range.high)/2); lo=c-3; hi=c+3; } st.notes={low:lo,mid:Math.round((lo+hi)/2),high:hi}; store.set('notes',st.notes); }
+  renderSetup(); }
+function renderWork(){ const it=items(), i=st.idx[st.tab]=Math.min(st.idx[st.tab]||0,it.length-1), m=curMidi();
+  $('#lineNo').textContent=(st.tab==='free'?'Zinnetje ':'Regel ')+(i+1)+' van '+it.length;
+  const d=Object.keys(st.done).filter(x=>x.startsWith(st.tab+'/')).length; $('#progBar').style.width=(100*d/it.length)+'%';
+  $('#pitchInfo').innerHTML=st.tab==='free'?'vrij zingen':'toon <b>'+nn(m)+'</b>';
+  const P=$('#prompt'); P.innerHTML='';
+  if(st.tab==='free'){ const f=document.createElement('div'); f.className='free'; f.textContent=it[i]; P.append(f); $('#how').textContent=i===it.length-1?'Druk op opnemen, adem, druk op stop.':'Zing zoals jij zingt, met je eigen melodie en gevoel. Druk op stop als je klaar bent.'; }
+  else { const c=document.createElement('div'); c.className='chips'; it[i].forEach((s,k)=>{ const e=document.createElement('div'); e.className='chip'; e.id='chip'+k; e.innerHTML='<b>'+spell(s)+'</b><small>'+hint(s)+'</small>'; c.append(e); }); P.append(c);
+    $('#how').textContent='Aan elkaar zingen, één lettergreep per klik, alles op dezelfde toon.'; }
+  const L=$('#list'); L.innerHTML=''; it.forEach((_,k)=>{ const b=document.createElement('button'); b.textContent=k+1; if(st.done[key(st.tab,k)]) b.className='done'; if(k===i) b.classList.add('cur'); b.onclick=()=>go(k); L.append(b); });
+  loadTake(); }
+async function loadTake(){ const t=await get(key(st.tab,st.idx[st.tab])); st.take=t||null; drawWave(t?t.x:null); $('#playBtn').disabled=!t; $('#goodBtn').disabled=!t; $('#msg').textContent=t?(t.ok?'✓ Al goedgekeurd. Je mag hem opnieuw doen.':'Opgenomen, nog niet goedgekeurd.'):''; $('#msg').className='msg'; }
+const f32=(q)=>{ if(!q||q instanceof Float32Array) return q; const y=new Float32Array(q.length); for(let i=0;i<q.length;i++) y[i]=q[i]/32767; return y; };
+function drawWave(x){ x=f32(x); const c=$('#wave'), g=c.getContext('2d'); g.clearRect(0,0,c.width,c.height); if(!x) return; const n=x.length, W=c.width, H=c.height; g.fillStyle='#F2994A';
+  for(let p=0;p<W;p++){ let m=0; const a=Math.floor(p*n/W), b=Math.floor((p+1)*n/W); for(let i=a;i<b;i+=8) m=Math.max(m,Math.abs(x[i])); const h=Math.max(1,m*H); g.fillRect(p,(H-h)/2,1,h); } }
+function go(k){ if(st.rec) return; st.idx[st.tab]=Math.max(0,Math.min(items().length-1,k)); store.set('idx',st.idx); renderWork(); }
+function render(){ renderTabs(); renderSetup(); if(!$('#work').hidden) renderWork(); $('#dlBtn').textContent='⬇ Download '+TABS.find(t=>t[0]===st.tab)[1]+'.zip'; }
+
+/* ---------------- record one line ---------------- */
+async function record(){
+  if(st.rec){ st.stopNow&&st.stopNow(); return; }
+  try{ await audio(); }catch(e){ $('#msg').textContent='Geen toegang tot de microfoon. Sta het toe in je browser.'; return; }
+  const free=st.tab==='free', m=curMidi(), it=items()[st.idx[st.tab]], R=$('#recBtn'), C=$('#count');
+  st.rec=true; R.classList.add('live'); $('#playBtn').disabled=$('#goodBtn').disabled=true; let peak=0; onLevel=(v)=>{ peak=Math.max(peak,v); $('#meter').style.width=Math.min(100,v*120)+'%'; $('#meter').style.background=v>0.95?'var(--bad)':'var(--ok)'; };
+  chunks=[]; await wait(0.15); const t0=ctx.currentTime+0.25; let beat1=null, len;
+  if(free){ R.classList.add('stop'); C.textContent='Zing maar'; await new Promise(r=>{ st.stopNow=r; setTimeout(r,25000); }); st.stopNow=null; len=null; }
+  else { tone(t0,BEAT*2-0.05,m); for(let k=0;k<4;k++) click(t0+k*BEAT,k===0); beat1=t0+4*BEAT; for(let k=0;k<it.length;k++) click(beat1+k*BEAT,false);
+    const end=beat1+(it.length+1)*BEAT;
+    const tick=()=>{ if(!st.rec) return; const t=ctx.currentTime; if(t<beat1){ C.textContent=String(4-Math.floor((t-t0)/BEAT)); } else { const k=Math.floor((t-beat1)/BEAT); C.textContent=k<it.length?spell(it[k]):''; for(let j=0;j<it.length;j++){ const e=$('#chip'+j); if(e) e.classList.toggle('on',j===k); } } if(t<end) requestAnimationFrame(tick); };
+    tick(); await wait(end-ctx.currentTime+0.15); }
+  const x=join(chunks), sr=ctx.sampleRate, T0=chunkT0; chunks=null; onLevel=null; st.rec=false; R.classList.remove('live','stop'); C.textContent=''; $('#meter').style.width='0';
+  for(let j=0;j<4;j++){ const e=$('#chip'+j); if(e) e.classList.remove('on'); }
+  const q=new Int16Array(x.length); for(let i=0;i<x.length;i++) q[i]=Math.max(-1,Math.min(1,x[i]))*32767;
+  const take={x:q, sr, tab:st.tab, line:st.idx[st.tab]+1, midi:free?null:m, bpm:BPM, beat1:beat1==null?null:Math.round((beat1-T0)*sr), syl:free?null:it, text:free?it:it.map(spell).join(' '), latency:{base:ctx.baseLatency||0,out:ctx.outputLatency||0}, ok:false, when:Date.now()};
+  delete st.done[key(st.tab,st.idx[st.tab])]; store.set('done',st.done); renderTabs();
+  st.take=take; await put(key(st.tab,st.idx[st.tab]),take); drawWave(x); $('#playBtn').disabled=$('#goodBtn').disabled=false;
+  const M=$('#msg'); if(peak>0.97){ M.textContent='Te hard: het kraakt. Zing iets zachter of houd de telefoon verder weg.'; M.className='msg warn'; } else if(peak<0.06){ M.textContent='Erg zacht. Zing iets harder of kom dichterbij.'; M.className='msg warn'; } else { M.textContent='Luister even, dan ✓ Goed of opnieuw opnemen.'; M.className='msg'; }
+}
+async function play(){ if(!st.take) return; await audio(); const b=ctx.createBuffer(1,st.take.x.length,st.take.sr); b.copyToChannel(f32(st.take.x),0); const s=ctx.createBufferSource(); s.buffer=b; s.connect(ctx.destination); s.start(); }
+async function good(){ if(!st.take) return; st.take.ok=true; const k=key(st.tab,st.idx[st.tab]); await put(k,st.take); st.done[k]=1; store.set('done',st.done); const n=items().length; let j=st.idx[st.tab]+1; while(j<n&&st.done[key(st.tab,j)]) j++; if(j>=n){ j=0; while(j<n&&st.done[key(st.tab,j)]) j++; } if(j>=n){ $('#msg').textContent='🎉 Alles voor '+TABS.find(t=>t[0]===st.tab)[1]+' is klaar. Download de zip en stuur hem op.'; renderTabs(); return; } go(j); renderTabs(); }
+
+async function download(){ const b=$('#dlBtn'); b.textContent='Bezig met inpakken…'; const ks=(await keys()).filter(k=>k.startsWith(st.tab+'/')).sort(); const files=[], meta=[];
+  for(const k of ks){ const t=await get(k); if(!t||!t.ok) continue; const name=k.replace('/','_')+'.wav'; files.push([name,wav(f32(t.x),t.sr)]); meta.push({file:name,line:t.line,text:t.text,syl:t.syl,midi:t.midi,bpm:t.bpm,beat1:t.beat1,sr:t.sr,latency:t.latency}); }
+  if(!files.length){ b.textContent='Nog niets goedgekeurd in deze tab'; setTimeout(render,1800); return; }
+  files.push(['meta.json',new TextEncoder().encode(JSON.stringify({tab:st.tab,range:st.range,notes:st.notes,ua:navigator.userAgent,takes:meta},null,1))]);
+  const z=zip(files), a=document.createElement('a'); a.href=URL.createObjectURL(z); a.download='divine-voice-'+TABS.find(t=>t[0]===st.tab)[1].toLowerCase()+'.zip'; document.body.append(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000); render(); }
+
+$('#recBtn').onclick=record; $('#playBtn').onclick=play; $('#goodBtn').onclick=good; $('#prevBtn').onclick=()=>go(st.idx[st.tab]-1); $('#nextBtn').onclick=()=>go(st.idx[st.tab]+1);
+$('#lowBtn').onclick=()=>measure('low'); $('#highBtn').onclick=()=>measure('high'); $('#redoRange').onclick=()=>{ st.redo=true; render(); window.scrollTo(0,0); }; $('#dlBtn').onclick=download;
+render();
+</script>
+</body>
+</html>
