@@ -39,7 +39,11 @@ button{font:inherit;cursor:pointer}
 .rec.live{animation:pulse 1s infinite}
 .rec.stop{border-radius:22px;width:80px;height:80px}
 @keyframes pulse{70%{box-shadow:0 0 0 18px rgba(229,103,90,0)}}
-.count{text-align:center;font-size:28px;font-weight:800;min-height:38px}
+.count{text-align:center;font-size:28px;font-weight:800;min-height:38px;border-radius:12px;transition:background .08s}
+.count.flash{background:var(--acc);color:#14151E}
+.mode{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+.mode button{padding:9px 4px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--soft);font-weight:700;font-size:14px}
+.mode button[aria-pressed=true]{background:#272A3D;color:var(--ink);border-color:var(--acc)}
 canvas{width:100%;height:70px;display:block;background:#171826;border-radius:10px;margin:8px 0}
 .meter{height:10px;border-radius:5px;background:#2A2D40;overflow:hidden}
 .meter i{display:block;height:100%;width:0;background:var(--ok);transition:width .05s}
@@ -63,6 +67,7 @@ canvas{width:100%;height:70px;display:block;background:#171826;border-radius:10p
 <main>
 <h1>Divine <b>Voice</b> Recorder</h1>
 <div class="tabs" id="tabs"></div>
+<div class="mode"><button id="mSilent">📱 Zonder koptelefoon</button><button id="mPhones">🎧 Met koptelefoon</button></div>
 
 <section class="card" id="setup" hidden>
   <div style="font-weight:800;font-size:18px">Eerst je bereik</div>
@@ -70,7 +75,7 @@ canvas{width:100%;height:70px;display:block;background:#171826;border-radius:10p
   <div class="row"><button class="btn big" id="lowBtn">🎤 Laagste toon</button><button class="btn big" id="highBtn">🎤 Hoogste toon</button></div>
   <div class="msg" id="rangeMsg"></div>
   <div class="notes3" id="notes3"></div>
-  <p class="tip">Tip: <b>koptelefoon op</b>, anders hoort de microfoon de klik.</p>
+  <p class="tip">Zacht zingen mag. Niemand hoort het behalve jij, en je kunt alles opnieuw doen.</p>
 </section>
 
 <section class="card" id="work">
@@ -95,8 +100,8 @@ canvas{width:100%;height:70px;display:block;background:#171826;border-radius:10p
 <section class="card tip">
   <b>Zo werkt het</b><br>
   1. Druk op de rode knop.<br>
-  2. Je hoort de toon en 4 klikken.<br>
-  3. Zing op elke klik daarna één lettergreep, aan elkaar, op die ene toon.<br>
+  2. Je hoort de toon. Daarna knippert het scherm 4 keer: tel mee.<br>
+  3. Zing bij elke knipper daarna één lettergreep, aan elkaar, op die ene toon.<br>
   4. Luister, dan ✓ Goed of opnieuw opnemen.<br>
   Alles blijft bewaard in deze telefoon, ook als je de pagina sluit.
   <div class="row" style="margin-top:10px"><button class="btn" id="redoRange">Bereik opnieuw meten</button></div>
@@ -153,7 +158,7 @@ const hint = (s)=>{ const cs=s[0].concat(s[2]).map(c=>CH[c]).filter(Boolean); re
 const TABS=[['low','Laag'],['mid','Midden'],['high','Hoog'],['free','Vrij']];
 const BPM=90, BEAT=60/BPM;
 const store={get:(k,d)=>{try{const v=localStorage.getItem('dvr-'+k);return v==null?d:JSON.parse(v);}catch(e){return d;}},set:(k,v)=>{try{localStorage.setItem('dvr-'+k,JSON.stringify(v));}catch(e){}}};
-const st={tab:store.get('tab','mid'),idx:store.get('idx',{low:0,mid:0,high:0,free:0}),range:store.get('range',null),notes:store.get('notes',null),done:store.get('done',{}),take:null,rec:false};
+const st={silent:store.get('silent',true),tab:store.get('tab','mid'),idx:store.get('idx',{low:0,mid:0,high:0,free:0}),range:store.get('range',null),notes:store.get('notes',null),done:store.get('done',{}),take:null,rec:false};
 const $=(s)=>document.querySelector(s);
 const NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const nn=(m)=>NAMES[m%12]+(Math.floor(m/12)-1);
@@ -240,7 +245,7 @@ const f32=(q)=>{ if(!q||q instanceof Float32Array) return q; const y=new Float32
 function drawWave(x){ x=f32(x); const c=$('#wave'), g=c.getContext('2d'); g.clearRect(0,0,c.width,c.height); if(!x) return; const n=x.length, W=c.width, H=c.height; g.fillStyle='#F2994A';
   for(let p=0;p<W;p++){ let m=0; const a=Math.floor(p*n/W), b=Math.floor((p+1)*n/W); for(let i=a;i<b;i+=8) m=Math.max(m,Math.abs(x[i])); const h=Math.max(1,m*H); g.fillRect(p,(H-h)/2,1,h); } }
 function go(k){ if(st.rec) return; st.idx[st.tab]=Math.max(0,Math.min(items().length-1,k)); store.set('idx',st.idx); renderWork(); }
-function render(){ renderTabs(); renderSetup(); if(!$('#work').hidden) renderWork(); $('#dlBtn').textContent='⬇ Download '+TABS.find(t=>t[0]===st.tab)[1]+'.zip'; }
+function render(){ $('#mSilent').setAttribute('aria-pressed',!!st.silent); $('#mPhones').setAttribute('aria-pressed',!st.silent); renderTabs(); renderSetup(); if(!$('#work').hidden) renderWork(); $('#dlBtn').textContent='⬇ Download '+TABS.find(t=>t[0]===st.tab)[1]+'.zip'; }
 
 /* ---------------- record one line ---------------- */
 async function record(){
@@ -248,19 +253,20 @@ async function record(){
   try{ await audio(); }catch(e){ $('#msg').textContent='Geen toegang tot de microfoon. Sta het toe in je browser.'; return; }
   const free=st.tab==='free', m=curMidi(), it=items()[st.idx[st.tab]], R=$('#recBtn'), C=$('#count');
   st.rec=true; R.classList.add('live'); $('#playBtn').disabled=$('#goodBtn').disabled=true; let peak=0; onLevel=(v)=>{ peak=Math.max(peak,v); $('#meter').style.width=Math.min(100,v*120)+'%'; $('#meter').style.background=v>0.95?'var(--bad)':'var(--ok)'; };
+  if(!free&&st.silent){ C.textContent='♪ luister naar de toon'; tone(ctx.currentTime+0.05,1.6,m); await wait(1.9); }
   chunks=[]; await wait(0.15); const t0=ctx.currentTime+0.25; let beat1=null, len;
   if(free){ R.classList.add('stop'); C.textContent='Zing maar'; await new Promise(r=>{ st.stopNow=r; setTimeout(r,25000); }); st.stopNow=null; len=null; }
-  else { tone(t0,BEAT*2-0.05,m); for(let k=0;k<4;k++) click(t0+k*BEAT,k===0); beat1=t0+4*BEAT; for(let k=0;k<it.length;k++) click(beat1+k*BEAT,false);
+  else { beat1=t0+4*BEAT; if(!st.silent){ tone(t0,BEAT*2-0.05,m); for(let k=0;k<4;k++) click(t0+k*BEAT,k===0); for(let k=0;k<it.length;k++) click(beat1+k*BEAT,false); }
     const end=beat1+(it.length+1)*BEAT;
-    const tick=()=>{ if(!st.rec) return; const t=ctx.currentTime; if(t<beat1){ C.textContent=String(4-Math.floor((t-t0)/BEAT)); } else { const k=Math.floor((t-beat1)/BEAT); C.textContent=k<it.length?spell(it[k]):''; for(let j=0;j<it.length;j++){ const e=$('#chip'+j); if(e) e.classList.toggle('on',j===k); } } if(t<end) requestAnimationFrame(tick); };
+    const tick=()=>{ if(!st.rec) return; const t=ctx.currentTime; C.classList.toggle('flash',t>=t0&&((t-t0)%BEAT)<0.14&&t<beat1+it.length*BEAT); if(t<beat1){ C.textContent=String(4-Math.floor((t-t0)/BEAT)); } else { const k=Math.floor((t-beat1)/BEAT); C.textContent=k<it.length?spell(it[k]):''; for(let j=0;j<it.length;j++){ const e=$('#chip'+j); if(e) e.classList.toggle('on',j===k); } } if(t<end) requestAnimationFrame(tick); };
     tick(); await wait(end-ctx.currentTime+0.15); }
-  const x=join(chunks), sr=ctx.sampleRate, T0=chunkT0; chunks=null; onLevel=null; st.rec=false; R.classList.remove('live','stop'); C.textContent=''; $('#meter').style.width='0';
+  C.classList.remove('flash'); const x=join(chunks), sr=ctx.sampleRate, T0=chunkT0; chunks=null; onLevel=null; st.rec=false; R.classList.remove('live','stop'); C.textContent=''; $('#meter').style.width='0';
   for(let j=0;j<4;j++){ const e=$('#chip'+j); if(e) e.classList.remove('on'); }
   const q=new Int16Array(x.length); for(let i=0;i<x.length;i++) q[i]=Math.max(-1,Math.min(1,x[i]))*32767;
-  const take={x:q, sr, tab:st.tab, line:st.idx[st.tab]+1, midi:free?null:m, bpm:BPM, beat1:beat1==null?null:Math.round((beat1-T0)*sr), syl:free?null:it, text:free?it:it.map(spell).join(' '), latency:{base:ctx.baseLatency||0,out:ctx.outputLatency||0}, ok:false, when:Date.now()};
+  const take={x:q, sr, tab:st.tab, line:st.idx[st.tab]+1, midi:free?null:m, bpm:BPM, beat1:beat1==null?null:Math.round((beat1-T0)*sr), syl:free?null:it, text:free?it:it.map(spell).join(' '), silent:!!st.silent, latency:{base:ctx.baseLatency||0,out:ctx.outputLatency||0}, ok:false, when:Date.now()};
   delete st.done[key(st.tab,st.idx[st.tab])]; store.set('done',st.done); renderTabs();
   st.take=take; await put(key(st.tab,st.idx[st.tab]),take); drawWave(x); $('#playBtn').disabled=$('#goodBtn').disabled=false;
-  const M=$('#msg'); if(peak>0.97){ M.textContent='Te hard: het kraakt. Zing iets zachter of houd de telefoon verder weg.'; M.className='msg warn'; } else if(peak<0.06){ M.textContent='Erg zacht. Zing iets harder of kom dichterbij.'; M.className='msg warn'; } else { M.textContent='Luister even, dan ✓ Goed of opnieuw opnemen.'; M.className='msg'; }
+  const M=$('#msg'); if(peak>0.97){ M.textContent='Te hard: het kraakt. Zing iets zachter of houd de telefoon verder weg.'; M.className='msg warn'; } else if(peak<0.03){ M.textContent='Erg zacht. Zacht zingen mag, houd de telefoon dan iets dichterbij.'; M.className='msg warn'; } else { M.textContent='Luister even, dan ✓ Goed of opnieuw opnemen.'; M.className='msg'; }
 }
 async function play(){ if(!st.take) return; await audio(); const b=ctx.createBuffer(1,st.take.x.length,st.take.sr); b.copyToChannel(f32(st.take.x),0); const s=ctx.createBufferSource(); s.buffer=b; s.connect(ctx.destination); s.start(); }
 async function good(){ if(!st.take) return; st.take.ok=true; const k=key(st.tab,st.idx[st.tab]); await put(k,st.take); st.done[k]=1; store.set('done',st.done); const n=items().length; let j=st.idx[st.tab]+1; while(j<n&&st.done[key(st.tab,j)]) j++; if(j>=n){ j=0; while(j<n&&st.done[key(st.tab,j)]) j++; } if(j>=n){ $('#msg').textContent='🎉 Alles voor '+TABS.find(t=>t[0]===st.tab)[1]+' is klaar. Download de zip en stuur hem op.'; renderTabs(); return; } go(j); renderTabs(); }
@@ -272,7 +278,7 @@ async function download(){ const b=$('#dlBtn'); b.textContent='Bezig met inpakke
   const z=zip(files), a=document.createElement('a'); a.href=URL.createObjectURL(z); a.download='divine-voice-'+TABS.find(t=>t[0]===st.tab)[1].toLowerCase()+'.zip'; document.body.append(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000); render(); }
 
 $('#recBtn').onclick=record; $('#playBtn').onclick=play; $('#goodBtn').onclick=good; $('#prevBtn').onclick=()=>go(st.idx[st.tab]-1); $('#nextBtn').onclick=()=>go(st.idx[st.tab]+1);
-$('#lowBtn').onclick=()=>measure('low'); $('#highBtn').onclick=()=>measure('high'); $('#redoRange').onclick=()=>{ st.redo=true; render(); window.scrollTo(0,0); }; $('#dlBtn').onclick=download;
+$('#lowBtn').onclick=()=>measure('low'); $('#highBtn').onclick=()=>measure('high'); $('#redoRange').onclick=()=>{ st.redo=true; render(); window.scrollTo(0,0); }; $('#dlBtn').onclick=download; $('#mSilent').onclick=()=>{ if(st.rec) return; st.silent=true; store.set('silent',true); render(); }; $('#mPhones').onclick=()=>{ if(st.rec) return; st.silent=false; store.set('silent',false); render(); };
 render();
 </script>
 </body>
