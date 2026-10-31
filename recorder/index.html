@@ -104,7 +104,7 @@ canvas{width:100%;height:70px;display:block;background:#171826;border-radius:10p
   3. Zing bij elke knipper daarna één lettergreep, aan elkaar, op die ene toon.<br>
   4. Luister, dan ✓ Goed of opnieuw opnemen.<br>
   Alles blijft bewaard in deze telefoon, ook als je de pagina sluit.
-  <div class="row" style="margin-top:10px"><button class="btn" id="redoRange">Bereik opnieuw meten</button></div>
+  <div class="row" style="margin-top:10px"><button class="btn" id="redoRange">Bereik opnieuw meten</button><button class="btn" id="wipe" style="color:var(--bad)">🗑 Alles wissen</button></div>
 </section>
 </main>
 <div class="dl"><button class="btn" id="dlBtn">⬇ Download</button></div>
@@ -278,7 +278,11 @@ async function download(){ const b=$('#dlBtn'); b.textContent='Bezig met inpakke
   const z=zip(files), a=document.createElement('a'); a.href=URL.createObjectURL(z); a.download='divine-voice-'+TABS.find(t=>t[0]===st.tab)[1].toLowerCase()+'.zip'; document.body.append(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000); render(); }
 
 $('#recBtn').onclick=record; $('#playBtn').onclick=play; $('#goodBtn').onclick=good; $('#prevBtn').onclick=()=>go(st.idx[st.tab]-1); $('#nextBtn').onclick=()=>go(st.idx[st.tab]+1);
-$('#lowBtn').onclick=()=>measure('low'); $('#highBtn').onclick=()=>measure('high'); $('#redoRange').onclick=()=>{ st.redo=true; render(); window.scrollTo(0,0); }; $('#dlBtn').onclick=download; $('#mSilent').onclick=()=>{ if(st.rec) return; st.silent=true; store.set('silent',true); render(); }; $('#mPhones').onclick=()=>{ if(st.rec) return; st.silent=false; store.set('silent',false); render(); };
+$('#lowBtn').onclick=()=>measure('low'); $('#highBtn').onclick=()=>measure('high'); $('#redoRange').onclick=()=>{ st.redo=true; render(); window.scrollTo(0,0); }; $('#dlBtn').onclick=download;
+let wipeArm=0; $('#wipe').onclick=async()=>{ const b=$('#wipe'); if(st.rec) return; if(Date.now()-wipeArm>4000){ wipeArm=Date.now(); b.textContent='Zeker? Tik nog een keer'; setTimeout(()=>{ if(Date.now()-wipeArm>=4000) b.textContent='🗑 Alles wissen'; },4100); return; }
+  try{ const d=await db(); await new Promise((ok)=>{ const t=d.transaction('takes','readwrite'); t.objectStore('takes').clear(); t.oncomplete=ok; t.onerror=ok; }); }catch(e){}
+  for(const k of ['done','idx','range','notes','tab']) try{ localStorage.removeItem('dvr-'+k); }catch(e){}
+  st.done={}; st.idx={low:0,mid:0,high:0,free:0}; st.range=null; st.notes=null; st.tab='mid'; st.take=null; st.redo=false; b.textContent='🗑 Alles wissen'; render(); window.scrollTo(0,0); }; $('#mSilent').onclick=()=>{ if(st.rec) return; st.silent=true; store.set('silent',true); render(); }; $('#mPhones').onclick=()=>{ if(st.rec) return; st.silent=false; store.set('silent',false); render(); };
 render();
 </script>
 </body>
