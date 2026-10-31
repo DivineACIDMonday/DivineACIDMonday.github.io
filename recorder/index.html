@@ -222,7 +222,7 @@ function renderSetup(){ const show=!st.notes||st.redo; $('#setup').hidden=!show;
       const m=document.createElement('button'); m.textContent='−'; m.onclick=()=>{st.notes[k]--;store.set('notes',st.notes);renderSetup();preview(st.notes[k]);};
       const p=document.createElement('button'); p.textContent='+'; p.onclick=()=>{st.notes[k]++;store.set('notes',st.notes);renderSetup();preview(st.notes[k]);};
       d.append(m,' ',p); N.append(d); }
-    const go=document.createElement('button'); go.className='btn ok'; go.style.gridColumn='1/4'; go.textContent='✓ Klaar, ga opnemen'; go.onclick=()=>{st.redo=false;render();}; N.append(go); } }
+    const go=document.createElement('button'); go.className='btn ok'; go.style.cssText='grid-column:1/4;width:100%;height:auto;padding:14px;margin-top:4px'; go.textContent='✓ Klaar, ga opnemen'; go.onclick=()=>{st.redo=false;render();}; N.append(go); } }
 async function preview(m){ await audio(); tone(ctx.currentTime+0.05,0.8,m); }
 async function measure(which){ st.redo=true; try{ await audio(); }catch(e){ $('#rangeMsg').textContent='Geen toegang tot de microfoon. Sta het toe in je browser.'; return; }
   const b=which==='low'?$('#lowBtn'):$('#highBtn'), was=b.textContent; b.textContent='🎤 Zing nu… 3 sec'; b.disabled=true; chunks=[]; await wait(3); const x=join(chunks); chunks=null; b.textContent=was; b.disabled=false;
