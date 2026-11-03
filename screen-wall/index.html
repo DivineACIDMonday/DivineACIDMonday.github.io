@@ -85,10 +85,11 @@ function parse(url){
 }
 function src(t){
   const base='https://www.youtube-nocookie.com/embed/';
-  return t.list? base+'videoseries?list='+encodeURIComponent(t.list)+'&playsinline=1&rel=0'
-               : base+t.id+'?playsinline=1&rel=0';
+  const api='&playsinline=1&rel=0&enablejsapi=1&origin='+encodeURIComponent(location.origin);
+  return t.list? base+'videoseries?list='+encodeURIComponent(t.list)+api
+               : base+t.id+'?'+api.slice(1);
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(tiles.map(({el,...t})=>t)))}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(tiles.map(({el,fr,muted,vol,...t})=>t)))}catch(e){}}
 function bounds(){return {w:wall.clientWidth,h:wall.clientHeight}}
 function clamp(t){
   const b=bounds();
@@ -104,8 +105,9 @@ function build(t){
   <iframe allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
   <div class="shield"></div><div class="size" title="Drag to resize"></div>`;
   el.querySelector('.name').textContent=t.list?'Playlist':t.id;
-  el.querySelector('iframe').src=src(t);
-  el.querySelector('.x').onclick=e=>{e.stopPropagation();el.remove();tiles=tiles.filter(o=>o!==t);update();save()};
+  const fr=el.querySelector('iframe'); t.fr=fr; fr.src=src(t);
+  fr.addEventListener('load',()=>{try{fr.contentWindow.postMessage(JSON.stringify({event:'listening',id:1}),'*')}catch(e){}});
+  el.querySelector('.x').onclick=e=>{e.stopPropagation();removeTile(t)};
   drag(el.querySelector('.bar'),t,'move'); drag(el.querySelector('.size'),t,'size');
   el.addEventListener('pointerdown',()=>front(t));
   wall.appendChild(el); place(t);
@@ -138,6 +140,28 @@ function tidy(){
   const c=best.c, r=Math.ceil(n/c), w=(b.w-g*(c+1))/c, h=(b.h-g*(r+1))/r;
   tiles.forEach((t,i)=>{t.x=g+(i%c)*(w+g);t.y=g+Math.floor(i/c)*(h+g);t.w=w;t.h=h;place(t)});
   save();
+}
+/* YouTube shares mute and volume between its players. When one closes, the others can
+   pick up its sound setting. So we remember each screen's own sound and put it back. */
+let frozen=false;
+function cmd(t,func,args){try{t.fr.contentWindow.postMessage(JSON.stringify({event:'command',func,args:args||[]}),'*')}catch(e){}}
+addEventListener('message',e=>{
+  if(frozen||!/youtube/.test(e.origin))return;
+  let d; try{d=typeof e.data==='string'?JSON.parse(e.data):e.data}catch(x){return}
+  if(!d||d.event!=='infoDelivery'||!d.info)return;
+  const t=tiles.find(o=>o.fr&&o.fr.contentWindow===e.source); if(!t)return;
+  if('muted' in d.info)t.muted=d.info.muted;
+  if('volume' in d.info)t.vol=d.info.volume;
+});
+function removeTile(t){
+  const keep=tiles.filter(o=>o!==t).map(o=>({o,m:o.muted,v:o.vol}));
+  frozen=true; t.el.remove(); tiles=tiles.filter(o=>o!==t); update(); save();
+  const restore=()=>keep.forEach(({o,m,v})=>{
+    if(v!=null)cmd(o,'setVolume',[v]);
+    if(m!=null)cmd(o,m?'mute':'unMute');
+  });
+  [150,500,1200].forEach(ms=>setTimeout(restore,ms));
+  setTimeout(()=>{frozen=false},1500);
 }
 function update(){empty.hidden=tiles.length>0}
 
