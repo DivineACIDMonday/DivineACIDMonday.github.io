@@ -39,14 +39,16 @@ button:focus-visible{outline:2px solid var(--accent)}
 .bar:active{cursor:grabbing}
 .grip{color:var(--dim);font-size:16px;padding:0 4px}
 .name{flex:1;min-width:0;font-size:12px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.x{padding:2px 9px;font-size:15px;line-height:1.2;border-radius:6px}
 .x:hover{border-color:var(--danger);color:var(--danger)}
 .tile iframe{flex:1;width:100%;border:0;display:block}
 .shield{position:absolute;inset:0;display:none}
 body.moving .shield{display:block}
-.size{position:absolute;right:0;bottom:0;width:26px;height:26px;cursor:nwse-resize;touch-action:none;
-  background:linear-gradient(135deg,transparent 50%,var(--accent) 50%);opacity:.8;border-bottom-right-radius:9px}
-.size:hover{opacity:1}
+.tile{transition:left .35s ease,top .35s ease,width .35s ease,height .35s ease}
+body.moving .tile{transition:none}
+.b{padding:2px 9px;font-size:15px;line-height:1.2;border-radius:6px}
+.size{cursor:nwse-resize;touch-action:none}
+.star.on{background:var(--accent);color:#15101f;border-color:var(--accent)}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}}
 </style>
 </head>
 <body>
@@ -101,9 +103,11 @@ function front(t){t.z=++z;tiles.forEach(o=>o.el.classList.toggle('top',o===t));p
 
 function build(t){
   const el=document.createElement('div'); el.className='tile'; t.el=el;
-  el.innerHTML=`<div class="bar"><span class="grip">⠿</span><span class="name"></span><button class="x" type="button" title="Remove screen">✕</button></div>
+  el.innerHTML=`<div class="bar"><span class="grip">⠿</span><span class="name"></span><button class="b star" type="button" title="Show big in the middle">★</button><button class="b size" type="button" title="Drag to resize">⤡</button><button class="b x" type="button" title="Remove screen">✕</button></div>
   <iframe allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-  <div class="shield"></div><div class="size" title="Drag to resize"></div>`;
+  <div class="shield"></div>`;
+  const st=el.querySelector('.star'); st.classList.toggle('on',!!t.star);
+  st.onclick=e=>{e.stopPropagation();const on=!t.star;tiles.forEach(o=>{o.star=false;o.el.querySelector('.star').classList.remove('on')});t.star=on;st.classList.toggle('on',on);tidy()};
   el.querySelector('.name').textContent=t.list?'Playlist':t.id;
   const fr=el.querySelector('iframe'); t.fr=fr; fr.src=src(t);
   fr.addEventListener('load',()=>{try{fr.contentWindow.postMessage(JSON.stringify({event:'listening',id:1}),'*')}catch(e){}});
@@ -114,7 +118,7 @@ function build(t){
 }
 function drag(handle,t,mode){
   handle.addEventListener('pointerdown',e=>{
-    if(e.target.closest('.x'))return;
+    if(mode==='move'&&e.target.closest('button'))return;
     e.preventDefault(); front(t); handle.setPointerCapture(e.pointerId);
     document.body.classList.add('moving');
     const sx=e.clientX, sy=e.clientY, o={...t};
@@ -129,16 +133,22 @@ function drag(handle,t,mode){
     handle.addEventListener('pointercancel',up,{once:true});
   });
 }
-function tidy(){
-  const n=tiles.length; if(!n)return;
-  const b=bounds(), g=8; let best={c:1,s:0};
+function grid(list,X,Y,W,H){
+  const n=list.length; if(!n)return; const g=8; let best={c:1,s:0};
   for(let c=1;c<=n;c++){
-    const r=Math.ceil(n/c), w=(b.w-g*(c+1))/c, h=(b.h-g*(r+1))/r;
-    const vw=Math.min(w,(h-28)*16/9), s=vw*vw;  /* keep 16:9 video, pick biggest fit */
-    if(s>best.s)best={c,s};
+    const r=Math.ceil(n/c), w=(W-g*(c+1))/c, h=(H-g*(r+1))/r;
+    const vw=Math.max(0,Math.min(w,(h-28)*16/9)); if(vw*vw>best.s)best={c,s:vw*vw};
   }
-  const c=best.c, r=Math.ceil(n/c), w=(b.w-g*(c+1))/c, h=(b.h-g*(r+1))/r;
-  tiles.forEach((t,i)=>{t.x=g+(i%c)*(w+g);t.y=g+Math.floor(i/c)*(h+g);t.w=w;t.h=h;place(t)});
+  const c=best.c, r=Math.ceil(n/c), w=(W-g*(c+1))/c, h=(H-g*(r+1))/r;
+  list.forEach((t,i)=>{t.x=X+g+(i%c)*(w+g);t.y=Y+g+Math.floor(i/c)*(h+g);t.w=w;t.h=h;place(t)});
+}
+function tidy(){
+  const b=bounds(), big=tiles.find(t=>t.star), rest=tiles.filter(t=>t!==big), g=8;
+  if(!big){grid(tiles,0,0,b.w,b.h);save();return}
+  const topH=rest.length?Math.round(b.h*.7):b.h;
+  let w=b.w-g*2, h=topH-g*2; const fit=(h-28)*16/9; if(fit<w)w=Math.max(200,fit);
+  big.w=w; big.h=h; big.x=(b.w-w)/2; big.y=g; place(big); front(big);
+  grid(rest,0,topH-g,b.w,b.h-topH+g);
   save();
 }
 /* YouTube shares mute and volume between its players. When one closes, the others can
@@ -155,7 +165,7 @@ addEventListener('message',e=>{
 });
 function removeTile(t){
   const keep=tiles.filter(o=>o!==t).map(o=>({o,m:o.muted,v:o.vol}));
-  frozen=true; t.el.remove(); tiles=tiles.filter(o=>o!==t); update(); save();
+  frozen=true; t.el.remove(); const wasBig=t.star; tiles=tiles.filter(o=>o!==t); update(); if(wasBig)tidy(); else save();
   const restore=()=>keep.forEach(({o,m,v})=>{
     if(v!=null)cmd(o,'setVolume',[v]);
     if(m!=null)cmd(o,m?'mute':'unMute');
