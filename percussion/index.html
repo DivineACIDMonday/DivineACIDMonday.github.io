@@ -206,9 +206,9 @@ footer a{color:var(--acc)}
     minimal: { name: 'Minimal house', grid: 16, tempo: [112, 132], players: [
       { id: 'shaker', role: 'shake', prio: 0, map: { S: 'shk', s: 'shk' }, make: (r) => r.pick(['SsSsSsSsSsSsSsSs', 's.S.s.S.s.S.s.S.', 'S.sSS.sSS.sSS.sS', 'sSssSsssSssssSsS', 'sssSsssSsssSsssS']) },
       { id: 'conga', role: 'hand', prio: 1, map: { T: 'chi', t: 'chi', L: 'clo', l: 'clo', S: 'slap' }, make: (r) => r.pick(['..T...L...T.L.L.', '...T..L...T..L..', 'L..T..L...T.T...', '..t.S.t...t.T.L.', 'T..L..T.L..T..L.', cells(['..T.', 'L...', '.T.L', 'S..t', '..LL'], 4, r)]) },
-      { id: 'bongo', role: 'hand2', prio: 3, map: { H: 'bhi', h: 'bhi', O: 'blo' }, make: (r) => r.pick(['..H...H...H...H.', 'H.h.H.hhH.h.H.hh', '.h.O.h.H.h.O.hH.', estr(5, 16, r.int(16), 'h')]) },
+      { id: 'bongo', role: 'hand2', prio: 3, map: { H: 'bhi', h: 'bhi', O: 'blo' }, make: (r) => r.pick(['..H...H...H...H.', 'H.h.H.hhH.h.H.hh', '.h.O.h.H.h.O.hH.', estr(5, 16, r.int(16), 'h'), 'h..h..H..h..h.H.']) },
       { id: 'rim', role: 'timeline', prio: 2, map: { C: 'clave', c: 'clave' }, make: (r) => r.pick([estr(3, 16, r.int(16), 'c'), estr(5, 16, r.int(16), 'c'), 'C..C..C...C.....', '...C..C....C..C.']) },
-      { id: 'block', role: 'metal', prio: 4, map: { W: 'wood', w: 'wood' }, make: (r) => r.pick([estr(3, 16, r.int(16), 'w'), estr(7, 16, r.int(16), 'w'), '...W......W.....']) },
+      { id: 'block', role: 'metal', prio: 4, map: { W: 'wood', w: 'wood' }, make: (r) => r.pick([estr(3, 16, r.int(16), 'w'), estr(7, 16, r.int(16), 'w'), '...W......W.....', 'W..w..w..w..w..w', '..w..w..w..w..w.']) },
       { id: 'tamb', role: 'bell', prio: 5, map: { R: 'tamb', r: 'tamb' }, make: (r) => r.pick(['....R.......R...', '..R...R...R...R.', 'R.r.R.r.R.r.R.r.']) },
       { id: 'cowbell', role: 'bell2', prio: 6, wild: 0.4, map: { M: 'bell', m: 'bell2' }, make: (r) => r.pick(['...M..M...M..M..', 'M..m..M...m.....', estr(5, 16, r.int(16), 'm')]) } ] }
   };
@@ -280,7 +280,8 @@ footer a{color:var(--acc)}
       return { part, out }; } };
 
   // Afro-Cuban: everything follows the clave and its direction. Conga strokes: h heel, t toe, S slap, O open; the quinto improvises and calls (llamada).
-  T.afrocuban = { fixed: ['clave'], grid: 16, group: 4, players: [['clave', 'Clave'], ['palitos', 'Palitos (cascara)'], ['segundo', 'Segundo'], ['tumba', 'Tumba'], ['quinto', 'Quinto'], ['campana', 'Campana'], ['guiro', 'Guiro']],
+  // The 6/8 side (bembé, rumba columbia): the bell keeps the seven-stroke timeline, the drums feel four big beats of three, 3 against 2.
+  T.afrocuban = { fixed: ['clave', 'bell'], grid: 16, group: 4, players: [['clave', 'Clave'], ['bell', 'Bell (6/8)'], ['shekere', 'Chekeré'], ['palitos', 'Palitos (cascara)'], ['segundo', 'Segundo'], ['tumba', 'Tumba'], ['quinto', 'Quinto'], ['campana', 'Campana'], ['guiro', 'Guiro']],
     map: { x: 'clave', pi: 'wood', h: 'chi', t: 'chi', s: 'slap', o: 'chi', bo: 'clo', q: 'bhi', cam: 'bell', gu: 'shk' },
     pools: { clave: ['X . . X . . X . . . X . X . . .', 'X . . X . . . X . . X . X . . .'],
       palitos: ['Pi . Pi Pi . Pi . Pi Pi . Pi . Pi . Pi .', 'Pi . Pi . Pi Pi . Pi Pi . Pi . Pi Pi . Pi'],
@@ -288,10 +289,32 @@ footer a{color:var(--acc)}
       tumba: ['. . . . . . . . . . . . . . Bo Bo', '. . . . . . Bo . . . . . . . Bo .', '. . . . . . . . . . . . Bo . Bo Bo'],
       campana: ['Cam . . . Cam . . . Cam . . . Cam . . .', 'Cam . cam . Cam . cam . Cam . cam . Cam . cam .'],
       guiro: ['Gu . gu gu Gu . gu gu Gu . gu gu Gu . gu gu'] },
+    P16: null,
+    P12: { clave: ['X . X . X . . X . X . .', 'X . X . . X . X . X . .'],
+      bell: ['Cam . Cam . Cam Cam . Cam . Cam . Cam', 'Cam . Cam . Cam Cam . Cam . Cam . Cam'],
+      shekere: ['Gu . gu Gu . gu Gu . gu Gu . gu', 'Gu gu . Gu gu . Gu gu . Gu gu .', 'Gu . . gu . gu Gu . . gu . gu'],
+      palitos: ['Pi . Pi . Pi Pi . Pi . Pi . Pi', 'Pi Pi . Pi . Pi Pi Pi . Pi . Pi'],
+      segundo: ['h . t O . O h . t O . O', '. . O . . O . . O . . O', 'h t O . O . h t O . O .', 'S . . O O . S . . O O .', 'h . O h . O h . O h . O'],
+      tumba: ['. . . . . . . . . Bo . Bo', 'Bo . . . . Bo . . . Bo . .', '. . . Bo . . . . . Bo . .', 'Bo . . . . . Bo . . . . .'],
+      campana: ['Cam . . Cam . . Cam . . Cam . .', 'Cam . . . . . Cam . . . . .'], guiro: ['Gu . gu Gu . gu Gu . gu Gu . gu'] },
     cells: ['S . Q .', '. Q Q .', 'S S . Q', 'Q . . S', '. . S Q', 'S . S .', 'Q Q Q S', '. . . .'],
+    // in 6/8 the quinto thinks in threes, and now and then in twos across them
+    cells12: ['S . Q', 'Q Q S', '. S S', 'S . .', 'Q . S', 'S Q Q', '. . Q', 'S! . S'], cross12: ['S . . S . . S . . S . .', 'S . Q . S . Q . S . Q .', 'S! . S . S . S! . S . S .'],
+    call12: 'S! . S S! . S Q Q . S! . .',
     call: 'S! . S . Q Q . . S! . . Q . Q . .',
-    setup(c) { this.dir = c.R.chance(0.5) ? 32 : 23; },
-    bar(c) { const { r, prog, inten, lastBar, pick } = c, d = (ph) => this.dir === 23 ? rot8(ph) : ph; const out = [['clave', d(pick('clave')), 0.9]];
+    setup(c) { this.dir = c.R.chance(0.5) ? 32 : 23; if (!this.P16) this.P16 = this.pools; this.six = c.R.chance(0.42); this.kind = c.R.chance(0.5) ? 'bembé' : 'rumba columbia';
+      this.grid = this.six ? 12 : 16; this.group = this.six ? 3 : 4; this.pools = this.six ? this.P12 : this.P16; },
+    bar6(c) { const { r, prog, inten, lastBar, pick } = c, out = [], d = (ph) => { if (this.dir === 32) return ph; const a = toks(ph); return a.slice(6).concat(a.slice(0, 6)).join(' '); };
+      // the bell is the timeline, the clave sits in it; the chekeré and the drums walk in the big beats
+      out.push(['bell', pick('bell'), 0.75]); if (this.kind === 'rumba columbia' || inten > 0.5) out.push(['clave', d(pick('clave')), 0.8]);
+      if (inten > 0.3) out.push(['shekere', pick('shekere'), 0.55]); out.push(['segundo', pick('segundo'), 0.85]); if (inten > 0.4) out.push(['tumba', pick('tumba'), 0.95]);
+      const hot = inten > 0.6 && prog >= 0.4; let part = hot ? (this.kind === 'bembé' ? 'bembé · the quinto rides' : 'columbia · the quinto dances') : this.kind;
+      if (lastBar && !c.short) { out.push(['quinto', this.call12, 1.1]); part = 'llamada'; }
+      else if (hot || r.chance(0.2 + inten * 0.2)) { const two = hot && r.chance(0.3 + 0.3 * c.w); let ph = two ? r.pick(this.cross12) : [0, 1, 2, 3].map(() => r.pick(this.cells12)).join(' ');
+        out.push(['quinto', ph, hot ? 1.05 : 0.8]); if (two) part += ', in twos across the threes'; }
+      if (hot && this.kind === 'bembé') out.push(['campana', pick('campana'), 0.55]);
+      return { part: part + ' · 6/8, clave ' + (this.dir === 32 ? '3-2' : '2-3'), out }; },
+    bar(c) { if (this.six) return this.bar6(c); const { r, prog, inten, lastBar, pick } = c, d = (ph) => this.dir === 23 ? rot8(ph) : ph; const out = [['clave', d(pick('clave')), 0.9]];
       if (inten > 0.25) out.push(['palitos', d(pick('palitos')), 0.6]); out.push(['segundo', pick('segundo'), 0.85]); if (inten > 0.4) out.push(['tumba', pick('tumba'), 0.95]);
       const mont = inten > 0.6 && prog >= 0.4; let part = mont ? 'montuno' : 'canto';
       if (lastBar && !c.short) { out.push(['quinto', d(this.call), 1.1]); part = 'llamada'; }
@@ -305,10 +328,10 @@ footer a{color:var(--acc)}
     pools: { surdo1: ['tum . . . Bum . . . tum . . . Bum . . .', '. . . . Bum . . . . . . . Bum . . .'], surdo2: ['Dum . . . . . . . Dum . . . . . . .', 'Dum . . . . . . . Dum . . . . . Dum .'],
       surdo3: ['. . . . Cor . Cor . . . Cor . . Cor . .', '. . Cor . . . Cor Cor . . Cor . . . Cor .', 'Cor . . Cor . . Cor . . . Cor . Cor . . .', '. . . Cor . . Cor . . . . Cor . . Cor Cor', 'Cor . Cor . . . . Cor . . Cor . . . Cor .'],
       caixa: ['X x x X x x X x X x x X x x X x', 'X x X x x X x X X x X x x X x X', 'x x X x x x X x x x X x x x X x'],
-      tamborim: ['Tam . Tam . . Tam . Tam . Tam . . Tam . Tam .', 'Tam tam Tam tam Tam tam Tam tam Tam tam Tam tam Tam tam Tam tam', 'Tam . . Tam . . Tam . . . Tam . Tam . . .', 'Tam . Tam Tam . Tam . Tam Tam . Tam . Tam . Tam .', '. Tam . Tam . Tam Tam . . Tam . Tam Tam . Tam .', 'Tam . . Tam Tam . Tam . Tam . . Tam Tam . . .'],
+      tamborim: ['Tam . Tam . . Tam . Tam . Tam . . Tam . Tam .', 'Tam tam Tam tam Tam tam Tam tam Tam tam Tam tam Tam tam Tam tam', 'Tam . . Tam . . Tam . . . Tam . Tam . . .', 'Tam . Tam Tam . Tam . Tam Tam . Tam . Tam . Tam .', '. Tam . Tam . Tam Tam . . Tam . Tam Tam . Tam .', 'Tam . . Tam Tam . Tam . Tam . . Tam Tam . . .', 'Tam . . Tam . . Tam . . Tam . . Tam . . tam'],
       agogo: ['Ag . gg . Ag Ag . gg . Ag . gg . . . .', 'Ag . . gg Ag . gg . Ag . . gg Ag . gg .', 'gg Ag . Ag . gg Ag . . Ag . gg Ag . . .', 'Ag gg . Ag gg . Ag . gg . Ag gg . Ag . .'], ganza: ['Sh sh sh sh Sh sh sh sh Sh sh sh sh Sh sh sh sh', 'sh sh Sh sh sh sh Sh sh sh sh Sh sh sh sh Sh sh', 'Sh sh sh Sh sh sh Sh sh Sh sh sh Sh sh sh Sh sh'] },
     chamada: 'Rp! . Rp . Rp! . Rp . Rp! . Rp . Rp! Rp Rp Rp', apito: 'Api! . . . Api! . . . . . . . . . . .', parad: 'Rp! . . Rp! . . Rp! . . . Rp! . Rp! . . .',
-    bossas: ['Rp! . . Rp! . . Rp! . . . Rp! . Rp! . . .', 'Rp! . Rp! . . Rp! . Rp! . . Rp! . Rp! Rp! . .', 'Rp! . . . Rp! . . . Rp! . Rp! . Rp! . . .', '. . Rp! . . Rp! . . Rp! . . . Rp! Rp! Rp! .'],
+    bossas: ['Rp! . . Rp! . . Rp! . . . Rp! . Rp! . . .', 'Rp! . Rp! . . Rp! . Rp! . . Rp! . Rp! Rp! . .', 'Rp! . . . Rp! . . . Rp! . Rp! . Rp! . . .', '. . Rp! . . Rp! . . Rp! . . . Rp! Rp! Rp! .', 'Rp! . . Rp! . . Rp! . . Rp! . . Rp! . . Rp!', 'Rp! . . Rp! . . Rp! . Rp! . . Rp! . . Rp! .'],
     setup(c) { this.order = null; this.parad = c.R.pick(this.bossas); this.chamada = c.R.pick(['Rp! . Rp . Rp! . Rp . Rp! . Rp . Rp! Rp Rp Rp', 'Rp! Rp . Rp Rp! . Rp . Rp! Rp . Rp Rp! Rp Rp Rp', 'Rp! . . Rp Rp! . . Rp Rp! . Rp . Rp! Rp Rp Rp']); },
     bar(c) { const { r, inten, firstBar, lastBar, pick, pb, nPat } = c, out = [];
       if (firstBar && c.si === 0) { out.push(['apito', this.apito, 1]); out.push(['repinique', this.chamada, 1.1]); return { part: 'chamada', out }; }
@@ -333,7 +356,9 @@ footer a{color:var(--acc)}
       // each darbuka player has their own soft ka strokes in the gaps of the cycle
       let part = name + ' · plain', d = toks(base).map((t, i) => t === '.' && this.gh.includes(i) ? 'ka' : t).join(' ');
       if (inten < 0.45 && !lastBar) { const h = c.pb % 2; d = toks(base).slice(h * 8, h * 8 + 8).map((t) => t + ' .').join(' '); part = name + ' · slow, over 2 bars'; }
-      if (lastBar && !c.short) { d = this.closing; part = 'closing phrase'; } else if (inten > 0.5 && prog >= 0.3) { d = this.adorn(base, r, 0.25 + 0.5 * w + 0.2 * prog); part = name + ' · zakhrafa (ornament)'; }
+      if (lastBar && !c.short) { d = this.closing; part = 'closing phrase'; } else if (inten > 0.5 && prog >= 0.3) { d = this.adorn(base, r, 0.25 + 0.5 * w + 0.2 * prog); part = name + ' · zakhrafa (ornament)';
+        // now and then the player groups the strokes in threes across the cycle and lands back on its Dum
+        if (c.pb % 4 === 2 && r.chance(0.3 + 0.3 * w)) { d = r.pick(['Dum tek ka Dum tek ka Dum tek ka Dum tek ka Dum . Tek .', 'Tek ka ka Tek ka ka Tek ka ka Tek ka ka Dum . Tek .', 'Dum . tek Dum . tek Dum . tek Dum . tek Dum . Tek ka']); part = name + ' · zakhrafa in threes'; } }
       out.push(['darbuka', d, 1]);
       if (inten > 0.3) { const q = toks(this.riq); out.push(['riq', toks(base).map((t, i) => t !== '.' ? 'Sh' : q[i % q.length] === '.' ? '.' : 'sh').join(' '), 0.6]); }
       if (inten > 0.45) out.push(['bendir', toks(base).map((t, i) => /dum/i.test(t) && (this.bd !== 'half' || i < 8) ? 'Bd' : this.bd === 'dum+' && /tek/i.test(t) ? 'bd' : '.').join(' '), 0.9]);
@@ -370,6 +395,8 @@ footer a{color:var(--acc)}
         const h = this.k.split(' '), a = h.slice(0, 4).join(' '), b = h.slice(4).join(' ');
         const palta = [this.k + ' ' + this.k, a + ' ' + a + ' ' + a + ' ' + b, b + ' ' + a + ' ' + a + ' ' + b, a + ' ' + b + ' ' + b + ' ' + b][Math.floor(c.pb / cyc.length) % 4];
         if (w > 0.7 && v === cyc.length - 1 && r.chance(0.5)) { ph = this.rela; part = 'rela'; } else { ph = !ek && v === 2 ? this.khali(palta) : palta; part = 'kaida'; }
+        // a chhand in threes: three bols at a time across the four beats, home again on the last
+        if (part === 'kaida' && v === 1 && r.chance(0.25 + 0.3 * w)) { const t3 = h.slice(0, 3); ph = [0, 1, 2, 3, 4].map(() => t3.join(' ')).join(' ') + ' Dha'; part = 'kaida · chhand in threes'; }
       } else { ph = this.spread(cyc[v]); part = slow ? 'keherwa' : ek ? 'ektaal' : 'theka'; }
       // drut, dugun: in the full parts the theka now and then runs at double speed, two bols to a beat
       if (!slow && !ek && inten > 0.8 && part === 'kaida' && c.pb % 8 >= 6 && r.chance(0.6)) { const all = this.theka.join(' ').split(' '), half = (c.pb % 2) * 8; ph = all.slice(half, half + 8).map((b) => b + ' .').join(' '); part = 'drut · theka in dugun'; }
@@ -397,7 +424,7 @@ footer a{color:var(--acc)}
     bar4(r, dense) { const k = (i) => i === 0 ? 'open' : r.chance(dense) ? 'mid' : r.chance(0.5) ? 'rest' : 'mid'; return [0, 1, 2, 3].map((i) => this.cell(k(i), r)).join(' '); },
     // an accent grid: soft taps all through, an accent every n strokes, so the accent walks across the bar
     accGrid(n, start, len) { const o = []; for (let i = 0; i < len; i++) o.push(((start + i) % n === 0) ? (i % 2 ? 'L!' : 'R!') : (i % 2 ? 'l' : 'r')); return o.join(' '); },
-    setup(c) { const R = c.R; this.grid = R.chance(0.35) ? 12 : 16; this.group = this.grid === 12 ? 3 : 4; this.sec = {}; this.cyc = R.pick([3, 5, 6, 7]); },
+    setup(c) { const R = c.R; this.grid = R.chance(0.45) ? 12 : 16; this.group = this.grid === 12 ? 3 : 4; this.sec = {}; this.cyc = R.pick([3, 5, 6, 7]); },
     plan(c) { // the phrases of one part, made once: motif A, echo A', turn B, ending E
       if (this.sec[c.si]) return this.sec[c.si]; const r = c.r, G = this.grid, beats = 4, dense = 0.35 + 0.4 * c.w;
       const A = this.bar4(r, dense), B = this.bar4(r, dense + 0.15), A2 = toks(A).slice(0, 2 * G / 4).concat(toks(this.cell('mid', r) + ' ' + this.cell('roll', r))).join(' ');
@@ -439,18 +466,19 @@ footer a{color:var(--acc)}
       out.push(['snare', sn, gain * (feat ? 1.05 : 1)]);
       // tenors: they answer in bars 2 and 4, and double the snare accents on their low drums in bars 1 and 3
       const acc = toks(sn).map((t, i) => /!/.test(t) ? (i % G === 0 ? 'T4' : r.pick(['T3', 'T4', 'T2'])) : '.').join(' ');
-      if (inten > 0.45) out.push(['tenors', (inPh % 2 === 1 || feat) ? p.ten : acc, gain * 0.95]);
+      // in 6/8 the tenors sometimes sweep in twos across the threes
+      const two = G === 12 && feat && inPh === 2 && r.chance(0.5); if (inten > 0.45) out.push(['tenors', two ? r.pick(['T1 . T2 . T3 . T4 . T3 . T2 .', 'T4 . T3 . T4 . T2 . T1 . T1 .']) : (inPh % 2 === 1 || feat) ? p.ten : acc, gain * 0.95]);
       // bass line: the melody, a run at the end of the phrase, unison with the tutti
       out.push(['bassline', slot === 'E' ? p.run : p.bass, gain]);
       if (inten > 0.55) out.push(['cymbals', inPh === 0 ? (G === 16 ? 'Cy . . . . . . . sz . . . sz . . .' : 'Cy . . . . . sz . . sz . .') : slot === 'E' ? (G === 16 ? '. . . . . . . . . . . . Cy . ch .' : '. . . . . . . . . Cy . ch') : (G === 16 ? '. . . . sz . . . . . . . sz . . .' : '. . . sz . . . . . sz . .'), 0.6 * gain]);
       const nm = { A: 'the motif', A2: 'its echo', B: 'the turn', G: 'accent every ' + this.cyc, E: 'the ending, rolling on' }[slot];
-      return { part: (feat ? 'drum feature' : 'cadence') + ' · bar ' + (inPh + 1) + ' of 4: ' + nm + (G === 12 ? ' · in 6/8' : ''), out }; } };
+      return { part: (feat ? 'drum feature' : 'cadence') + ' · bar ' + (inPh + 1) + ' of 4: ' + nm + (two ? ', tenors in twos across' : '') + (G === 12 ? ' · in 6/8' : ''), out }; } };
 
   // Shamanic: one steady pulse of about four to seven strokes a second, a rattle with it. At the end of the journey the callback:
   // four rounds of seven strong strokes, a fast roll, one last stroke.
   T.shamanic = { grid: 16, group: 4, players: [['frame', 'Frame drum'], ['rattle', 'Rattle'], ['drum2', 'Second drum'], ['bells', 'Bells']],
     map: { dum: 'drum', ra: 'shk', lo: 'clo', zi: 'bell' },
-    setup(c) { const R = c.R; this.acc = R.pick([3, 5, 6, 7, 9]); this.rat = R.pick(['Ra ra', 'Ra ra ra ra', 'Ra . ra .', 'Ra ra ra .']); this.d2 = R.pick(['. . Lo . . . Lo .', 'Lo . . . . . . .', '. Lo . Lo . . . .', 'Lo . . Lo . . Lo .']); this.hb = R.pick(['Dum . dum . . . . . Dum . dum . . . . .', 'Dum . . dum . . . . Dum . . dum . . . .', 'Dum dum . . . . . . Dum dum . . . . . .']); },
+    setup(c) { const R = c.R; this.acc = R.pick([3, 5, 6, 7, 9]); this.rat = R.pick(['Ra ra', 'Ra ra ra ra', 'Ra . ra .', 'Ra ra ra .']); this.d2 = R.pick(['. . Lo . . . Lo .', 'Lo . . . . . . .', '. Lo . Lo . . . .', 'Lo . . Lo . . Lo .']); this.wave = R.chance(0.6); this.hb = R.pick(['Dum . dum . . . . . Dum . dum . . . . .', 'Dum . . dum . . . . Dum . . dum . . . .', 'Dum dum . . . . . . Dum dum . . . . . .']); },
     bar(c) { const { bpm, inten, prog, w, pb, nPat, lastSec, firstBar } = c, out = [];
       // one pulse; the accent walks in its own cycle over it (every 3, 4, 5, 6 or 8 strokes), so the drum breathes
       const sub = bpm * 2 / 60 >= 3.8 && bpm * 2 / 60 <= 7.5 ? 2 : bpm * 4 / 60 <= 7.5 ? 1 : 4, k0 = (c.bar0 + pb) * (16 / sub);
@@ -463,6 +491,8 @@ footer a{color:var(--acc)}
       if (inten > 0.7 && pb % 8 === 7 && c.r.chance(0.45 + 0.35 * w)) { out.push(['frame', 'Dum dum Dum dum Dum dum Dum dum Dum dum Dum dum Dum! Dum! Dum! Dum!', 1.05]); out.push(['rattle', 'Ra ra Ra ra Ra ra Ra ra Ra ra Ra ra Ra ra Ra ra', 0.6]); return { part: 'storm · fast drumming', out }; }
       out.push(['frame', pulse, 0.95]); out.push(['rattle', rat, 0.45]);
       if (inten > 0.6 && w > 0.35) out.push(['drum2', this.d2 + ' ' + this.d2, 0.6]);
+      // the wave: the second drum walks in threes over the pulse in twos, so the trance rocks
+      else if (inten > 0.45 && this.wave && Math.floor(pb / 4) % 2 === 1) { const k = (c.bar0 + pb) * 16; out.push(['drum2', Array.from({ length: 16 }, (_, i) => (k + i) % 6 === 0 ? 'Lo' : (k + i) % 6 === 3 ? 'lo' : '.').join(' '), 0.55]); return { part: 'journey · the wave, three across two', out }; }
       if (prog > 0.5 && pb % 4 === 0) out.push(['bells', 'Zi . . . . . . . . . . . . . . .', 0.5]);
       return { part: 'journey · ' + (sub === 2 ? 'eighths' : sub === 1 ? 'sixteenths' : 'quarters') + ', ' + (bpm * 4 / 60 / sub).toFixed(1) + ' strokes a second', out }; } };
 
@@ -845,7 +875,7 @@ const LABELS = {
 const vname = (v) => (LABELS[st.style] || {})[v] || P.VOICES[v].name;
 const NOTES = {
   westafrica: ['West Africa · djembe and dundun', 'From the Mande drum ensembles. The djembe speaks in three sounds: <b>Gun</b> (bass, centre), <b>Go</b> (tone, edge) and <b>Pa</b> (slap). Three dunduns, <b>dundunba</b>, <b>sangban</b> and <b>kenkeni</b>, play a melody together, held by a <b>bell</b>. Felt in 12/8: three against two is the heart. The <b>lead djembe</b> plays the <b>call</b> that brings everyone in and out, solos over the ensemble and lifts it in the <b>echauffement</b>, the heating up before the end.'],
-  afrocuban: ['Afro-Cuban · rumba and son', 'Everything follows the <b>clave</b> and its direction, <b>3-2</b> or <b>2-3</b>: the palitos (cascara) turn with it. The conga strokes are <b>h</b> heel, <b>t</b> toe, <b>S</b> slap and <b>O</b> open. <b>Segundo</b> and <b>tumba</b> hold the tumbao, the <b>quinto</b> improvises and calls the changes with a <b>llamada</b>. A part moves from the calm <b>canto</b> to the hot <b>montuno</b>.'],
+  afrocuban: ['Afro-Cuban · rumba and son', 'Everything follows the <b>clave</b> and its direction, <b>3-2</b> or <b>2-3</b>: the palitos (cascara) turn with it. The conga strokes are <b>h</b> heel, <b>t</b> toe, <b>S</b> slap and <b>O</b> open. <b>Segundo</b> and <b>tumba</b> hold the tumbao, the <b>quinto</b> improvises and calls the changes with a <b>llamada</b>. A part moves from the calm <b>canto</b> to the hot <b>montuno</b>. Sometimes the song plays the <b>6/8 side</b>, <b>bembé</b> or <b>rumba columbia</b>: the <b>bell</b> keeps a seven-stroke timeline, the drums feel four big beats of three, and the quinto now and then plays in twos across them. That is <b>3 against 2</b>, the same feeling that makes West Africa roll.'],
   brazil: ['Brazil · samba bateria', 'Three <b>surdos</b> talk to each other: <b>marcação</b> on the second beat, <b>resposta</b> answering on the first, <b>corte</b> cutting between. <b>Caixa</b>, <b>tamborim</b>, <b>ganzá</b> and <b>agogô</b> fill the sixteenths. The <b>repinique</b> plays the <b>chamada</b>, the call, and the <b>apito</b> whistle signals the <b>paradinha</b>, the break where the bateria stops and comes back as one.'],
   mideast: ['Middle East · iqa\'at', 'Rhythmic cycles, each with a name: <b>maqsum</b>, <b>baladi</b>, <b>saidi</b>, <b>malfuf</b>, <b>ayoub</b>. They are spoken in <b>Dum</b> (low centre), <b>Tek</b> (high edge) and <b>ka</b> (the soft other hand). Here each part of your song gets its own cycle. The darbuka plays it plain first, then ornaments it (<b>zakhrafa</b>), and ends with a closing phrase. <b>Riq</b>, <b>bendir</b> and <b>zills</b> follow.'],
   india: ['India · tabla', 'The tabla speaks in <b>bols</b>: Dha, Dhin, Ta, Tin, Na, Ge, Ke. <b>Teentaal</b> is a cycle of 16 matras; one matra is one beat here, so a cycle lasts four bars: <b>sam</b> (X) is the first beat, <b>khali</b> (0) the ninth, where the bass falls silent. Quieter parts play <b>keherwa</b>, 8 matras. A <b>kaida</b> develops a theme, and every part ends with a <b>tihai</b>: one phrase three times that lands exactly on sam, the first beat of the next part.'],
