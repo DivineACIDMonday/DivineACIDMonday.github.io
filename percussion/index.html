@@ -759,6 +759,19 @@ const NOTES = {
   shamanic: ['Shamanic · frame drum journey', 'One steady pulse of about <b>four to seven strokes a second</b>, a rattle with it: the drumming used in many cultures to carry a journey. It opens with a <b>heartbeat</b>, holds the pulse without showing off, and ends with the <b>callback</b>: rounds of seven strong strokes, a fast roll, one last stroke. The motor picks the pulse that fits your tempo.'],
   minimal: ['Minimal house', 'A modern club tradition: shaker, conga and rim figures that repeat with small changes, made to lock with a four on the floor kick.']
 };
+// the parts of a piece in the words of each tradition (with your own beat loaded, the beat's names stay)
+const PARTS = {
+  taiko: { intro: 'Jo', verse: 'Ha', build: 'Ha', drop: 'Kyū', chorus: 'Kyū', break: 'Ma', outro: 'Owari' },
+  westafrica: { intro: 'Call', verse: 'Ensemble', build: 'Ensemble', drop: 'Solo', chorus: 'Solo', break: 'Break', outro: 'Call · end' },
+  afrocuban: { intro: 'Diana', verse: 'Canto', build: 'Canto', drop: 'Montuno', chorus: 'Montuno', break: 'Canto', outro: 'Final' },
+  brazil: { intro: 'Chamada', verse: 'Batucada', build: 'Batucada', drop: 'Batucada forte', chorus: 'Batucada forte', break: 'Paradinha', outro: 'Final' },
+  india: { intro: 'Keherwa', verse: 'Madhya laya', build: 'Madhya laya', drop: 'Drut laya', chorus: 'Drut laya', break: 'Vilambit', outro: 'Keherwa' },
+  shamanic: { intro: 'Heartbeat', verse: 'Journey', build: 'Journey', drop: 'Deep journey', chorus: 'Deep journey', break: 'Journey', outro: 'Callback' },
+  zen: { intro: 'Stillness', verse: 'Breath', build: 'Breath', drop: 'Breath', chorus: 'Breath', break: 'Ma', outro: 'Silence' }
+};
+function partName(s, startBar) { if (st.beat) return s.type;
+  if (st.style === 'mideast' && st.res.words) { const w = st.res.words.find((x) => x.bar === startBar); if (w) { const n = w.part.split(' · ')[0]; return n === 'closing phrase' ? s.type : n[0].toUpperCase() + n.slice(1); } }
+  return (PARTS[st.style] || {})[s.type] || s.type; }
 function speak() { const S = $('#speak'); S.innerHTML = ''; if (!st.res.words) return; const bar = Math.floor(now() / st.res.barSec), w = st.res.words.find((x) => x.bar === bar);
   if (!w) return; const row = (k, v) => { const d = document.createElement('div'); d.innerHTML = '<span>' + k + '</span>' + v; S.append(d); };
   if (w.lines) { row('This bar', '<i>' + w.part + '</i>'); for (const [n, t] of w.lines) row(n, t); return; }
@@ -769,7 +782,7 @@ function render() {
   const S = $('#styles'); S.innerHTML = ''; for (const k of P.ORDER) { const b = document.createElement('button'); b.textContent = P.STYLES[k].name; b.setAttribute('aria-pressed', k === st.style); b.onclick = () => { st.style = k; store.set('style', k); st.mutes = {}; if (!st.beat) native(); regen(true); slotInfo(); }; S.append(b); }
   const tf = st.res.tf; $('#tfInfo').textContent = tf === 0.5 ? 'Plays in half time at this tempo.' : tf === 2 ? 'Plays in double time at this tempo.' : '';
   const secs = parseStruct(st.struct), tot = secs.reduce((a, s) => a + s.bars, 0), SC = $('#secs'); SC.querySelectorAll('button').forEach((b) => b.remove()); let b0 = 0;
-  secs.forEach((s) => { const b = document.createElement('button'); b.style.flex = s.bars + ' 1 0'; b.style.background = SEC_COL[s.type] || '#ccc'; b.textContent = s.type + ' ' + s.bars; b.title = s.type + ', ' + s.bars + ' bars'; const at = b0 * st.res.barSec; b.onclick = () => { start(at); }; SC.append(b); b0 += s.bars; });
+  secs.forEach((s) => { const b = document.createElement('button'); b.style.flex = s.bars + ' 1 0'; b.style.background = SEC_COL[s.type] || '#ccc'; b.textContent = partName(s, b0) + ' ' + s.bars; b.title = s.type + ', ' + s.bars + ' bars'; const at = b0 * st.res.barSec; b.onclick = () => { start(at); }; SC.append(b); b0 += s.bars; });
   const PL = $('#players'); PL.innerHTML = ''; for (const p of st.res.players.concat(st.res.players.length && !st.res.words ? [{ id: 'poly3', role: 'poly', voices: [] }] : [])) { const b = document.createElement('button'); const PAL = ['#E0705A', '#E9C46A', '#E39B4C', '#8FD18B', '#7FC8E8', '#A79BF0', '#E88FC8', '#9FE8D8', '#C88FE8']; const col = p.name ? PAL[st.res.players.indexOf(p) % PAL.length] : p.voices.length ? P.VOICES[p.voices[0]].col : '#888'; b.innerHTML = '<i style="background:' + col + '"></i>' + (p.name ? p.name : p.id === 'poly3' ? 'Polyrhythm' : st.res.words ? ({ odaiko: 'Odaiko', shime: 'Shime', don: 'Nagado', okedo: 'Okedo', kane: 'Atarigane', kake: 'Kakegoe' })[p.id] : p.id[0].toUpperCase() + p.id.slice(1)); b.setAttribute('aria-pressed', !st.mutes[p.id]); b.onclick = () => { st.mutes[p.id] = !st.mutes[p.id]; regen(true); }; PL.append(b); }
   drawLanes(); drawPos();
 }
@@ -781,7 +794,7 @@ function drawLanes() { const L = $('#lanes'), bar = Math.floor(now() / st.res.ba
     for (let s = 0; s < (st.res.tf === 1 ? st.res.grid : 16); s++) { const i = document.createElement('i'); const vel = used[v][s]; if (vel) { i.style.background = P.VOICES[v].col; i.style.opacity = 0.35 + vel / 127 * 0.65; } c.append(i); } row.append(nm, c); L.append(row); }
   if (!vs.length) L.innerHTML = '<div class="small">This bar is quiet.</div>'; lastBar = bar; speak(); }
 function drawPos() { const t = now(), bar = Math.floor(t / st.res.barSec), secs = parseStruct(st.struct), tot = secs.reduce((a, s) => a + s.bars, 0);
-  let b0 = 0, name = ''; for (const s of secs) { if (bar < b0 + s.bars) { name = s.type + ' · bar ' + (bar - b0 + 1) + ' of ' + s.bars; break; } b0 += s.bars; }
+  let b0 = 0, name = ''; for (const s of secs) { if (bar < b0 + s.bars) { name = partName(s, b0) + ' · bar ' + (bar - b0 + 1) + ' of ' + s.bars; break; } b0 += s.bars; }
   $('#pos').textContent = name || 'End'; $('#ph').style.left = 'calc(' + Math.min(100, 100 * t / Math.max(0.01, st.res.totalSec)) + '% - 1px)';
   if (bar !== lastBar) drawLanes(); const step = Math.floor((t / st.res.barSec - bar) * (st.res.tf === 1 ? st.res.grid : 16)); document.querySelectorAll('.cells').forEach((c) => [...c.children].forEach((i, k) => i.classList.toggle('now', AU.playing && k === step))); }
 
