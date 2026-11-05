@@ -468,8 +468,10 @@ footer a{color:var(--acc)}
         const lastBar = pb === nPat - 1, kime = lastBar && nPat >= 2 && !(last && nPat >= 4);
         // oroshi: a roll that speeds up, to open the piece and to close it
         if ((si === 0 && pb === 0 && nPat >= 4) || (last && lastBar && nPat >= 4)) {
-          const n = 10 + Math.round(10 * w); let t = 0; const out = si === 0 && pb === 0;
-          for (let k = 0; k < n; k++) { const f = k / (n - 1), pos = out ? 1 - Math.pow(1 - f, 1.8) : Math.pow(f, 1.8); put(t0 + pos * patSec * 0.94, 'odaiko', 54 + 60 * (out ? 1 - f * 0.4 : f)); }
+          // every oroshi is its own: how many strokes, how fast it speeds up, odaiko alone or answered by the nagado
+          const n = 8 + r.int(8) + Math.round(8 * w), cv = 1.4 + r() * 1.2, duo = r.chance(0.5), out = si === 0 && pb === 0;
+          for (let k = 0; k < n; k++) { const f = k / (n - 1), pos = out ? 1 - Math.pow(1 - f, cv) : Math.pow(f, cv), v = duo && k % 2 ? 'don' : 'odaiko'; put(t0 + pos * patSec * 0.94, v, 54 + 60 * (out ? 1 - f * 0.4 : f)); }
+          if (r.chance(0.4)) put(t0 + patSec * 0.75, 'ka', 90);
           line.odaiko = 'oroshi'; if (!out) { put(t0 + patSec * 0.97, 'kake', 110); line.kake = 'ha!'; } txt.push(line); continue; }
         // odaiko: the heartbeat of the earth, sparse in jo, every bar later
         const od = part === 'jo' ? (pb % 2 === 0 ? 'DON su su su' : 'su su su su') : part === 'ha' ? (inten > 0.5 ? 'DON su su DON' : 'DON su su su') : 'DON su DON su';
