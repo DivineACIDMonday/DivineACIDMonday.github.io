@@ -324,15 +324,15 @@ function parseStruct(s) { const out = []; for (const part of s.split(/[,;\n]+/))
 function readMidi(buf) { const d = new DataView(buf); let p = 0; const str = (n) => { let s = ''; for (let i = 0; i < n; i++) s += String.fromCharCode(d.getUint8(p + i)); p += n; return s; };
   const u32 = () => { const v = d.getUint32(p); p += 4; return v; }, u16 = () => { const v = d.getUint16(p); p += 2; return v; }, vlq = () => { let v = 0, b; do { b = d.getUint8(p++); v = (v << 7) | (b & 127); } while (b & 128); return v; };
   if (str(4) !== 'MThd') throw new Error('not a MIDI file'); const hl = u32(); u16(); const nt = u16(), div = u16(); p = 8 + hl; if (div & 0x8000) throw new Error('SMPTE timing');
-  const notes = []; let tempo = null, ts = [4, 4];
+  const notes = [], marks = []; let tempo = null, ts = [4, 4];
   for (let k = 0; k < nt && p < d.byteLength; k++) { if (str(4) !== 'MTrk') break; const len = u32(), end = p + len; let t = 0, rs = 0;
     while (p < end) { t += vlq(); let s = d.getUint8(p); if (s & 128) p++; else s = rs;
-      if (s === 0xFF) { const ty = d.getUint8(p++), l = vlq(); if (ty === 0x51 && tempo == null) tempo = (d.getUint8(p) << 16) | (d.getUint8(p + 1) << 8) | d.getUint8(p + 2); if (ty === 0x58) ts = [d.getUint8(p), 2 ** d.getUint8(p + 1)]; p += l; continue; }
+      if (s === 0xFF) { const ty = d.getUint8(p++), l = vlq(); if (ty === 0x51 && tempo == null) tempo = (d.getUint8(p) << 16) | (d.getUint8(p + 1) << 8) | d.getUint8(p + 2); if (ty === 0x58) ts = [d.getUint8(p), 2 ** d.getUint8(p + 1)]; if (ty === 0x06 && l) { let tx = ''; for (let i = 0; i < l; i++) tx += String.fromCharCode(d.getUint8(p + i)); marks.push({ tick: t, text: tx }); } p += l; continue; }
       if (s === 0xF0 || s === 0xF7) { p += vlq(); continue; }
       rs = s; const hi = s & 0xF0; if (hi === 0xC0 || hi === 0xD0) { p += 1; continue; } const a = d.getUint8(p), b = d.getUint8(p + 1); p += 2;
       if (hi === 0x90 && b > 0) notes.push({ tick: t, note: a, vel: b }); }
     p = end; }
-  return { ppq: div, notes, bpm: tempo ? Math.round(60000000 / tempo) : null, ts }; }
+  return { ppq: div, notes, marks, bpm: tempo ? Math.round(60000000 / tempo) : null, ts }; }
 const KICKS = [35, 36], SNARES = [37, 38, 39, 40], HATS = [42, 44, 46, 49, 51];
 function analyse(m) {
   const barT = m.ppq * 4 * m.ts[0] / m.ts[1], nBars = Math.max(1, Math.ceil((Math.max(0, ...m.notes.map((n) => n.tick)) + 1) / barT));
@@ -345,12 +345,16 @@ function analyse(m) {
   const mx = Math.max(...blk, 1e-9), lvl = blk.map((v) => v < 0.42 * mx ? 0 : v < 0.78 * mx ? 1 : 2);
   const segs = []; lvl.forEach((l, i) => { const n = Math.min(4, nBars - i * 4); if (segs.length && segs[segs.length - 1].l === l) segs[segs.length - 1].bars += n; else segs.push({ l, bars: n }); });
   const sec = segs.map((s, i) => ({ bars: s.bars, type: s.l === 2 ? 'drop' : s.l === 1 ? (segs[i + 1] && segs[i + 1].l === 2 ? 'build' : 'verse') : i === 0 ? 'intro' : i === segs.length - 1 ? 'outro' : 'break' }));
+  // markers in the file (Intro 1, Drop 2 ...) win over the guess
+  const mk = (m.marks || []).filter((x) => x.tick < nBars * barT).sort((a, b) => a.tick - b.tick);
+  if (mk.length >= 2) { const ms = mk.map((x, i) => { const end = i + 1 < mk.length ? mk[i + 1].tick : nBars * barT, w = x.text.trim().toLowerCase().match(/[a-z]+/); return { type: (w && TYPES.find((t) => t.startsWith(w[0].slice(0, 4)))) || 'verse', bars: Math.max(1, Math.round((end - x.tick) / barT)) }; });
+    if (mk[0].tick >= barT) ms.unshift({ type: 'intro', bars: Math.round(mk[0].tick / barT) }); return { bars, beatNotes, nBars, sections: ms, fromMarkers: true }; }
   return { bars, beatNotes, nBars, sections: sec };
 }
 async function loadFile(f) { try { const m = readMidi(await f.arrayBuffer()); if (!m.notes.length) throw new Error('no notes'); const a = analyse(m);
-    st.beat = a; if (m.bpm) { st.bpm = m.bpm; $('#bpm').value = m.bpm; store.set('bpm', m.bpm); }
+    a.name = f.name.replace(/\.(mid|midi)$/i, ''); st.beat = a; if (m.bpm) { st.bpm = m.bpm; $('#bpm').value = m.bpm; store.set('bpm', m.bpm); }
     st.struct = a.sections.map((s) => s.type + ' ' + s.bars).join(', '); $('#struct').value = st.struct; store.set('struct', st.struct);
-    $('#beatInfo').innerHTML = '<b>' + f.name.replace(/</g, '') + '</b>: ' + a.nBars + ' bars' + (m.bpm ? ' at ' + m.bpm + ' bpm' : '') + ', ' + a.sections.length + ' sections found. The band plays around your kick and snare.';
+    $('#beatInfo').innerHTML = '<b>' + f.name.replace(/</g, '') + '</b>: ' + a.nBars + ' bars' + (m.bpm ? ' at ' + m.bpm + ' bpm' : '') + ', ' + a.sections.length + ' sections ' + (a.fromMarkers ? 'from the markers in your file' : 'found') + '. The band plays around your kick and snare.';
     $('#withBeatL').hidden = false; regen(true); toast('Beat loaded: ' + a.sections.length + ' sections.'); }
   catch (e) { toast('Could not read that MIDI file (' + e.message + ').'); } }
 
@@ -426,13 +430,23 @@ function midiOut() { const res = st.res, PPQ = 480, spq = 60 / st.bpm, vlq = (n)
     for (const m of msgs) { bytes = bytes.concat(vlq(m[0] - last), [m[1], m[2], m[3]]); last = m[0]; } tracks.push(trk(bytes.concat([0, 0xFF, 0x2F, 0]))); }
   const head = [0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 1, (tracks.length >> 8) & 255, tracks.length & 255, (PPQ >> 8) & 255, PPQ & 255];
   return new Blob([new Uint8Array(head.concat(...tracks))], { type: 'audio/midi' }); }
-function fileName(ext) { return ('Divine Percussion ' + P.STYLES[st.style].name + ' ' + st.bpm + 'bpm' + (ext === 'mid' && st.target !== 'gm' ? ' ' + TARGETS[st.target].name : '') + '.' + ext).replace(/\s+/g, ' '); }
+const TAGS = { xo: 'XLNXO', beatmaker: 'Beatmaker3', tekno: 'Tekno', impact: 'ImpactXT', vdrummer: 'VirtualDrummer', gm: 'GM' };
+function fileName(ext) {
+  if (st.beat && st.beat.name) { const sty = P.STYLES[st.style].name.replace(/[^A-Za-z]/g, ''); let n = st.beat.name, tag = ext === 'mid' ? TAGS[st.target] : 'Audio';
+    n = /beat/i.test(n) ? n.replace(/beat/i, 'Percussion_' + sty) : n + '_Percussion_' + sty;
+    const has = Object.values(TAGS).find((t) => n.toLowerCase().includes(t.toLowerCase())); n = has ? n.replace(new RegExp(has, 'i'), tag) : n + '_' + tag;
+    return n + '.' + ext; } return ('Divine Percussion ' + P.STYLES[st.style].name + ' ' + st.bpm + 'bpm' + (ext === 'mid' && st.target !== 'gm' ? ' ' + TARGETS[st.target].name : '') + '.' + ext).replace(/\s+/g, ' '); }
 function save(blob, nm) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nm; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); count('download/' + nm.split('.').pop()); }
-async function wavOut() { const sr = 44100, len = Math.ceil((st.res.totalSec + 1.2) * sr), oc = new OfflineAudioContext(2, len, sr), out = oc.createGain(); out.gain.value = 0.5; const c = oc.createDynamicsCompressor(); c.threshold.value = -10; out.connect(c); c.connect(oc.destination);
-  for (const e of st.res.events) P.play(oc, out, e.v, e.t + 0.02, e.vel); const buf = await oc.startRendering(), L = buf.getChannelData(0), R = buf.getChannelData(1), n = L.length; let pk = 1e-9; for (let i = 0; i < n; i++) pk = Math.max(pk, Math.abs(L[i]), Math.abs(R[i])); const gn = 0.89 / pk; for (let i = 0; i < n; i++) { L[i] *= gn; R[i] *= gn; }
+async function wavOut() { const sr = 44100, n = Math.ceil((st.res.totalSec + 1.2) * sr), L = new Float32Array(n), R = new Float32Array(n), smp = {};
+  // each instrument rendered once, then laid down at every hit: fast even for long songs
+  for (const v of Object.keys(P.VOICES)) { const oc = new OfflineAudioContext(1, Math.round(sr * 0.7), sr); P.play(oc, oc.destination, v, 0, 127); smp[v] = (await oc.startRendering()).getChannelData(0); }
+  const pan = { drum: 0, clo: -0.25, chi: 0.25, slap: 0.15, bhi: 0.4, blo: -0.4, shk: 0.55, tamb: -0.55, bell: 0.35, bell2: -0.35, clave: 0.5, wood: -0.5 };
+  for (const e of st.res.events) { const x = smp[e.v], o = Math.round((e.t + 0.02) * sr), g = Math.pow(e.vel / 127, 1.5) / Math.pow(1, 1.5), pp = pan[e.v] || 0, gl = g * Math.cos((pp + 1) * Math.PI / 4), gr = g * Math.sin((pp + 1) * Math.PI / 4);
+    for (let i = 0, m = Math.min(x.length, n - o); i < m; i++) { L[o + i] += x[i] * gl; R[o + i] += x[i] * gr; } }
+  let pk = 1e-9; for (let i = 0; i < n; i++) pk = Math.max(pk, Math.abs(L[i]), Math.abs(R[i])); const gn = 0.89 / pk;
   const b = new ArrayBuffer(44 + n * 4), v = new DataView(b), w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
   w(0, 'RIFF'); v.setUint32(4, 36 + n * 4, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 2, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 4, true); v.setUint16(32, 4, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 4, true);
-  for (let i = 0; i < n; i++) { v.setInt16(44 + i * 4, Math.max(-1, Math.min(1, L[i])) * 32767, true); v.setInt16(46 + i * 4, Math.max(-1, Math.min(1, R[i])) * 32767, true); }
+  for (let i = 0; i < n; i++) { v.setInt16(44 + i * 4, Math.max(-1, Math.min(1, L[i] * gn)) * 32767, true); v.setInt16(46 + i * 4, Math.max(-1, Math.min(1, R[i] * gn)) * 32767, true); }
   return new Blob([b], { type: 'audio/wav' }); }
 
 /* ---------- wiring ---------- */
