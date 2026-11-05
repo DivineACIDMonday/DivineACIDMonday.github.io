@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Divine Percussion Motor</title>
+<meta name="description" content="A percussion band that plays over any beat: West Africa, Afro-Cuban, Brazil, Middle East, India, Japanese zen, Shamanic and Minimal house. Load your beat as MIDI, it takes over the structure. Export MIDI and WAV. No AI. By Divine Monday.">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Divine Monday"><meta property="og:title" content="Divine Percussion Motor">
+<meta property="og:description" content="A percussion band that plays over any beat, from zen to shamanic. Load your beat MIDI, take MIDI and WAV home. No AI.">
+<meta property="og:url" content="https://divineacidmonday.github.io/percussion/">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230E0F16'/%3E%3Cellipse cx='32' cy='22' rx='18' ry='7' fill='none' stroke='%23F0C25A' stroke-width='4'/%3E%3Cpath d='M14 22v18c0 4 8 8 18 8s18-4 18-8V22' fill='none' stroke='%23F0C25A' stroke-width='4'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#12131B;--card:#1C1E2A;--card2:#242737;--line:#33364A;--ink:#F3F1EA;--soft:#A9A8B8;--acc:#F0C25A;--hot:#E0705A}
+@media (prefers-color-scheme: light){:root:not([data-theme=dark]){--bg:#F4F2EC;--card:#FFFFFF;--card2:#F0EDE4;--line:#E2DED2;--ink:#1E1D2B;--soft:#666275;--acc:#B8860B;--hot:#C7503A}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+[hidden]{display:none!important}
+main{max-width:1100px;margin:0 auto;padding:16px 16px 60px}
+header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:4px 0 14px}
+h1{font-size:24px;margin:0}h1 b{color:var(--acc)}
+.sub{color:var(--soft);font-size:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+.lab{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-bottom:8px;font-weight:700}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;color:inherit}
+.btn{padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card2);font-weight:700}
+.btn.main{background:var(--acc);color:#14151E;border-color:var(--acc)}
+.btn:disabled{opacity:.4;cursor:default}
+.drop{display:block;border:2px dashed var(--line);border-radius:14px;padding:16px;text-align:center;color:var(--soft);cursor:pointer}
+.drop.on{border-color:var(--acc);color:var(--ink)}
+.drop b{color:var(--ink)}
+input[type=text],input[type=number]{font:inherit;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+input[type=text]{width:100%}
+.styles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+@media(max-width:520px){.styles{grid-template-columns:repeat(2,1fr)}}
+.styles button{padding:10px 6px;border-radius:12px;border:1px solid var(--line);background:var(--card2);font-weight:700;font-size:14px}
+.styles button[aria-pressed=true]{background:var(--acc);color:#14151E;border-color:var(--acc)}
+.slider{display:grid;grid-template-columns:90px 1fr 90px;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--soft)}
+.slider span:last-child{text-align:right}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.players{display:flex;gap:6px;flex-wrap:wrap}
+.players button{padding:7px 11px;border-radius:999px;border:1px solid var(--line);background:var(--card2);font-size:13px;font-weight:700;display:flex;gap:6px;align-items:center}
+.players button i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.players button[aria-pressed=false]{opacity:.38;text-decoration:line-through}
+.secs{display:flex;gap:3px;height:46px;margin:6px 0 4px;position:relative}
+.secs button{border:0;border-radius:8px;font-size:12px;font-weight:700;color:#14151E;overflow:hidden;white-space:nowrap;padding:0 4px;min-width:0}
+.ph{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--ink);border-radius:2px;pointer-events:none;left:0}
+.lanes{display:grid;gap:4px;margin-top:10px}
+.lane{display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:center;font-size:12px;color:var(--soft)}
+.cells{display:grid;gap:2px}
+.cells i{height:16px;border-radius:4px;background:var(--card2)}
+.cells i.now{outline:2px solid var(--ink)}
+.transport{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.play{width:56px;height:56px;border-radius:50%;border:0;background:var(--acc);color:#14151E;font-size:22px;font-weight:800}
+.pos{color:var(--soft);font-size:14px;min-width:140px}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:92vw}
+.toast.on{opacity:1}
+footer{color:var(--soft);font-size:13px;margin-top:20px;line-height:1.6}
+footer a{color:var(--acc)}
+.small{font-size:13px;color:var(--soft)}
+</style>
+</head>
+<body>
+<main>
+<header><h1>Divine <b>Percussion</b> Motor</h1><span class="sub">A percussion band for any beat. Rules, no AI.</span></header>
+
+<div class="grid2">
+  <section class="card">
+    <div class="lab">1 · Your beat</div>
+    <label class="drop" id="drop"><input type="file" id="file" accept=".mid,.midi,audio/midi" hidden><b>Drop your beat MIDI here</b><br><span class="small">or tap to choose. It reads the tempo, the bars and where the beat gets full or empty.</span></label>
+    <p class="small" id="beatInfo">No beat loaded: the band plays on its own.</p>
+    <div class="row" style="margin-top:8px"><label class="small">Tempo <input type="number" id="bpm" min="40" max="220" value="124" style="width:80px"> bpm</label></div>
+    <div style="margin-top:10px"><div class="small" style="margin-bottom:4px">Structure (type and bars, change it as you like)</div><input type="text" id="struct" value="intro 8, verse 16, build 8, drop 32, break 8, drop 32, outro 8"></div>
+  </section>
+  <section class="card">
+    <div class="lab">2 · The band</div>
+    <div class="styles" id="styles"></div>
+    <div class="slider"><span>🧘 Zen</span><input type="range" id="wild" min="0" max="100" value="50" aria-label="From zen to shamanic"><span>Shamanic 🔥</span></div>
+    <div class="slider"><span>Straight</span><input type="range" id="swing" min="0" max="100" value="20" aria-label="Swing"><span>Swing</span></div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="dice">⚄ Other players</button><span class="small" id="tfInfo"></span></div>
+  </section>
+</div>
+
+<section class="card">
+  <div class="lab">3 · Listen</div>
+  <div class="transport">
+    <button class="play" id="play" aria-label="Play">▶</button>
+    <span class="pos" id="pos">Bar 1</span>
+    <label class="small" id="withBeatL" hidden><input type="checkbox" id="withBeat" checked> with my beat</label>
+    <span style="flex:1"></span>
+    <button class="btn" id="dlMidi">⬇ MIDI</button><button class="btn main" id="dlWav">⬇ WAV</button>
+  </div>
+  <div class="secs" id="secs"><div class="ph" id="ph"></div></div>
+  <div class="small">Tap a section to play from there.</div>
+  <div class="lab" style="margin-top:14px">Players · tap to mute</div>
+  <div class="players" id="players"></div>
+  <div class="lanes" id="lanes"></div>
+</section>
+
+<footer>
+  How it works: every style is a set of traditional timelines (bell patterns, clave, maqsum, theka) and figures for each player. The motor combines them, lets a fourth bar answer the first three, adds and removes players every eight bars, slides a polyrhythm in halfway long sections and rolls into each new section. Fast tempos make slow styles play in half time, and the other way around.<br>
+  Everything runs in your browser. No cookies, only an anonymous visit counter (GoatCounter, no personal data); your MIDI never leaves this device.<br>
+  Also by Divine Monday: <a href="../">the Divine Music Suite</a> · © 2026 Divine Monday
+</footer>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+/* PERC ENGINE START
+   Divine Percussion Motor: traditional timelines and figures, rules only, no AI.
+   A song is { bpm, sections:[{type,bars}], style, seed, wild 0..1, swing 0..1, mutes:{}, beat:{bars:[{k:[steps],s:[steps]}]} }
+   generate(song) gives events { t seconds, v voice id, vel 1..127 } for the whole song. */
+(function (root) {
+  'use strict';
+  // ---------- voices: name, General MIDI note, colour ----------
+  const VOICES = {
+    drum: { name: 'Big drum', gm: 41, col: '#E0705A' }, clo: { name: 'Low conga', gm: 64, col: '#E39B4C' }, chi: { name: 'High conga', gm: 63, col: '#E9C46A' },
+    slap: { name: 'Slap', gm: 62, col: '#F2E0A0' }, bhi: { name: 'Bongo high', gm: 60, col: '#8FD18B' }, blo: { name: 'Bongo low', gm: 61, col: '#5BB38A' },
+    shk: { name: 'Shaker', gm: 70, col: '#7FC8E8' }, bell: { name: 'Bell', gm: 67, col: '#A79BF0' }, bell2: { name: 'Low bell', gm: 68, col: '#8A7BE0' },
+    clave: { name: 'Clave', gm: 75, col: '#E88FC8' }, wood: { name: 'Woodblock', gm: 76, col: '#C88FE8' }, tamb: { name: 'Tambourine', gm: 54, col: '#9FE8D8' }
+  };
+  // ---------- random ----------
+  function rng(seed) { let a = (seed >>> 0) || 1; const f = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    f.int = (n) => Math.floor(f() * n); f.pick = (a) => a[Math.floor(f() * a.length)]; f.chance = (p) => f() < p; return f; }
+  const hash = (...xs) => { let h = 2166136261; for (const x of xs) { const s = String(x); for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } } return h >>> 0; };
+  const euclid = (k, n, rot) => { const o = []; for (let i = 0; i < n; i++) if (((i + rot) * k) % n < k) o.push(i); return o; };
+  const estr = (k, n, rot, ch) => { const e = euclid(k, n, rot); let s = ''; for (let i = 0; i < n; i++) s += e.includes(i) ? (i === e[0] ? ch.toUpperCase() : ch) : '.'; return s; };
+  const rot = (s, k) => { k = ((k % s.length) + s.length) % s.length; return s.slice(k) + s.slice(0, k); };
+  // three step cells for 12/8 hand drums, four step cells for 16ths: figures are cells glued together, ABAB, AABA or ABAC
+  const cells = (pool, n, r) => { const A = r.pick(pool), B = r.pick(pool), C = r.pick(pool); const form = r.pick(['ABAB', 'AABA', 'ABAC', 'AAAB', 'ABBA']); let s = ''; for (const c of form.slice(0, n)) s += c === 'A' ? A : c === 'B' ? B : C; return s; };
+
+  /* ---------- styles ----------
+     each player: { id, role, map: letter -> voice or [voices], prio (lower joins first), wild (needs at least this wildness), make(r) -> figure string }
+     uppercase letter = full stroke, lowercase = soft stroke, '.' = rest */
+  const STYLES = {
+    westafrica: { name: 'West Africa', grid: 12, tempo: [90, 145], players: [
+      { id: 'bell', role: 'timeline', prio: 0, map: { B: 'bell', b: 'bell' }, make: (r) => rot(r.pick(['B.B.BB.B.B.B', 'B.B.BB.B.B.B', 'B..B..B..B..', 'B.B.B..B.B..', 'B.BB.B.BB.B.']), r.pick([0, 0, 0, 7, 5])) },
+      { id: 'dundun', role: 'low', prio: 1, map: { D: 'drum', d: 'drum', K: 'bell2', k: 'bell2' }, make: (r) => r.pick(['D.....D..D..', 'D..D..D.....', 'D.....DD....', 'D..D.D..D...', 'D.k..kD.k..k', 'D.k.D.k.k...', '..D..D.....D']) },
+      { id: 'sangban', role: 'mid', prio: 3, map: { L: 'clo', l: 'clo' }, make: (r) => r.pick(['...L..L..L..', 'L..L.....L.L', '.L..L..L..L.', 'L.....L.lL..', '..lL....lL..', 'L..l..L..l.l']) },
+      { id: 'djembe1', role: 'hand', prio: 2, map: { B: 'clo', T: 'chi', t: 'chi', S: 'slap', s: 'slap' }, make: (r) => cells(['B.T', 'S.T', 'TS.', 'S.S', 'T.T', '.TT', 'B..', 'S..', '.ST', 'T.S', 'SsT', 'B.s', 'TtS'], 4, r) },
+      { id: 'djembe2', role: 'hand2', prio: 4, map: { H: 'bhi', h: 'bhi', O: 'blo', o: 'blo' }, make: (r) => cells(['H.h', '.HH', 'O.H', 'H..', '.hO', 'HhH', 'O..', '.H.', 'h.O'], 4, r) },
+      { id: 'shekere', role: 'shake', prio: 2, map: { S: 'shk', s: 'shk' }, make: (r) => r.pick(['S.sS.sS.sS.s', 'SssSssSssSss', '..S..S..S..S', 'S.sS.s.sSS.s', 's.Ss.Ss.Ss.S']) },
+      { id: 'kpanlogo', role: 'poly', prio: 6, wild: 0.35, map: { W: 'wood', w: 'wood' }, make: (r) => r.pick(['W...W...W...', 'W..W..W..W..', estr(5, 12, r.int(12), 'w'), estr(7, 12, r.int(12), 'w')]) } ] },
+    afrocuban: { name: 'Afro-Cuban', grid: 16, tempo: [88, 135], players: [
+      { id: 'clave', role: 'timeline', prio: 0, map: { C: 'clave' }, make: (r) => r.pick(['C..C..C...C.C...', 'C..C...C..C.C...', '..C.C...C..C..C.', '..C.C...C..C...C', 'C..C..C...C..C..']) },
+      { id: 'tumbao', role: 'hand', prio: 1, map: { l: 'clo', L: 'clo', t: 'chi', T: 'chi', S: 'slap' }, make: (r) => r.pick(['l.t.S.t.l.t.T.T.', 'l.t.S.t.l.t.T.L.', 'l.t.S.tTl.t.T.L.', '..t.S.t...t.S.TT', 'l.t.S.t.l.TTS.L.', 'l.t.S.L.l.t.TTL.', 'l.tTS.t.l.tTS.LL']) },
+      { id: 'martillo', role: 'hand2', prio: 2, map: { H: 'bhi', h: 'bhi', O: 'blo', o: 'blo' }, make: (r) => r.pick(['H.h.O.h.H.h.O.h.', 'HhhhOhhhHhhhOhhh', 'H.hhO.h.H.hhO.hh', 'h.H.h.O.h.H.h.OO', 'H.h.O.hHH.h.O.hO']) },
+      { id: 'cascara', role: 'metal', prio: 3, map: { W: 'wood', w: 'wood' }, make: (r) => r.pick(['W.WW.WW.W.WW.W.W', 'W.W.WW.WW.W.WW.W', 'W...W...W...W...', 'W.w.W.w.W.w.W.w.', 'W.Ww.W.wW.Ww.W.w']) },
+      { id: 'campana', role: 'bell', prio: 4, map: { M: 'bell', m: 'bell2' }, make: (r) => r.pick(['M...M...M...M...', 'M.m.M.m.M.m.M.m.', 'M..mM.m.M..mM.m.', 'M.mmM.m.M.mmM.mm']) },
+      { id: 'guiro', role: 'shake', prio: 2, map: { S: 'shk', s: 'shk' }, make: (r) => r.pick(['S.ssS.ssS.ssS.ss', 'S.s.S.s.S.s.S.s.', 'SsssSsssSsssSsss', 's.S.s.S.s.S.s.S.']) },
+      { id: 'bombo', role: 'low', prio: 5, map: { D: 'drum' }, make: (r) => r.pick(['......D.........', '......D.....D...', '...D......D.....', 'D.........D.....']) } ] },
+    brazil: { name: 'Brazil', grid: 16, tempo: [90, 135], players: [
+      { id: 'surdo', role: 'low', prio: 0, map: { D: 'drum', d: 'drum' }, make: (r) => r.pick(['....d.......D...', 'd...D...d...D...', '....D.......D..D', 'd.....d.D.......', '....d...d...D.D.']) },
+      { id: 'ganza', role: 'shake', prio: 1, map: { S: 'shk', s: 'shk' }, make: (r) => r.pick(['SsssSsssSsssSsss', 'sSs.sSs.sSs.sSs.', 'SssSSssSSssSSssS', 'sSssSsssSsssSssS']) },
+      { id: 'tamborim', role: 'hand', prio: 2, map: { H: 'bhi', h: 'bhi' }, make: (r) => r.pick(['H.H..H.H.H..H.H.', 'H.HH.H.H.HH.H.H.', 'H..H..H...H..H..', estr(9, 16, r.int(16), 'h'), 'H.h.HH.h.H.hHH.h']) },
+      { id: 'agogo', role: 'bell', prio: 3, map: { A: 'bell', a: 'bell2' }, make: (r) => r.pick(['A.a.AA.a.A.a.a..', 'A..aA.a.A..aA.a.', 'aA.A.aA.A.a.A..A', 'A.aaA.a.A.aaA.a.', 'AA.aA.a.AA.aA.a.']) },
+      { id: 'caixa', role: 'metal', prio: 4, map: { T: 'tamb', t: 'tamb' }, make: (r) => r.pick(['TttTttTtTttTttTt', 'T.tTt.tTT.tTt.tT', 'TtttTtttTtttTttt', 't.Tt.tT.t.Tt.tTt']) },
+      { id: 'repique', role: 'hand2', prio: 5, wild: 0.3, map: { L: 'clo', l: 'clo', T: 'chi', S: 'slap' }, make: (r) => cells(['L.T.', 'S.l.', 'T.TL', 'l.S.', '..TT', 'S.SL'], 4, r) } ] },
+    mideast: { name: 'Middle East', grid: 16, tempo: [75, 135], players: [
+      { id: 'darbuka', role: 'timeline', prio: 0, map: { D: 'clo', T: 'slap', k: 'bhi', K: 'bhi' }, make: (r) => r.pick(['D.T...T.D...T...', 'D.D...T.D...T...', 'D.T...D.D...T...', 'D.....T.....T...', 'D...k.T.D...k.T.', 'D.TkT.TkD.TkT.Tk']) },
+      { id: 'ka', role: 'hand2', prio: 2, map: { k: 'bhi', K: 'bhi', t: 'blo' }, make: (r) => r.pick(['..k.k...k.k.k.k.', '.kk.kk.k.kk.kk.k', 'k.kt.k.kk.kt.k.k', estr(7, 16, r.int(16), 'k')]) },
+      { id: 'riq', role: 'metal', prio: 1, map: { R: 'tamb', r: 'tamb' }, make: (r) => r.pick(['R.r.R.r.R.r.R.r.', 'R.rrR.r.R.rrR.r.', 'RrrrRrrrRrrrRrrr', '..R...R...R...R.']) },
+      { id: 'bendir', role: 'low', prio: 3, map: { F: 'drum', f: 'drum' }, make: (r) => r.pick(['F.......F.......', 'F.....F...F.....', 'F..f..F.F..f....', 'F.......f.f.....']) },
+      { id: 'zills', role: 'bell', prio: 4, map: { Z: 'bell', z: 'bell' }, make: (r) => r.pick(['..Z...Z...Z...Z.', 'Z...Z...Z...Z...', 'Z.z.Z.z.Z.z.Z.z.', 'Z..zZ.z.Z..zZ.z.']) },
+      { id: 'clap', role: 'hand', prio: 5, wild: 0.4, map: { W: 'wood' }, make: (r) => r.pick(['....W.......W...', '..W..W....W..W..', 'W..W..W...W.....']) } ] },
+    india: { name: 'India', grid: 16, tempo: [60, 125], players: [
+      { id: 'tabla', role: 'timeline', prio: 0, map: { A: ['clo', 'bhi'], N: ['clo', 'blo'], t: 'bhi', T: 'bhi', g: 'clo', n: 'blo', k: 'slap' }, make: (r) => r.pick(['ANNAANNAAtttTNNA', 'AgntnkNnAgntnkNn', 'AgNnAgNnAgNntkNn', 'A.NAA.NAAt.tT.NA', 'AgtkNnAgtkNnAgNn']) },
+      { id: 'kaida', role: 'hand2', prio: 2, map: { t: 'bhi', k: 'slap', T: 'bhi', g: 'clo' }, make: (r) => cells(['tktk', 'T.tk', 'g.tk', 'tk.T', 'T.T.', 'gtkt'], 4, r) },
+      { id: 'manjira', role: 'bell', prio: 1, map: { Z: 'bell', z: 'bell' }, make: (r) => r.pick(['..Z...Z...Z...Z.', 'Z.....Z.Z.....Z.', 'Z...z...Z...z...', 'Z.z.Z.z.Z.z.Z.z.']) },
+      { id: 'dholak', role: 'low', prio: 3, map: { D: 'drum', d: 'drum', L: 'clo' }, make: (r) => r.pick(['D..L..D...L.D...', 'D.....d.D...L...', 'D..d..L.D..d..L.', 'D.......D..L....']) },
+      { id: 'ghungroo', role: 'shake', prio: 4, map: { S: 'shk', s: 'shk' }, make: (r) => r.pick(['S.s.S.s.S.s.S.s.', 'SsssSsssSsssSsss', '..S...S...S...S.']) } ] },
+    zen: { name: 'Japanese zen', grid: 16, tempo: [50, 105], zen: true, players: [
+      { id: 'odaiko', role: 'low', prio: 0, map: { D: 'drum', d: 'drum' }, make: (r) => r.pick(['D...............', 'D.......D.......', 'D.....D.........', 'D..........D....', 'D.......d.D.....']) },
+      { id: 'hyoshigi', role: 'timeline', prio: 1, map: { W: 'wood' }, make: (r) => r.pick(['W.......W.......', '........W.....W.', 'W..W............', '....W...........']) },
+      { id: 'kane', role: 'bell', prio: 2, map: { Z: 'bell', z: 'bell2' }, make: (r) => r.pick(['....Z.......Z...', 'Z.z...Z.z...Z...', '..........Z.....', 'Z...z...Z...z...']) },
+      { id: 'shime', role: 'hand', prio: 3, wild: 0.25, map: { S: 'slap', s: 'slap' }, make: (r) => r.pick(['S...S...S...S...', 'S.sSS.sSS.sSS.sS', 'S..sS..sS..sS..s', 'S.S.S.S.S.S.S.S.']) },
+      { id: 'chudaiko', role: 'mid', prio: 4, wild: 0.4, map: { L: 'clo', l: 'clo' }, make: (r) => r.pick(['L..L..L.L.......', 'L.....L.....L.l.', '..L...L...L.L.L.']) } ] },
+    shamanic: { name: 'Shamanic', grid: 16, tempo: [95, 190], climb: true, players: [
+      { id: 'frame', role: 'low', prio: 0, map: { D: 'drum', d: 'drum' }, make: (r) => r.pick(['D.d.....D.d.....', 'D...D...D...D...', 'D.D.D.D.D.D.D.D.', 'D.d.D.d.D.d.D.d.', 'D..dD..dD..dD..d']) },
+      { id: 'rattle', role: 'shake', prio: 1, map: { S: 'shk', s: 'shk' }, make: (r) => r.pick(['SsSsSsSsSsSsSsSs', 'S.s.S.s.S.s.S.s.', 'S..sS..sS..sS..s', 'SssSssSssSssSsss']) },
+      { id: 'drum2', role: 'mid', prio: 2, map: { L: 'clo', l: 'clo' }, make: (r) => r.pick(['..L...L...L...L.', 'L..L..L..L..L.L.', '.l.L.l.L.l.L.l.L', estr(5, 16, r.int(16), 'l')]) },
+      { id: 'bells', role: 'bell', prio: 3, map: { Z: 'bell', z: 'bell' }, make: (r) => r.pick(['Z.......z.......', '..z...z...z...z.', 'Z.....z...Z.....']) },
+      { id: 'sticks', role: 'hand', prio: 4, wild: 0.45, map: { W: 'wood', w: 'wood' }, make: (r) => r.pick(['W..W..W...W..W..', 'W.w.W.w.W.w.W.w.', estr(7, 16, r.int(16), 'w')]) },
+      { id: 'hands', role: 'hand2', prio: 5, wild: 0.6, map: { H: 'bhi', h: 'bhi', S: 'slap' }, make: (r) => cells(['H.h.', 'S.hh', 'hhS.', 'H.S.', 'hHhS'], 4, r) } ] },
+    minimal: { name: 'Minimal house', grid: 16, tempo: [112, 132], players: [
+      { id: 'shaker', role: 'shake', prio: 0, map: { S: 'shk', s: 'shk' }, make: (r) => r.pick(['SsSsSsSsSsSsSsSs', 's.S.s.S.s.S.s.S.', 'S.sSS.sSS.sSS.sS', 'sSssSsssSssssSsS', 'sssSsssSsssSsssS']) },
+      { id: 'conga', role: 'hand', prio: 1, map: { T: 'chi', t: 'chi', L: 'clo', l: 'clo', S: 'slap' }, make: (r) => r.pick(['..T...L...T.L.L.', '...T..L...T..L..', 'L..T..L...T.T...', '..t.S.t...t.T.L.', 'T..L..T.L..T..L.', cells(['..T.', 'L...', '.T.L', 'S..t', '..LL'], 4, r)]) },
+      { id: 'bongo', role: 'hand2', prio: 3, map: { H: 'bhi', h: 'bhi', O: 'blo' }, make: (r) => r.pick(['..H...H...H...H.', 'H.h.H.hhH.h.H.hh', '.h.O.h.H.h.O.hH.', estr(5, 16, r.int(16), 'h')]) },
+      { id: 'rim', role: 'timeline', prio: 2, map: { C: 'clave', c: 'clave' }, make: (r) => r.pick([estr(3, 16, r.int(16), 'c'), estr(5, 16, r.int(16), 'c'), 'C..C..C...C.....', '...C..C....C..C.']) },
+      { id: 'block', role: 'metal', prio: 4, map: { W: 'wood', w: 'wood' }, make: (r) => r.pick([estr(3, 16, r.int(16), 'w'), estr(7, 16, r.int(16), 'w'), '...W......W.....']) },
+      { id: 'tamb', role: 'bell', prio: 5, map: { R: 'tamb', r: 'tamb' }, make: (r) => r.pick(['....R.......R...', '..R...R...R...R.', 'R.r.R.r.R.r.R.r.']) },
+      { id: 'cowbell', role: 'bell2', prio: 6, wild: 0.4, map: { M: 'bell', m: 'bell2' }, make: (r) => r.pick(['...M..M...M..M..', 'M..m..M...m.....', estr(5, 16, r.int(16), 'm')]) } ] }
+  };
+  const ORDER = ['westafrica', 'afrocuban', 'brazil', 'mideast', 'india', 'zen', 'shamanic', 'minimal'];
+  const INTENS = { intro: 0.3, verse: 0.55, prechorus: 0.65, build: 0.6, chorus: 0.95, drop: 1, break: 0.25, bridge: 0.45, outro: 0.35, fill: 0.7, solo: 0.8 };
+
+  // parse a figure into strokes { s step (may be fractional), voices, soft }
+  function strokes(fig, map) { const o = []; for (let i = 0; i < fig.length; i++) { const c = fig[i]; if (c === '.' || !map[c] && !map[c.toUpperCase()]) continue; const v = map[c] || map[c.toUpperCase()]; o.push({ s: i, v: Array.isArray(v) ? v : [v], soft: c !== c.toUpperCase() }); } return o; }
+  // a small change: move, drop or add a stroke, so a bar answers the one before
+  function mutate(fig, r, amount) { const a = fig.split(''); const n = a.length, letters = a.filter((c) => c !== '.'); if (!letters.length) return fig;
+    for (let k = 0; k < amount; k++) { const i = r.int(n); if (a[i] === '.') { if (r.chance(0.6)) a[i] = r.pick(letters).toLowerCase(); } else if (i % (n === 12 ? 3 : 4) !== 0 && r.chance(0.5)) a[i] = '.'; else { const j = (i + 1) % n; if (a[j] === '.') { a[j] = a[i]; a[i] = '.'; } } }
+    return a.join(''); }
+
+  // ---------- the band for one song ----------
+  function band(song) {
+    const S = STYLES[song.style] || STYLES.minimal, r = rng(hash(song.seed, song.style, 'band')), w = song.wild;
+    const ps = S.players.filter((p) => (p.wild || 0) <= w + 0.05).map((p) => { const pr = rng(hash(song.seed, song.style, p.id)); const base = p.make(pr); const alt = pr.chance(0.5) ? p.make(pr) : mutate(base, pr, 2 + pr.int(3));
+      return { id: p.id, role: p.role, prio: p.prio + (pr() * 0.8), map: p.map, base, alt, third: mutate(alt, pr, 3) }; });
+    ps.sort((a, b) => a.prio - b.prio);
+    // shuffle the joining order a little after the first two, so two songs do not build up the same way
+    for (let i = ps.length - 1; i > 2; i--) { const j = 2 + r.int(i - 1); [ps[i], ps[j]] = [ps[j], ps[i]]; }
+    // a polyrhythm that can slide in halfway long sections: three against four or a euclid on a free voice
+    const pv = r.pick(['wood', 'clave', 'bhi', 'bell2', 'slap']), G = S.grid;
+    const poly = { id: 'poly3', role: 'poly', map: { X: pv, x: pv }, base: G === 16 ? r.pick(['X..x..x..x..x..x', 'X..x..x..X..x..x', estr(5, 16, r.int(16), 'x'), estr(7, 16, r.int(16), 'x')]) : r.pick(['X...x...x...', 'X..x..x..x..', estr(5, 12, r.int(12), 'x')]) };
+    poly.alt = poly.base; poly.third = poly.base;
+    return { S, ps, poly, G };
+  }
+
+  // ---------- tempo: a style that wants a slower or faster pulse plays in half or double time ----------
+  function timeFactor(S, bpm) { if (bpm > S.tempo[1] * 1.3) return 0.5; if (bpm < S.tempo[0] / 1.3) return 2; return 1; }
+
+  /* ---------- the whole song ---------- */
+  function generate(song) {
+    const { S, ps, poly, G } = band(song), w = song.wild, sw = song.swing || 0, bpm = song.bpm, barSec = 240 / bpm, tf = timeFactor(S, bpm);
+    const ev = [], mutes = song.mutes || {}; let bar0 = 0;
+    const maxN = Math.max(2, Math.round(ps.length * (0.5 + 0.5 * w)));
+    song.sections.forEach((sec, si) => {
+      const nb = Math.max(1, sec.bars), base = INTENS[sec.type] != null ? INTENS[sec.type] : 0.6, last = si === song.sections.length - 1;
+      const nPat = Math.max(1, Math.round(nb * tf)), patSec = barSec * nb / nPat; // pattern bars in this section and their length
+      const r = rng(hash(song.seed, song.style, 'sec', si, sec.type));
+      for (let pb = 0; pb < nPat; pb++) {
+        const t0 = (bar0 * barSec) + pb * patSec, prog = nPat > 1 ? pb / (nPat - 1) : 0, phrase = Math.floor(pb / (8 * tf || 8)), nPhr = Math.max(1, Math.ceil(nPat / (8 * tf || 8)));
+        // how full: the section type, a slow climb over long sections, a little more for wild players
+        let inten = base + (S.climb || w > 0.6 ? 0.25 * prog : 0.1 * prog); if (sec.type === 'build') inten = 0.35 + 0.6 * prog;
+        let n = Math.round(1 + (maxN - 1) * Math.min(1, inten)); if (nPhr > 1) n = Math.max(1, Math.min(maxN, n - (nPhr - 1 - phrase)));
+        const lastBar = pb === nPat - 1 && !last && nb >= 2, inPhrase = pb % 4, half = nPat >= 8 && prog >= 0.5;
+        const br = rng(hash(song.seed, song.style, si, pb));
+        const zenSilence = S.zen && br.chance((1 - w) * 0.35) && pb % 4 !== 0;
+        const players = ps.slice(0, n).concat(half && w > 0.2 && nb >= 16 ? [poly] : []);
+        players.forEach((p, pi) => {
+          if (mutes[p.id]) return; if (zenSilence && pi > 0) return;
+          let fig = half && pi % 2 === 1 ? p.alt : p.base;
+          if (inPhrase === 3) fig = pi === (phrase % Math.max(1, players.length)) ? p.third : p.alt === fig ? p.base : fig; // the fourth bar answers
+          if (br.chance(w * 0.45)) fig = mutate(fig, br, 1 + Math.round(w * 3));
+          if (S.zen && br.chance((1 - w) * 0.25)) fig = mutate(fig, br, 2);
+          let st = strokes(fig.length === G ? fig : fig.padEnd(G, '.').slice(0, G), p.map);
+          // the last bar before a new section: a roll, a tihai, or a single big stroke
+          if (lastBar && (p.role === 'hand' || p.role === 'low' || p.role === 'timeline' && S === STYLES.india)) st = st.filter((x) => x.s < G / 2).concat(fill(S, p, G, br, w));
+          for (const x of st) { let s = x.s; if (G === 16 && Math.floor(s) % 2 === 1 && Number.isInteger(s)) s += sw * 0.36;
+            const acc = Number.isInteger(x.s) && x.s % (G === 12 ? 3 : 4) === 0;
+            let vel = (x.soft ? 56 : 98) + (acc ? 12 : 0) + (x.vel || 0); vel = 64 + (vel - 64) * (0.75 + 0.5 * w) * (0.85 + 0.25 * Math.min(1, inten)); vel += (br() - 0.5) * (8 + 14 * w);
+            const jit = (br() - 0.5) * (0.004 + 0.01 * w);
+            for (const v of x.v) ev.push({ t: Math.max(0, t0 + s * patSec / G + jit), v, vel: Math.max(18, Math.min(127, Math.round(vel))) }); }
+        });
+      }
+      bar0 += nb;
+    });
+    // play around the beat: no big drum right on a kick, softer slaps on the snare
+    if (song.beat && song.beat.bars) { const B = song.beat;
+      for (const e of ev) { const bi = Math.floor(e.t / barSec), b = B.bars[bi]; if (!b) continue; const st = (e.t - bi * barSec) / barSec * 16, near = (arr) => arr.some((k) => Math.abs(k - st) < 0.35);
+        if ((e.v === 'drum' || e.v === 'clo') && near(b.k)) e.vel = Math.round(e.vel * 0.45); if (e.v === 'slap' && near(b.s)) e.vel = Math.round(e.vel * 0.7); }
+    }
+    ev.sort((a, b) => a.t - b.t);
+    return { events: ev, barSec, totalSec: bar0 * barSec, tf, players: ps.map((p) => ({ id: p.id, role: p.role, voices: [...new Set(Object.values(p.map).flat())] })), grid: G };
+  }
+  function fill(S, p, G, r, w) {
+    const v = Object.values(p.map).flat(), lo = v.includes('drum') ? 'drum' : v.includes('clo') ? 'clo' : v[0], hi = v.find((x) => x === 'chi' || x === 'bhi' || x === 'slap') || v[v.length - 1];
+    const o = [];
+    if (S === STYLES.india && p.role === 'timeline') { // tihai: one phrase three times, landing on the one
+      const m = [['clo', 'bhi'], ['bhi'], ['slap']]; let s = G / 2 - 1; for (let k = 0; k < 3; k++) { m.forEach((x, j) => o.push({ s: s + j, v: x, soft: j > 0 })); s += 3 + (k < 2 ? 0 : 0); } return o.filter((x) => x.s < G); }
+    if (S.zen) { if (p.role === 'low') o.push({ s: G - 4, v: [lo], soft: false, vel: 18 }); return o; }
+    const step = w > 0.65 ? 0.5 : 1; // shamanic players roll in 32nds
+    for (let s = G / 2; s < G; s += step) { const k = (s - G / 2) / (G / 2); o.push({ s, v: [k > 0.6 || r.chance(0.4) ? hi : lo], soft: k < 0.4, vel: Math.round(k * 16) }); }
+    return o;
+  }
+
+  /* ---------- sounds: small synths, the same code for playing and for the WAV ---------- */
+  let NOISE = null;
+  function noise(ctx) { if (NOISE && NOISE.sampleRate === ctx.sampleRate) return NOISE; const b = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; NOISE = b; return b; }
+  function env(g, t, a, peak, dec) { g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec); }
+  function tone(ctx, out, t, f0, f1, dec, amp, type) { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + Math.min(0.12, dec)); env(g, t, 0.002, amp, dec); o.connect(g); g.connect(out); o.start(t); o.stop(t + dec + 0.05); }
+  function nz(ctx, out, t, type, f, q, dec, amp) { const s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain(); s.buffer = noise(ctx); fl.type = type; fl.frequency.value = f; fl.Q.value = q; env(g, t, 0.002, amp, dec); s.connect(fl); fl.connect(g); g.connect(out); s.start(t, Math.random() * 0.5); s.stop(t + dec + 0.05); }
+  function play(ctx, out, v, t, vel) { const a = Math.pow(vel / 127, 1.5);
+    switch (v) {
+      case 'drum': tone(ctx, out, t, 140, 52, 0.55, 0.9 * a); nz(ctx, out, t, 'lowpass', 900, 0.7, 0.05, 0.25 * a); break;
+      case 'clo': tone(ctx, out, t, 205, 180, 0.28, 0.6 * a); nz(ctx, out, t, 'bandpass', 600, 2, 0.03, 0.15 * a); break;
+      case 'chi': tone(ctx, out, t, 300, 270, 0.2, 0.5 * a); nz(ctx, out, t, 'bandpass', 900, 2, 0.025, 0.14 * a); break;
+      case 'slap': nz(ctx, out, t, 'bandpass', 1500, 1.4, 0.06, 0.6 * a); tone(ctx, out, t, 380, 330, 0.06, 0.2 * a); break;
+      case 'bhi': tone(ctx, out, t, 480, 430, 0.11, 0.42 * a); nz(ctx, out, t, 'bandpass', 2400, 3, 0.015, 0.12 * a); break;
+      case 'blo': tone(ctx, out, t, 350, 320, 0.13, 0.42 * a); nz(ctx, out, t, 'bandpass', 1800, 3, 0.015, 0.1 * a); break;
+      case 'shk': nz(ctx, out, t, 'highpass', 6500, 0.8, 0.05, 0.28 * a); break;
+      case 'bell': tone(ctx, out, t, 830, 830, 0.32, 0.17 * a, 'triangle'); tone(ctx, out, t, 1245, 1245, 0.2, 0.07 * a, 'square'); break;
+      case 'bell2': tone(ctx, out, t, 560, 560, 0.32, 0.17 * a, 'triangle'); tone(ctx, out, t, 845, 845, 0.2, 0.07 * a, 'square'); break;
+      case 'clave': tone(ctx, out, t, 2500, 2450, 0.06, 0.32 * a); break;
+      case 'wood': tone(ctx, out, t, 1150, 1100, 0.07, 0.3 * a); tone(ctx, out, t, 1780, 1750, 0.04, 0.12 * a); break;
+      case 'tamb': nz(ctx, out, t, 'highpass', 7000, 0.7, 0.12, 0.22 * a); nz(ctx, out, t, 'bandpass', 9500, 6, 0.18, 0.12 * a); break;
+    } }
+
+  root.PercMotor = { VOICES, STYLES, ORDER, INTENS, generate, play, rng, hash, euclid, timeFactor };
+})(window);
+/* PERC ENGINE END */
+
+</script>
+<script>
+'use strict';
+const P = window.PercMotor, $ = (s) => document.querySelector(s);
+const store = { get: (k, d) => { try { const v = localStorage.getItem('dpm-' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set: (k, v) => { try { localStorage.setItem('dpm-' + k, JSON.stringify(v)); } catch (e) {} } };
+const SEC_COL = { intro: '#7FC8E8', verse: '#8FD18B', prechorus: '#B4D98B', build: '#E9C46A', chorus: '#E0705A', drop: '#E0705A', break: '#A79BF0', bridge: '#C88FE8', outro: '#7FA3E8', solo: '#E88FC8', fill: '#F2E0A0' };
+const st = { style: store.get('style', 'westafrica'), wild: store.get('wild', 0.5), swing: store.get('swing', 0.2), bpm: store.get('bpm', 124), struct: store.get('struct', $('#struct').value), seed: store.get('seed', (Math.random() * 2 ** 31) >>> 0), mutes: {}, beat: null, res: null };
+let toastT = 0; const toast = (m) => { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2400); };
+
+/* ---------- structure text ---------- */
+const TYPES = Object.keys(P.INTENS);
+function parseStruct(s) { const out = []; for (const part of s.split(/[,;\n]+/)) { const m = part.trim().toLowerCase().match(/^([a-z]+)\s*(\d+)?/); if (!m) continue; const ty = TYPES.find((t) => t.startsWith(m[1])) || 'verse'; const n = Math.max(1, Math.min(256, +(m[2] || 8))); out.push({ type: ty, bars: n }); } return out.length ? out : [{ type: 'drop', bars: 16 }]; }
+
+/* ---------- MIDI in ---------- */
+function readMidi(buf) { const d = new DataView(buf); let p = 0; const str = (n) => { let s = ''; for (let i = 0; i < n; i++) s += String.fromCharCode(d.getUint8(p + i)); p += n; return s; };
+  const u32 = () => { const v = d.getUint32(p); p += 4; return v; }, u16 = () => { const v = d.getUint16(p); p += 2; return v; }, vlq = () => { let v = 0, b; do { b = d.getUint8(p++); v = (v << 7) | (b & 127); } while (b & 128); return v; };
+  if (str(4) !== 'MThd') throw new Error('not a MIDI file'); const hl = u32(); u16(); const nt = u16(), div = u16(); p = 8 + hl; if (div & 0x8000) throw new Error('SMPTE timing');
+  const notes = []; let tempo = null, ts = [4, 4];
+  for (let k = 0; k < nt && p < d.byteLength; k++) { if (str(4) !== 'MTrk') break; const len = u32(), end = p + len; let t = 0, rs = 0;
+    while (p < end) { t += vlq(); let s = d.getUint8(p); if (s & 128) p++; else s = rs;
+      if (s === 0xFF) { const ty = d.getUint8(p++), l = vlq(); if (ty === 0x51 && tempo == null) tempo = (d.getUint8(p) << 16) | (d.getUint8(p + 1) << 8) | d.getUint8(p + 2); if (ty === 0x58) ts = [d.getUint8(p), 2 ** d.getUint8(p + 1)]; p += l; continue; }
+      if (s === 0xF0 || s === 0xF7) { p += vlq(); continue; }
+      rs = s; const hi = s & 0xF0; if (hi === 0xC0 || hi === 0xD0) { p += 1; continue; } const a = d.getUint8(p), b = d.getUint8(p + 1); p += 2;
+      if (hi === 0x90 && b > 0) notes.push({ tick: t, note: a, vel: b }); }
+    p = end; }
+  return { ppq: div, notes, bpm: tempo ? Math.round(60000000 / tempo) : null, ts }; }
+const KICKS = [35, 36], SNARES = [37, 38, 39, 40], HATS = [42, 44, 46, 49, 51];
+function analyse(m) {
+  const barT = m.ppq * 4 * m.ts[0] / m.ts[1], nBars = Math.max(1, Math.ceil((Math.max(0, ...m.notes.map((n) => n.tick)) + 1) / barT));
+  const hasGM = m.notes.some((n) => KICKS.includes(n.note)); const lowest = Math.min(...m.notes.map((n) => n.note));
+  const bars = Array.from({ length: nBars }, () => ({ k: [], s: [], n: 0 }));
+  const beatNotes = m.notes.map((n) => { const b = Math.floor(n.tick / barT), step = (n.tick - b * barT) / barT * 16; const kind = (hasGM ? KICKS.includes(n.note) : n.note === lowest) ? 'k' : SNARES.includes(n.note) ? 's' : HATS.includes(n.note) ? 'h' : 'o';
+    if (bars[b]) { bars[b].n += kind === 'h' ? 0.5 : 1; if (kind === 'k') bars[b].k.push(step); if (kind === 's') bars[b].s.push(step); } return { q: n.tick / m.ppq, kind, vel: n.vel }; });
+  // structure from how full the beat is, in blocks of four bars
+  const blk = []; for (let b = 0; b < nBars; b += 4) { let s = 0, c = 0; for (let i = b; i < Math.min(nBars, b + 4); i++) { s += bars[i].n; c++; } blk.push(s / c); }
+  const mx = Math.max(...blk, 1e-9), lvl = blk.map((v) => v < 0.42 * mx ? 0 : v < 0.78 * mx ? 1 : 2);
+  const segs = []; lvl.forEach((l, i) => { const n = Math.min(4, nBars - i * 4); if (segs.length && segs[segs.length - 1].l === l) segs[segs.length - 1].bars += n; else segs.push({ l, bars: n }); });
+  const sec = segs.map((s, i) => ({ bars: s.bars, type: s.l === 2 ? 'drop' : s.l === 1 ? (segs[i + 1] && segs[i + 1].l === 2 ? 'build' : 'verse') : i === 0 ? 'intro' : i === segs.length - 1 ? 'outro' : 'break' }));
+  return { bars, beatNotes, nBars, sections: sec };
+}
+async function loadFile(f) { try { const m = readMidi(await f.arrayBuffer()); if (!m.notes.length) throw new Error('no notes'); const a = analyse(m);
+    st.beat = a; if (m.bpm) { st.bpm = m.bpm; $('#bpm').value = m.bpm; store.set('bpm', m.bpm); }
+    st.struct = a.sections.map((s) => s.type + ' ' + s.bars).join(', '); $('#struct').value = st.struct; store.set('struct', st.struct);
+    $('#beatInfo').innerHTML = '<b>' + f.name.replace(/</g, '') + '</b>: ' + a.nBars + ' bars' + (m.bpm ? ' at ' + m.bpm + ' bpm' : '') + ', ' + a.sections.length + ' sections found. The band plays around your kick and snare.';
+    $('#withBeatL').hidden = false; regen(true); toast('Beat loaded: ' + a.sections.length + ' sections.'); }
+  catch (e) { toast('Could not read that MIDI file (' + e.message + ').'); } }
+
+/* ---------- the song ---------- */
+function song() { return { bpm: st.bpm, sections: parseStruct(st.struct), style: st.style, seed: st.seed, wild: st.wild, swing: st.swing, mutes: st.mutes, beat: st.beat ? { bars: st.beat.bars } : null }; }
+function regen(keepPos) { const pos = AU.playing ? now() : null; st.res = P.generate(song()); render(); if (AU.playing && keepPos) restartAt(pos); }
+
+/* ---------- audio ---------- */
+const AU = { ctx: null, playing: false, t0: 0, off: 0, i: 0, j: 0, timer: 0, out: null };
+function ctx() { if (!AU.ctx) { AU.ctx = new (window.AudioContext || window.webkitAudioContext)(); AU.out = AU.ctx.createGain(); AU.out.gain.value = 0.5; const c = AU.ctx.createDynamicsCompressor(); c.threshold.value = -10; AU.out.connect(c); c.connect(AU.ctx.destination); } return AU.ctx; }
+const now = () => AU.playing ? AU.ctx.currentTime - AU.t0 + AU.off : AU.off;
+function beatEvents() { if (!st.beat || !$('#withBeat').checked) return []; const spq = 60 / st.bpm; return st.beat.beatNotes.map((n) => ({ t: n.q * spq, kind: n.kind, vel: n.vel })); }
+function beatHit(c, out, e, t) { const a = e.vel / 127; const o = c.createOscillator(), g = c.createGain();
+  if (e.kind === 'k') { o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12); g.gain.setValueAtTime(0.9 * a, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.35); o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.4); return; }
+  const s = c.createBufferSource(), f = c.createBiquadFilter(); s.buffer = (function () { const b = c.createBuffer(1, c.sampleRate * 0.3, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; })();
+  f.type = e.kind === 'h' ? 'highpass' : 'bandpass'; f.frequency.value = e.kind === 'h' ? 8000 : 1800; g.gain.setValueAtTime((e.kind === 'h' ? 0.18 : 0.45) * a, t); g.gain.exponentialRampToValueAtTime(0.001, t + (e.kind === 'h' ? 0.05 : 0.18)); s.connect(f); f.connect(g); g.connect(out); s.start(t); s.stop(t + 0.3); }
+let BEV = [];
+function restartAt(pos) { AU.off = Math.max(0, pos); AU.t0 = AU.ctx.currentTime + 0.05; const ev = st.res.events; AU.i = 0; while (AU.i < ev.length && ev[AU.i].t < AU.off) AU.i++; BEV = beatEvents(); AU.j = 0; while (AU.j < BEV.length && BEV[AU.j].t < AU.off) AU.j++; }
+function tick() { const c = AU.ctx, ev = st.res.events, horizon = now() + 0.25;
+  while (AU.i < ev.length && ev[AU.i].t < horizon) { const e = ev[AU.i++]; P.play(c, AU.out, e.v, AU.t0 + e.t - AU.off, e.vel); }
+  while (AU.j < BEV.length && BEV[AU.j].t < horizon) { const e = BEV[AU.j++]; beatHit(c, AU.out, e, AU.t0 + e.t - AU.off); }
+  if (now() > st.res.totalSec + 0.5) { stop(); AU.off = 0; } drawPos(); }
+async function start(pos) { const c = ctx(); if (c.state !== 'running') await c.resume(); AU.playing = true; restartAt(pos != null ? pos : AU.off); clearInterval(AU.timer); AU.timer = setInterval(tick, 40); $('#play').textContent = '■'; $('#play').setAttribute('aria-label', 'Stop'); }
+function stop() { AU.off = now(); AU.playing = false; clearInterval(AU.timer); $('#play').textContent = '▶'; $('#play').setAttribute('aria-label', 'Play'); drawPos(); }
+
+/* ---------- screen ---------- */
+function render() {
+  const S = $('#styles'); S.innerHTML = ''; for (const k of P.ORDER) { const b = document.createElement('button'); b.textContent = P.STYLES[k].name; b.setAttribute('aria-pressed', k === st.style); b.onclick = () => { st.style = k; store.set('style', k); st.mutes = {}; regen(true); }; S.append(b); }
+  const tf = st.res.tf; $('#tfInfo').textContent = tf === 0.5 ? 'Plays in half time at this tempo.' : tf === 2 ? 'Plays in double time at this tempo.' : '';
+  const secs = parseStruct(st.struct), tot = secs.reduce((a, s) => a + s.bars, 0), SC = $('#secs'); SC.querySelectorAll('button').forEach((b) => b.remove()); let b0 = 0;
+  secs.forEach((s) => { const b = document.createElement('button'); b.style.flex = s.bars + ' 1 0'; b.style.background = SEC_COL[s.type] || '#ccc'; b.textContent = s.type + ' ' + s.bars; b.title = s.type + ', ' + s.bars + ' bars'; const at = b0 * st.res.barSec; b.onclick = () => { start(at); }; SC.append(b); b0 += s.bars; });
+  const PL = $('#players'); PL.innerHTML = ''; for (const p of st.res.players.concat(st.res.players.length ? [{ id: 'poly3', role: 'poly', voices: [] }] : [])) { const b = document.createElement('button'); const col = p.voices.length ? P.VOICES[p.voices[0]].col : '#888'; b.innerHTML = '<i style="background:' + col + '"></i>' + (p.id === 'poly3' ? 'Polyrhythm' : p.id[0].toUpperCase() + p.id.slice(1)); b.setAttribute('aria-pressed', !st.mutes[p.id]); b.onclick = () => { st.mutes[p.id] = !st.mutes[p.id]; regen(true); }; PL.append(b); }
+  drawLanes(); drawPos();
+}
+let lastBar = -1;
+function drawLanes() { const L = $('#lanes'), bar = Math.floor(now() / st.res.barSec), ev = st.res.events, bs = st.res.barSec, a = bar * bs, used = {};
+  for (const e of ev) { if (e.t < a - 0.01) continue; if (e.t >= a + bs - 0.01) break; const G = st.res.tf === 1 ? st.res.grid : 16, s = Math.min(G - 1, Math.max(0, Math.round((e.t - a) / bs * G))); (used[e.v] = used[e.v] || {})[s] = Math.max((used[e.v] || {})[s] || 0, e.vel); }
+  const vs = Object.keys(P.VOICES).filter((v) => used[v]); L.innerHTML = '';
+  for (const v of vs) { const row = document.createElement('div'); row.className = 'lane'; const nm = document.createElement('span'); nm.textContent = P.VOICES[v].name; const c = document.createElement('div'); c.className = 'cells'; c.style.gridTemplateColumns = 'repeat(' + (st.res.tf === 1 ? st.res.grid : 16) + ',1fr)';
+    for (let s = 0; s < (st.res.tf === 1 ? st.res.grid : 16); s++) { const i = document.createElement('i'); const vel = used[v][s]; if (vel) { i.style.background = P.VOICES[v].col; i.style.opacity = 0.35 + vel / 127 * 0.65; } c.append(i); } row.append(nm, c); L.append(row); }
+  if (!vs.length) L.innerHTML = '<div class="small">This bar is quiet.</div>'; lastBar = bar; }
+function drawPos() { const t = now(), bar = Math.floor(t / st.res.barSec), secs = parseStruct(st.struct), tot = secs.reduce((a, s) => a + s.bars, 0);
+  let b0 = 0, name = ''; for (const s of secs) { if (bar < b0 + s.bars) { name = s.type + ' · bar ' + (bar - b0 + 1) + ' of ' + s.bars; break; } b0 += s.bars; }
+  $('#pos').textContent = name || 'End'; $('#ph').style.left = 'calc(' + Math.min(100, 100 * t / Math.max(0.01, st.res.totalSec)) + '% - 1px)';
+  if (bar !== lastBar) drawLanes(); const step = Math.floor((t / st.res.barSec - bar) * (st.res.tf === 1 ? st.res.grid : 16)); document.querySelectorAll('.cells').forEach((c) => [...c.children].forEach((i, k) => i.classList.toggle('now', AU.playing && k === step))); }
+
+/* ---------- MIDI out ---------- */
+function midiOut() { const res = st.res, PPQ = 480, spq = 60 / st.bpm, vlq = (n) => { const b = [n & 127]; while ((n >>= 7)) b.unshift((n & 127) | 128); return b; };
+  const trk = (bytes) => { const h = [0x4D, 0x54, 0x72, 0x6B], l = bytes.length; return h.concat([(l >>> 24) & 255, (l >>> 16) & 255, (l >>> 8) & 255, l & 255], bytes); };
+  const name = (s) => { const b = [...new TextEncoder().encode(s)]; return [0, 0xFF, 3].concat(vlq(b.length), b); };
+  const tempo = Math.round(60000000 / st.bpm), tracks = [trk(name('Divine Percussion Motor').concat([0, 0xFF, 0x51, 3, (tempo >> 16) & 255, (tempo >> 8) & 255, tempo & 255, 0, 0xFF, 0x58, 4, 4, 2, 24, 8, 0, 0xFF, 0x2F, 0]))];
+  const by = {}; for (const e of res.events) (by[e.v] = by[e.v] || []).push(e);
+  for (const v of Object.keys(P.VOICES)) { if (!by[v]) continue; const n = P.VOICES[v].gm, msgs = [];
+    for (const e of by[v]) { const tk = Math.round(e.t / spq * PPQ); msgs.push([tk, 0x99, n, e.vel], [tk + 60, 0x89, n, 0]); }
+    msgs.sort((a, b) => a[0] - b[0] || (a[1] === 0x89 ? -1 : 1)); let last = 0, bytes = name(P.VOICES[v].name);
+    for (const m of msgs) { bytes = bytes.concat(vlq(m[0] - last), [m[1], m[2], m[3]]); last = m[0]; } tracks.push(trk(bytes.concat([0, 0xFF, 0x2F, 0]))); }
+  const head = [0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 1, (tracks.length >> 8) & 255, tracks.length & 255, (PPQ >> 8) & 255, PPQ & 255];
+  return new Blob([new Uint8Array(head.concat(...tracks))], { type: 'audio/midi' }); }
+function fileName(ext) { return ('Divine Percussion ' + P.STYLES[st.style].name + ' ' + st.bpm + 'bpm.' + ext).replace(/\s+/g, ' '); }
+function save(blob, nm) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nm; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); count('download/' + nm.split('.').pop()); }
+async function wavOut() { const sr = 44100, len = Math.ceil((st.res.totalSec + 1.2) * sr), oc = new OfflineAudioContext(2, len, sr), out = oc.createGain(); out.gain.value = 0.5; const c = oc.createDynamicsCompressor(); c.threshold.value = -10; out.connect(c); c.connect(oc.destination);
+  for (const e of st.res.events) P.play(oc, out, e.v, e.t + 0.02, e.vel); const buf = await oc.startRendering(), L = buf.getChannelData(0), R = buf.getChannelData(1), n = L.length; let pk = 1e-9; for (let i = 0; i < n; i++) pk = Math.max(pk, Math.abs(L[i]), Math.abs(R[i])); const gn = 0.89 / pk; for (let i = 0; i < n; i++) { L[i] *= gn; R[i] *= gn; }
+  const b = new ArrayBuffer(44 + n * 4), v = new DataView(b), w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 4, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 2, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 4, true); v.setUint16(32, 4, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 4, true);
+  for (let i = 0; i < n; i++) { v.setInt16(44 + i * 4, Math.max(-1, Math.min(1, L[i])) * 32767, true); v.setInt16(46 + i * 4, Math.max(-1, Math.min(1, R[i])) * 32767, true); }
+  return new Blob([b], { type: 'audio/wav' }); }
+
+/* ---------- wiring ---------- */
+$('#wild').value = Math.round(st.wild * 100); $('#swing').value = Math.round(st.swing * 100); $('#bpm').value = st.bpm; $('#struct').value = st.struct;
+$('#wild').oninput = (e) => { st.wild = e.target.value / 100; store.set('wild', st.wild); regen(true); };
+$('#swing').oninput = (e) => { st.swing = e.target.value / 100; store.set('swing', st.swing); regen(true); };
+$('#bpm').onchange = (e) => { st.bpm = Math.max(40, Math.min(220, +e.target.value || 120)); e.target.value = st.bpm; store.set('bpm', st.bpm); regen(false); if (AU.playing) restartAt(0); };
+$('#struct').onchange = (e) => { st.struct = e.target.value; store.set('struct', st.struct); regen(false); };
+$('#dice').onclick = () => { st.seed = (Math.random() * 2 ** 31) >>> 0; store.set('seed', st.seed); st.mutes = {}; regen(true); toast('Other players, same style.'); };
+$('#play').onclick = () => { if (AU.playing) stop(); else start(AU.off >= st.res.totalSec ? 0 : AU.off); };
+$('#withBeat').onchange = () => { if (AU.playing) restartAt(now()); };
+$('#dlMidi').onclick = () => save(midiOut(), fileName('mid'));
+$('#dlWav').onclick = async () => { const b = $('#dlWav'), t = b.textContent; b.textContent = 'Rendering…'; b.disabled = true; try { save(await wavOut(), fileName('wav')); } catch (e) { toast('WAV failed: ' + e.message); } b.textContent = t; b.disabled = false; };
+const D = $('#drop'); $('#file').onchange = (e) => { if (e.target.files[0]) loadFile(e.target.files[0]); e.target.value = ''; };
+D.ondragover = (e) => { e.preventDefault(); D.classList.add('on'); }; D.ondragleave = () => D.classList.remove('on'); D.ondrop = (e) => { e.preventDefault(); D.classList.remove('on'); if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); };
+document.addEventListener('keydown', (e) => { if (e.code === 'Space' && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); $('#play').click(); } });
+function count(path) { try { if (!/\.github\.io$/.test(location.hostname)) return; const q = new URLSearchParams({ p: location.pathname + path, t: document.title, e: 'true' }); const u = 'https://divine-monday.goatcounter.com/count?' + q; if (!(navigator.sendBeacon && navigator.sendBeacon(u))) new Image().src = u; } catch (e) {} }
+window.__dpm = { st, P, regen, analyse, readMidi, midiOut, wavOut };
+regen(false);
+</script>
+<script>(function(){try{if(!/\.github\.io$/.test(location.hostname))return;var q=new URLSearchParams({p:location.pathname,t:document.title,s:screen.width+','+screen.height,rnd:Math.random().toString(36).slice(2)});if(document.referrer&&document.referrer.indexOf(location.hostname)<0)q.set('r',document.referrer.split('?')[0]);var u='https://divine-monday.goatcounter.com/count?'+q;if(!(navigator.sendBeacon&&navigator.sendBeacon(u)))new Image().src=u;}catch(e){}})();</script>
+</body>
+</html>
