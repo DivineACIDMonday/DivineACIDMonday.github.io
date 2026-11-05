@@ -137,8 +137,8 @@ footer a{color:var(--acc)}
     shime: { name: 'Shime', gm: 48, col: '#E9C46A' }, shimeka: { name: 'Shime ka (rim)', gm: 75, col: '#F7EBC0' }, okedo: { name: 'Okedo', gm: 45, col: '#E39B4C' },
     kane: { name: 'Atarigane', gm: 56, col: '#A79BF0' }, kake: { name: 'Kakegoe (call)', gm: 54, col: '#7FC8E8' },
     apito: { name: 'Apito (whistle)', gm: 71, col: '#9FE8D8' },
-    snare: { name: 'Snare', gm: 38, col: '#6F86D6' }, rim: { name: 'Snare rim click', gm: 37, col: '#C9D6FF' }, tenor1: { name: 'Tenor high', gm: 48, col: '#D4A537' }, tenor2: { name: 'Tenor low', gm: 45, col: '#B8862B' },
-    bass1: { name: 'Bass 1 (low)', gm: 35, col: '#8E1E14' }, bass2: { name: 'Bass 2', gm: 36, col: '#B8322A' }, bass3: { name: 'Bass 3 (high)', gm: 41, col: '#D9412E' }, cym: { name: 'Cymbals', gm: 49, col: '#F6D365' }, cyc: { name: 'Cymbal choke', gm: 52, col: '#E8D7A6' }
+    snare: { name: 'Snare', gm: 38, col: '#6F86D6' }, rim: { name: 'Snare rim click', gm: 37, col: '#C9D6FF' }, tenor1: { name: 'Tenor 1 (high)', gm: 50, col: '#E8C468' }, tenor2: { name: 'Tenor 2', gm: 48, col: '#D4A537' }, tenor3: { name: 'Tenor 3', gm: 47, col: '#B8862B' }, tenor4: { name: 'Tenor 4 (low)', gm: 60, col: '#8F6A22' },
+    bass1: { name: 'Bass 1 (lowest)', gm: 35, col: '#6E140C' }, bass2: { name: 'Bass 2', gm: 36, col: '#8E1E14' }, bass3: { name: 'Bass 3', gm: 41, col: '#B8322A' }, bass4: { name: 'Bass 4', gm: 43, col: '#D9412E' }, bass5: { name: 'Bass 5 (highest)', gm: 45, col: '#E8704F' }, cym: { name: 'Cymbals', gm: 49, col: '#F6D365' }, cyc: { name: 'Cymbal choke', gm: 52, col: '#E8D7A6' }
   };
   // ---------- random ----------
   function rng(seed) { let a = (seed >>> 0) || 1; const f = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -381,33 +381,67 @@ footer a{color:var(--acc)}
     cadence(c, tEnd, stp) { const p = this.th[0], len = toks(p).length, gap = this.th[1], st = tEnd - this.tlen() * stp; let s = st;
       for (let k = 0; k < 3; k++) { layer(c, 'tabla', s, stp, p, this.map, k === 2 ? 1.15 : 1.05); s += (len + gap) * stp; } return 'tihai ×3 → sam'; } };
 
-  // Marching: military and drum corps drumming. The snare speaks in rudiments and stickings (R right, L left):
-  // a '~' is a flam (a grace note just before), a '=' a diddle (two strokes on one), a lower case letter a soft tap.
-  T.marching = { grid: 16, group: 4, fixed: ['bassline'], players: [['snare', 'Snare line'], ['tenors', 'Tenors'], ['bassline', 'Bass line'], ['cymbals', 'Cymbals']],
-    map: { r: 'snare', l: 'snare', x: 'rim', t: 'tenor1', u: 'tenor2', b1: 'bass1', b2: 'bass2', b3: 'bass3', cy: 'cym', ch: 'cyc' },
-    pools: {
-      snare: ['R! l R R L! r L L R! l R R L! r L L', 'R~ l r L~ r l R~ l r L~ r l R! . L .', 'R! . L= R . L R= . R! . L= R . L R= .', 'R! . . . L . R . R! . . . L . R L', 'R= L= R= L= R! . . . R= L= R= L= R! . L .', 'R! l r l L! r l r R~ . L~ . R! . . .', 'R! . r l R . L! . r l R . L! r l r'],
-      tenors: ['T . . u . T . . u . T . u . . .', 'T . u . T . u . T u T u T . . .', '. . T . . u . . T . . u T . u .', 'T . . . u . . . T . u . u . . .'],
-      bassline: ['B1 . . B2 . . B3 . B1 . B2 . . B3 . .', 'B1 . B3 . B2 . . . B1 . B3 . B2 . B1 .', 'B1 . . . B2 . B3 . B1 . . . B3 . B2 .'],
-      cymbals: ['Cy . . . . . . . Cy . . . . . . .', 'Cy . . . ch . . . Cy . . . ch . . .', 'Cy . . . . . . . . . . . Cy . ch .'] },
-    feature: ['R= L= R= L= R! r l R! r l R= L= R! L! R! .', 'R~ L~ R~ L~ R! l r l R= L= R= L= R! . L! .', 'R! L R R L! R L L R= L= R= L= R! . . .', 'R! r l r L! l r l R! r R! r L! l L! .'],
-    rolloff: 'R= L= R= L= R= L= R= L= R= L= R= L= R! . R! .',
-    cutoff: 'R! . . . . . . . . . . . . . . .',
-    rollin: '. . . . . . . . R= L= R= L= R= L= R! .',
-    setup(c) { this.feat = c.R.pick(this.feature); },
-    bar(c) { const { r, inten, prog, firstBar, lastBar, lastSec, pick, w } = c, ty = c.sec.type, out = [];
-      if (firstBar && c.si === 0) { out.push(['snare', this.rolloff, 1.05]); out.push(['bassline', '. . . . . . . . . . . . B1 . B1 .', 1]); return { part: 'roll-off · the signal to step off', out }; }
-      if (lastSec && lastBar) { out.push(['snare', this.cutoff, 1.15]); out.push(['tenors', 'T . . . . . . . . . . . . . . .', 1]); out.push(['bassline', 'B1 . . . . . . . . . . . . . . .', 1.1]); out.push(['cymbals', 'Cy . . . ch . . . . . . . . . . .', 1]); return { part: 'cut-off · all as one', out }; }
-      // mark time: in place, the bass line keeps the step, the snares click the rim
-      if (ty === 'build' || ty === 'break' || inten < 0.35) { out.push(['bassline', ty === 'build' && prog > 0.5 ? 'B1 . B2 . B1 . B2 . B1 . B2 . B1 . B3 .' : 'B1 . . . B2 . . . B1 . . . B2 . . .', 0.9 + 0.2 * prog]);
-        out.push(['snare', ty === 'build' && prog > 0.7 ? 'R= L= R= L= R= L= R= L= R= L= R= L= R! . L! .' : 'x . . x . . x . x . . x . . x .', 0.6 + 0.4 * prog]); return { part: 'mark time · in place', out }; }
-      // drum feature: the show, the corps walks its figures and the snares show the rudiments
-      const feat = (ty === 'drop' || ty === 'chorus') && prog >= 0.25;
-      if (feat) { out.push(['snare', c.pb % 4 === 3 ? this.feat : r.chance(0.5 + 0.3 * w) ? r.pick(this.feature) : pick('snare'), 1.05]); out.push(['tenors', r.pick(['T t u u T t u u T u T u T . u .', 'T u T u t u T u u . T . u u T .', pick('tenors')]), 0.95]); }
-      else { out.push(['snare', pick('snare'), 1]); if (inten > 0.45) out.push(['tenors', pick('tenors'), 0.85]); }
-      out.push(['bassline', pick('bassline'), 0.95]); if (inten > 0.55) out.push(['cymbals', pick('cymbals'), 0.6]);
-      if (lastBar && !c.short) { out[0] = ['snare', this.rollin, 1.05]; return { part: 'roll into the next part', out }; }
-      return { part: feat ? 'drum feature · the corps walks its figures' : 'cadence · street beat', out }; } };
+  // Marching: drum line and taptoe. The snare speaks in rudiments, written as stickings (R right, L left):
+  // '~' a flam, '=' a diddle (two strokes on one), small letters soft taps, '!' an accent.
+  // A drum line plays phrases of four bars that build and answer, not one bar over and over:
+  // a motif, its echo, a turn, and an ending that rolls into the next phrase. Accents against soft taps make the groove.
+  T.marching = { grid: 16, group: 4, players: [['snare', 'Snare line'], ['tenors', 'Tenors (quads)'], ['bassline', 'Bass line (5 drums)'], ['cymbals', 'Cymbals']],
+    map: { r: 'snare', l: 'snare', x: 'rim', t1: 'tenor1', t2: 'tenor2', t3: 'tenor3', t4: 'tenor4', b1: 'bass1', b2: 'bass2', b3: 'bass3', b4: 'bass4', b5: 'bass5', cy: 'cym', ch: 'cyc', sz: 'cyc' },
+    C16: { open: ['R! l r l', 'R! l r r', 'R~ l r l', 'R! l= r l', 'R! . r l', 'R= L= R! .', 'R~ r L~ l'], mid: ['r l R! l', 'l r r L!', 'r l r L!', 'R= l R= l', 'r= l r= l', 'l R! l r', 'r l= R! l', '. l r L!', 'R~ r l l', 'l l R! .'],
+      roll: ['R= L= R= L=', 'R= L= R= L!', 'R= L= R! .', 'L= R= L= R!'], rest: ['R! . . .', '. . . .', '. . R! .'] },
+    C12: { open: ['R! l r', 'R~ l r', 'R! l= r', 'R! . r', 'R= L= R!'], mid: ['r l R!', 'l r L!', 'R! L! .', 'r= l r', 'l R! l', 'R~ l l', 'r l r'], roll: ['R= L= R=', 'R= L= R!', 'L= R= L!'], rest: ['R! . .', '. . .'] },
+    cell(kind, r) { const C = this.grid === 12 ? this.C12 : this.C16; return r.pick(C[kind]); },
+    bar4(r, dense) { const k = (i) => i === 0 ? 'open' : r.chance(dense) ? 'mid' : r.chance(0.5) ? 'rest' : 'mid'; return [0, 1, 2, 3].map((i) => this.cell(k(i), r)).join(' '); },
+    // an accent grid: soft taps all through, an accent every n strokes, so the accent walks across the bar
+    accGrid(n, start, len) { const o = []; for (let i = 0; i < len; i++) o.push(((start + i) % n === 0) ? (i % 2 ? 'L!' : 'R!') : (i % 2 ? 'l' : 'r')); return o.join(' '); },
+    setup(c) { const R = c.R; this.grid = R.chance(0.35) ? 12 : 16; this.group = this.grid === 12 ? 3 : 4; this.sec = {}; this.cyc = R.pick([3, 5, 6, 7]); },
+    plan(c) { // the phrases of one part, made once: motif A, echo A', turn B, ending E
+      if (this.sec[c.si]) return this.sec[c.si]; const r = c.r, G = this.grid, beats = 4, dense = 0.35 + 0.4 * c.w;
+      const A = this.bar4(r, dense), B = this.bar4(r, dense + 0.15), A2 = toks(A).slice(0, 2 * G / 4).concat(toks(this.cell('mid', r) + ' ' + this.cell('roll', r))).join(' ');
+      const E = this.cell('open', r) + ' ' + this.cell('mid', r) + ' ' + this.cell('roll', r) + ' ' + this.cell('roll', r);
+      const forms = [['A', 'A', 'A2', 'E'], ['A', 'B', 'A', 'E'], ['A', 'A2', 'B', 'E'], ['A', 'G', 'A', 'E'], ['A', 'B', 'G', 'E']];
+      // bass line: a melody over five drums, and a run for the ends
+      const pos = euclid(r.pick([5, 6, 7]), G, r.int(G)); let d = 1 + r.int(5); const bl = Array(G).fill('.');
+      pos.forEach((p, i) => { bl[p] = (i === 0 ? 'B' : 'b') + d; d = Math.max(1, Math.min(5, d + r.pick([-2, -1, 1, 2]))); }); bl[0] = 'B1';
+      const run = Array(G).fill('.').map((_, i) => i >= G / 2 ? 'B' + (5 - ((i - G / 2) % 5)) : '.'); run[0] = 'B1';
+      // tenors: sweeps around the four drums and answers to the snares
+      const sweeps = G === 16 ? ['T1 T2 T3 T4', 'T4 T3 T2 T1', 'T1 . T3 .', 'T2 T1 T3 T4', 't1 t2 T3 .', 'T1 T1 T4 .'] : ['T1 T2 T3', 'T4 T3 T2', 'T1 . T4', 't2 t1 T3'];
+      const ten = Array.from({ length: 4 }, () => r.pick(sweeps)).join(' ');
+      const p = { A, A2, B, E, form: r.pick(forms), bass: bl.join(' '), run: run.join(' '), ten, cresc: r.pick(['cresc', 'flat', 'terraced']) }; this.sec[c.si] = p; return p; },
+    // every next phrase of a part is a development of the first: a cell changed, a new turn, a new ending
+    phrase(c) { const base = this.plan(c), k = Math.floor(c.pb / 4), key = c.si + '_' + k; if (!k) return base; if (this.sec[key]) return this.sec[key];
+      const r = c.r, G = this.grid, g = G / 4, cells = (ph) => { const a = toks(ph), o = []; for (let i = 0; i < 4; i++) o.push(a.slice(i * g, i * g + g).join(' ')); return o; };
+      const A = cells(base.A); A[1 + r.int(3)] = this.cell('mid', r); const B = cells(r.chance(0.5) ? base.B : this.bar4(r, 0.6 + 0.3 * c.w)); B[r.int(4)] = this.cell('mid', r);
+      const E = this.cell('open', r) + ' ' + this.cell(r.chance(0.5) ? 'mid' : 'rest', r) + ' ' + this.cell('roll', r) + ' ' + this.cell('roll', r);
+      const p = Object.assign({}, base, { A: A.join(' '), B: B.join(' '), E, A2: A.slice(0, 2).join(' ') + ' ' + this.cell('mid', r) + ' ' + this.cell('roll', r), form: r.pick([['A', 'B', 'A', 'E'], ['A', 'A2', 'B', 'E'], ['B', 'A', 'G', 'E'], ['A', 'G', 'B', 'E'], ['G', 'A', 'B', 'E']]) });
+      if (r.chance(0.5)) { const sw = G === 16 ? ['T1 T2 T3 T4', 'T4 T3 T2 T1', 'T1 . T3 .', 'T2 T1 T3 T4', 't1 t2 T3 .', 'T1 T1 T4 .', 'T4 . T1 T2'] : ['T1 T2 T3', 'T4 T3 T2', 'T1 . T4', 't2 t1 T3']; p.ten = Array.from({ length: 4 }, () => r.pick(sw)).join(' '); }
+      this.sec[key] = p; return p; },
+    bar(c) { const { r, inten, prog, firstBar, lastBar, lastSec, w } = c, ty = c.sec.type, G = this.grid, out = [], p = this.phrase(c), inPh = c.pb % 4;
+      const unis = (tok) => Array(G).fill('.').map((_, i) => i === 0 ? tok : '.').join(' ');
+      if (firstBar && c.si === 0) { const ro = G === 16 ? 'R! . . . R! . . . R! . R! . R= L= R= L=' : 'R! . . R! . . R! . R! R= L= R='; out.push(['snare', ro, 1.05]); out.push(['bassline', G === 16 ? 'B1 . . . B1 . . . B1 . B1 . . . . .' : 'B1 . . B1 . . B1 . B1 . . .', 1]); return { part: 'roll-off · the signal to step off', out }; }
+      if (lastSec && lastBar) { out.push(['snare', unis('R!'), 1.2]); out.push(['tenors', unis('T4'), 1.1]); out.push(['bassline', unis('B1'), 1.15]); out.push(['cymbals', G === 16 ? 'Cy . . . ch . . . . . . . . . . .' : 'Cy . . ch . . . . . . . .', 1.1]); return { part: 'cut-off · all as one', out }; }
+      const gain = p.cresc === 'cresc' ? 0.75 + 0.35 * (inPh / 3) : p.cresc === 'terraced' ? [0.8, 0.8, 1, 1.05][inPh] : 0.95;
+      // mark time: in place; left and right foot on the basses, rim clicks, and in a build a roll that grows
+      if (ty === 'build' || ty === 'break' || inten < 0.35) { const steps = G === 16 ? 'B1 . . . B2 . . . B1 . . . B2 . . .' : 'B1 . . B2 . . B1 . . B2 . .';
+        out.push(['bassline', steps, 0.85 + 0.3 * prog]);
+        const rim = G === 16 ? 'x . x x . x . x x . x . x x . x' : 'x . x x . x x . x x . x';
+        out.push(['snare', ty === 'build' && prog > 0.5 ? this.accGrid(this.cyc, c.pb * G, G) : rim, ty === 'build' ? 0.6 + 0.5 * prog : 0.6]);
+        if (ty === 'build' && prog > 0.75) out.push(['cymbals', G === 16 ? 'sz . . . sz . . . sz . . . sz . sz .' : 'sz . . sz . . sz . . sz . sz', 0.6]);
+        return { part: 'mark time · in place' + (ty === 'build' && prog > 0.5 ? ', accent every ' + this.cyc : ''), out }; }
+      const feat = (ty === 'drop' || ty === 'chorus') && prog >= 0.2, slot = p.form[inPh];
+      // the snare line: the phrase; in the feature the accent grid and the denser turn take over now and then
+      let sn = slot === 'A' ? p.A : slot === 'A2' ? p.A2 : slot === 'B' ? p.B : slot === 'G' ? this.accGrid(this.cyc, c.pb * G, G) : p.E;
+      if (feat && slot !== 'E' && r.chance(0.25 + 0.35 * w)) { sn = r.chance(0.5) ? this.accGrid(this.cyc, c.pb * G, G) : this.bar4(r, 0.85); }
+      if (lastBar && !c.short) sn = toks(sn).slice(0, G / 2).concat(toks(this.cell('roll', r) + ' ' + this.cell('roll', r))).join(' ');
+      out.push(['snare', sn, gain * (feat ? 1.05 : 1)]);
+      // tenors: they answer in bars 2 and 4, and double the snare accents on their low drums in bars 1 and 3
+      const acc = toks(sn).map((t, i) => /!/.test(t) ? (i % G === 0 ? 'T4' : r.pick(['T3', 'T4', 'T2'])) : '.').join(' ');
+      if (inten > 0.45) out.push(['tenors', (inPh % 2 === 1 || feat) ? p.ten : acc, gain * 0.95]);
+      // bass line: the melody, a run at the end of the phrase, unison with the tutti
+      out.push(['bassline', slot === 'E' ? p.run : p.bass, gain]);
+      if (inten > 0.55) out.push(['cymbals', inPh === 0 ? (G === 16 ? 'Cy . . . . . . . sz . . . sz . . .' : 'Cy . . . . . sz . . sz . .') : slot === 'E' ? (G === 16 ? '. . . . . . . . . . . . Cy . ch .' : '. . . . . . . . . Cy . ch') : (G === 16 ? '. . . . sz . . . . . . . sz . . .' : '. . . sz . . . . . sz . .'), 0.6 * gain]);
+      const nm = { A: 'the motif', A2: 'its echo', B: 'the turn', G: 'accent every ' + this.cyc, E: 'the ending, rolling on' }[slot];
+      return { part: (feat ? 'drum feature' : 'cadence') + ' · bar ' + (inPh + 1) + ' of 4: ' + nm + (G === 12 ? ' · in 6/8' : ''), out }; } };
 
   // Shamanic: one steady pulse of about four to seven strokes a second, a rattle with it. At the end of the journey the callback:
   // four rounds of seven strong strokes, a fast roll, one last stroke.
@@ -430,14 +464,15 @@ footer a{color:var(--acc)}
       return { part: 'journey · ' + (sub === 2 ? 'eighths' : sub === 1 ? 'sixteenths' : 'quarters') + ', ' + (bpm * 4 / 60 / sub).toFixed(1) + ' strokes a second', out }; } };
 
   function generateTrad(song) {
-    const Tm = T[song.style], w = song.wild, sw = song.swing || 0, bpm = song.bpm, barSec = 240 / bpm, grid = Tm.grid, stp = barSec / grid, mutes = song.mutes || {}, ev = [], words = [];
+    const Tm = T[song.style], w = song.wild, sw = song.swing || 0, bpm = song.bpm, barSec = 240 / bpm, mutes = song.mutes || {}, ev = [], words = [];
     const R = rng(hash(song.seed, song.style, 'trad')), choice = {}, fixed = Tm.fixed || [];
+    if (Tm.setup) Tm.setup({ R, w });
+    const grid = Tm.grid, stp = barSec / grid;
     // like real players, each one makes the figure their own: a stroke moved, added or left out, never on the main beats
     const personal = (ph, r, n) => { const a = toks(ph), syl = a.filter((t) => t !== '.'); if (!syl.length) return ph; const g = Tm.group;
       for (let k = 0; k < n; k++) { const i = r.int(a.length); if (i % g === 0) continue; if (a[i] === '.') a[i] = r.pick(syl).replace('!', '').toLowerCase(); else if (r.chance(0.6)) a[i] = '.'; } return a.join(' '); };
     const fresh = (p, r) => fixed.includes(p) ? r.pick(Tm.pools[p]) : personal(r.pick(Tm.pools[p]), r, 1 + r.int(3));
     const pick = (p) => { if (!choice[p]) choice[p] = fresh(p, R); return choice[p]; };
-    if (Tm.setup) Tm.setup({ R, w });
     // now and then a player changes figure between parts, as players do
     let bar0 = 0;
     song.sections.forEach((sec, si) => {
@@ -636,11 +671,15 @@ footer a{color:var(--acc)}
       case 'kane': tone(ctx, out, t, 2200, 2200, 0.25, 0.12 * a, 'square'); tone(ctx, out, t, 3170, 3170, 0.18, 0.06 * a, 'square'); nz(ctx, out, t, 'highpass', 5000, 1, 0.05, 0.1 * a); break;
       case 'snare': nz(ctx, out, t, 'bandpass', 2600, 0.9, 0.13, 0.55 * a); nz(ctx, out, t, 'highpass', 5000, 0.7, 0.05, 0.3 * a); tone(ctx, out, t, 340, 300, 0.05, 0.25 * a); break;
       case 'rim': tone(ctx, out, t, 1750, 1700, 0.03, 0.3 * a); nz(ctx, out, t, 'bandpass', 3500, 3, 0.015, 0.15 * a); break;
-      case 'tenor1': tone(ctx, out, t, 280, 250, 0.28, 0.55 * a); nz(ctx, out, t, 'bandpass', 1800, 2, 0.02, 0.18 * a); break;
-      case 'tenor2': tone(ctx, out, t, 190, 170, 0.32, 0.55 * a); nz(ctx, out, t, 'bandpass', 1400, 2, 0.02, 0.18 * a); break;
-      case 'bass1': tone(ctx, out, t, 72, 52, 0.55, 0.9 * a); nz(ctx, out, t, 'lowpass', 700, 0.7, 0.03, 0.2 * a); break;
-      case 'bass2': tone(ctx, out, t, 92, 70, 0.48, 0.85 * a); nz(ctx, out, t, 'lowpass', 800, 0.7, 0.03, 0.2 * a); break;
-      case 'bass3': tone(ctx, out, t, 118, 92, 0.42, 0.8 * a); nz(ctx, out, t, 'lowpass', 900, 0.7, 0.03, 0.2 * a); break;
+      case 'tenor1': tone(ctx, out, t, 330, 300, 0.25, 0.5 * a); nz(ctx, out, t, 'bandpass', 2000, 2, 0.02, 0.18 * a); break;
+      case 'tenor2': tone(ctx, out, t, 262, 240, 0.28, 0.5 * a); nz(ctx, out, t, 'bandpass', 1800, 2, 0.02, 0.18 * a); break;
+      case 'tenor3': tone(ctx, out, t, 208, 190, 0.3, 0.52 * a); nz(ctx, out, t, 'bandpass', 1500, 2, 0.02, 0.18 * a); break;
+      case 'tenor4': tone(ctx, out, t, 165, 150, 0.34, 0.55 * a); nz(ctx, out, t, 'bandpass', 1300, 2, 0.02, 0.18 * a); break;
+      case 'bass1': tone(ctx, out, t, 62, 46, 0.6, 0.95 * a); nz(ctx, out, t, 'lowpass', 600, 0.7, 0.03, 0.2 * a); break;
+      case 'bass2': tone(ctx, out, t, 78, 60, 0.55, 0.9 * a); nz(ctx, out, t, 'lowpass', 700, 0.7, 0.03, 0.2 * a); break;
+      case 'bass3': tone(ctx, out, t, 98, 76, 0.5, 0.85 * a); nz(ctx, out, t, 'lowpass', 800, 0.7, 0.03, 0.2 * a); break;
+      case 'bass4': tone(ctx, out, t, 122, 96, 0.45, 0.8 * a); nz(ctx, out, t, 'lowpass', 900, 0.7, 0.03, 0.2 * a); break;
+      case 'bass5': tone(ctx, out, t, 150, 120, 0.4, 0.78 * a); nz(ctx, out, t, 'lowpass', 1000, 0.7, 0.03, 0.2 * a); break;
       case 'cym': nz(ctx, out, t, 'highpass', 4500, 0.6, 0.9, 0.25 * a); nz(ctx, out, t, 'bandpass', 7800, 4, 0.6, 0.12 * a); break;
       case 'cyc': nz(ctx, out, t, 'highpass', 4500, 0.6, 0.12, 0.28 * a); break;
       case 'apito': { const o = ctx.createOscillator(), l = ctx.createOscillator(), lg = ctx.createGain(), g = ctx.createGain(); o.frequency.value = 2900; l.frequency.value = 38; lg.gain.value = 120; l.connect(lg); lg.connect(o.frequency); env(g, t, 0.01, 0.18 * a, 0.22); o.connect(g); g.connect(out); o.start(t); l.start(t); o.stop(t + 0.3); l.stop(t + 0.3); break; }
@@ -849,14 +888,14 @@ function drawPos() { const t = now(), bar = Math.floor(t / st.res.barSec), secs 
 /* ---------- MIDI out: plain GM, or the eight slots of a drum plugin ---------- */
 // eight slots: the voices that sound alike share one
 const TAIKO_SLOTS = [['Odaiko', ['odaiko']], ['Nagado don', ['don']], ['Nagado ka (rim)', ['ka']], ['Shime', ['shime']], ['Shime ka (rim)', ['shimeka']], ['Okedo', ['okedo']], ['Atarigane', ['kane']], ['Kakegoe (call)', ['kake']]];
-const MARCH_SLOTS = [['Bass 1 (low)', ['bass1']], ['Bass 2', ['bass2']], ['Bass 3 (high)', ['bass3']], ['Snare', ['snare']], ['Snare rim click', ['rim']], ['Tenor high', ['tenor1']], ['Tenor low', ['tenor2']], ['Cymbals', ['cym', 'cyc']]];
+const MARCH_SLOTS = [['Bass low (1, 2)', ['bass1', 'bass2']], ['Bass mid (3)', ['bass3']], ['Bass high (4, 5)', ['bass4', 'bass5']], ['Snare', ['snare']], ['Snare rim click', ['rim']], ['Tenors high (1, 2)', ['tenor1', 'tenor2']], ['Tenors low (3, 4)', ['tenor3', 'tenor4']], ['Cymbals', ['cym', 'cyc']]];
 const slots = () => P.STYLES[st.style].taiko ? TAIKO_SLOTS : st.style === 'marching' ? MARCH_SLOTS : SLOTS;
 const SLOTS = [['Big drum', ['drum']], ['Low conga', ['clo']], ['High conga', ['chi']], ['Slap', ['slap']], ['Bongos', ['bhi', 'blo']], ['Shaker and tambourine', ['shk', 'tamb']], ['Bells and whistle', ['bell', 'bell2', 'apito']], ['Wood and clave', ['wood', 'clave']]];
 const TARGETS = {
   gm: { name: 'Plain MIDI (GM percussion)' },
   xo: { name: 'XLN XO', keys: [36, 37, 38, 39, 40, 41, 42, 43] },
   beatmaker: { name: 'UJAM Beatmaker 3', keys: [36, 38, 40, 43, 45, 48, 52, 59] },
-  tekno: { name: 'BABY Audio Tekno', map: { drum: [43, 'tom l'], clo: [47, 'conga l'], chi: [48, 'conga h'], slap: [46, 'rimshot'], bhi: [44, 'tom h'], blo: [44, 'tom h'], shk: [40, 'hat a'], tamb: [42, 'hat op'], bell: [51, 'cowbell'], bell2: [51, 'cowbell'], wood: [52, 'block'], clave: [52, 'block'], odaiko: [36, 'kick a'], don: [43, 'tom l'], ka: [46, 'rimshot'], shime: [44, 'tom h'], shimeka: [52, 'block'], okedo: [47, 'conga l'], kane: [51, 'cowbell'], kake: [45, 'clap'], apito: [50, 'tonal'], bass1: [36, 'kick a'], bass2: [37, 'kick b'], bass3: [43, 'tom l'], snare: [38, 'snare a'], rim: [46, 'rimshot'], tenor1: [44, 'tom h'], tenor2: [47, 'conga l'], cym: [53, 'crash'], cyc: [53, 'crash'] } },
+  tekno: { name: 'BABY Audio Tekno', map: { drum: [43, 'tom l'], clo: [47, 'conga l'], chi: [48, 'conga h'], slap: [46, 'rimshot'], bhi: [44, 'tom h'], blo: [44, 'tom h'], shk: [40, 'hat a'], tamb: [42, 'hat op'], bell: [51, 'cowbell'], bell2: [51, 'cowbell'], wood: [52, 'block'], clave: [52, 'block'], odaiko: [36, 'kick a'], don: [43, 'tom l'], ka: [46, 'rimshot'], shime: [44, 'tom h'], shimeka: [52, 'block'], okedo: [47, 'conga l'], kane: [51, 'cowbell'], kake: [45, 'clap'], apito: [50, 'tonal'], bass1: [36, 'kick a'], bass2: [36, 'kick a'], bass3: [37, 'kick b'], bass4: [43, 'tom l'], bass5: [43, 'tom l'], snare: [38, 'snare a'], rim: [46, 'rimshot'], tenor1: [44, 'tom h'], tenor2: [44, 'tom h'], tenor3: [48, 'conga h'], tenor4: [47, 'conga l'], cym: [53, 'crash'], cyc: [53, 'crash'] } },
   impact: { name: 'Impact XT', keys: [36, 37, 38, 39, 40, 41, 42, 43] },
   vdrummer: { name: 'UJAM Virtual Drummer', keys: [36, 41, 38, 40, 42, 46, 37, 49] }
 };
