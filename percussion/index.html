@@ -317,7 +317,9 @@ footer a{color:var(--acc)}
       if (nPat >= 16 && pb === Math.floor(nPat / 2) - 1) out.push(['apito', '. . . . . . . . Api! . . . Api! . . .', 1]);
       const order = this.order || (this.order = ['surdo1', 'surdo2'].concat(['ganza', 'caixa', 'tamborim', 'surdo3', 'agogo'].sort(() => c.R() - 0.5))), n = Math.max(3, Math.round(3 + inten * 4));
       order.slice(0, n).forEach((p) => out.push([p, pick(p), p.startsWith('surdo') ? 1 : 0.7]));
-      let part = 'batucada'; if (lastBar && !c.short) { out.push(['apito', this.apito, 1]); out.push(['repinique', this.chamada, 1.05]); part = 'chamada'; }
+      if (pb % 4 === 3 && !lastBar) { out.push(['repinique', r.pick(['. . . . . . . . Rp! . Rp Rp Rp! . Rp! .', 'Rp . Rp Rp . Rp . Rp Rp! . . Rp! . Rp! . .', '. . . . . . . . . . Rp Rp Rp! Rp Rp! .', 'Rp! . . Rp . . Rp . . . . . Rp! Rp Rp Rp!']), 1]);
+        const s3 = out.findIndex((x) => x[0] === 'surdo3'); if (s3 >= 0) out[s3] = ['surdo3', toks(out[s3][1]).slice(0, 12).concat(['Cor', 'Cor', 'Cor', 'Cor']).join(' '), 1]; }
+      let part = pb % 4 === 3 ? 'batucada · the repinique turns the phrase' : 'batucada'; if (lastBar && !c.short) { out.push(['apito', this.apito, 1]); out.push(['repinique', this.chamada, 1.05]); part = 'chamada'; }
       return { part, out }; } };
 
   // Middle East: rhythmic cycles (iqa'at) in Dum (low centre), Tek (high edge), ka (soft other hand). Each part of the song can have its own cycle.
@@ -371,6 +373,7 @@ footer a{color:var(--acc)}
       } else { ph = this.spread(cyc[v]); part = slow ? 'keherwa' : ek ? 'ektaal' : 'theka'; }
       // drut, dugun: in the full parts the theka now and then runs at double speed, two bols to a beat
       if (!slow && !ek && inten > 0.8 && part === 'kaida' && c.pb % 8 >= 6 && r.chance(0.6)) { const all = this.theka.join(' ').split(' '), half = (c.pb % 2) * 8; ph = all.slice(half, half + 8).map((b) => b + ' .').join(' '); part = 'drut · theka in dugun'; }
+      if (part === 'theka' && v === cyc.length - 1) { const f = r.pick(['Ti Ra Ki Ta', 'Dha Ge Na Ge', 'Na Dha Ti Ta', 'Ki Ta Dha .', 'Dha . Ti Ra']); ph = toks(ph).slice(0, 12).concat(toks(f)).join(' '); part = 'theka, a small fill back to sam'; }
       // room for the tihai at the end of the part
       if (c.nPat >= 2) { const L = this.tlen(), endIdx = (c.nPat - c.pb) * 16; // steps from this bar's start to the end of the part
         const room = endIdx - L; if (room <= 0) ph = null; else if (room < 16) ph = toks(ph).map((t, i) => i < room ? t : '.').join(' '); }
@@ -447,7 +450,7 @@ footer a{color:var(--acc)}
   // four rounds of seven strong strokes, a fast roll, one last stroke.
   T.shamanic = { grid: 16, group: 4, players: [['frame', 'Frame drum'], ['rattle', 'Rattle'], ['drum2', 'Second drum'], ['bells', 'Bells']],
     map: { dum: 'drum', ra: 'shk', lo: 'clo', zi: 'bell' },
-    setup(c) { const R = c.R; this.acc = R.pick([4, 3, 6, 8, 5]); this.rat = R.pick(['Ra ra', 'Ra ra ra ra', 'Ra . ra .', 'Ra ra ra .']); this.d2 = R.pick(['. . Lo . . . Lo .', 'Lo . . . . . . .', '. Lo . Lo . . . .', 'Lo . . Lo . . Lo .']); this.hb = R.pick(['Dum . dum . . . . . Dum . dum . . . . .', 'Dum . . dum . . . . Dum . . dum . . . .', 'Dum dum . . . . . . Dum dum . . . . . .']); },
+    setup(c) { const R = c.R; this.acc = R.pick([3, 5, 6, 7, 9]); this.rat = R.pick(['Ra ra', 'Ra ra ra ra', 'Ra . ra .', 'Ra ra ra .']); this.d2 = R.pick(['. . Lo . . . Lo .', 'Lo . . . . . . .', '. Lo . Lo . . . .', 'Lo . . Lo . . Lo .']); this.hb = R.pick(['Dum . dum . . . . . Dum . dum . . . . .', 'Dum . . dum . . . . Dum . . dum . . . .', 'Dum dum . . . . . . Dum dum . . . . . .']); },
     bar(c) { const { bpm, inten, prog, w, pb, nPat, lastSec, firstBar } = c, out = [];
       // one pulse; the accent walks in its own cycle over it (every 3, 4, 5, 6 or 8 strokes), so the drum breathes
       const sub = bpm * 2 / 60 >= 3.8 && bpm * 2 / 60 <= 7.5 ? 2 : bpm * 4 / 60 <= 7.5 ? 1 : 4, k0 = (c.bar0 + pb) * (16 / sub);
@@ -472,7 +475,12 @@ footer a{color:var(--acc)}
     const personal = (ph, r, n) => { const a = toks(ph), syl = a.filter((t) => t !== '.'); if (!syl.length) return ph; const g = Tm.group;
       for (let k = 0; k < n; k++) { const i = r.int(a.length); if (i % g === 0) continue; if (a[i] === '.') a[i] = r.pick(syl).replace('!', '').toLowerCase(); else if (r.chance(0.6)) a[i] = '.'; } return a.join(' '); };
     const fresh = (p, r) => fixed.includes(p) ? r.pick(Tm.pools[p]) : personal(r.pick(Tm.pools[p]), r, 1 + r.int(3));
-    const pick = (p) => { if (!choice[p]) choice[p] = fresh(p, R); return choice[p]; };
+    // phrases of four bars: the part a player chose develops from phrase to phrase, and the fourth bar turns
+    const cur = { si: 0, pb: 0 }, dev = {};
+    const pick = (p) => { if (!choice[p]) choice[p] = fresh(p, R); const base = choice[p]; if (fixed.includes(p)) return base;
+      const k = Math.floor(cur.pb / 4), key = p + '|' + cur.si + '|' + k, rr = rng(hash(song.seed, key));
+      if (!dev[key]) dev[key] = k ? personal(base, rr, 1) : base; if (cur.pb % 4 !== 3) return dev[key];
+      if (!dev[key + 't']) dev[key + 't'] = personal(dev[key], rr, 2 + Math.round(2 * w)); return dev[key + 't']; };
     // now and then a player changes figure between parts, as players do
     let bar0 = 0;
     song.sections.forEach((sec, si) => {
@@ -481,8 +489,10 @@ footer a{color:var(--acc)}
       for (let pb = 0; pb < nb; pb++) {
         const t0 = (bar0 + pb) * barSec, prog = nb > 1 ? pb / (nb - 1) : 1, inten = Math.min(1, base * (0.8 + 0.4 * prog) + 0.12 * w);
         const c = { ev, mutes, r, w, sw, grid, R, bpm, si, sec, pb, bar0, nPat: nb, pbIn: pb, prog, inten, firstBar: pb === 0, lastBar: pb === nb - 1, lastSec, short: nb < 2, pick };
-        const res = Tm.bar(c), line = { bar: bar0 + pb, part: res.part, lines: [] };
-        for (const [pid, ph, g] of res.out) { layer(c, pid, t0, stp, ph, Tm.map, g * (0.85 + 0.2 * inten)); const nm = (Tm.players.find((p) => p[0] === pid) || [pid, pid])[1]; line.lines.push([nm, show(ph, Tm.group)]); }
+        cur.si = si; cur.pb = pb; const res = Tm.bar(c), line = { bar: bar0 + pb, part: res.part, lines: [] };
+        // the dynamics of the phrase: growing, in steps, or even
+        const shape = [['cresc', [0.85, 0.92, 1, 1.08]], ['terraced', [0.88, 0.88, 1.02, 1.06]], ['even', [0.97, 0.97, 0.97, 1.03]]][hash(song.seed, si, 'shape') % 3][1][pb % 4];
+        for (const [pid, ph, g] of res.out) { layer(c, pid, t0, stp, ph, Tm.map, g * (0.85 + 0.2 * inten) * shape); const nm = (Tm.players.find((p) => p[0] === pid) || [pid, pid])[1]; line.lines.push([nm, show(ph, Tm.group)]); }
         if (res.roll) { const n = 24 + Math.round(16 * w); for (let k = 0; k < n; k++) ev.push({ t: t0 + (k / n) * barSec * 0.9, v: 'drum', vel: 70 + Math.round(40 * k / n) }); ev.push({ t: t0 + barSec * 0.95, v: 'drum', vel: 124 }); line.lines.push(['Frame drum', 'roll, faster and faster, one last stroke']); }
         words.push(line);
       }
