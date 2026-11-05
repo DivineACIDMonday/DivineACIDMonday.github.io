@@ -308,6 +308,7 @@ footer a{color:var(--acc)}
     setup(c) { this.order = null; this.parad = c.R.pick(this.bossas); this.chamada = c.R.pick(['Rp! . Rp . Rp! . Rp . Rp! . Rp . Rp! Rp Rp Rp', 'Rp! Rp . Rp Rp! . Rp . Rp! Rp . Rp Rp! Rp Rp Rp', 'Rp! . . Rp Rp! . . Rp Rp! . Rp . Rp! Rp Rp Rp']); },
     bar(c) { const { r, inten, firstBar, lastBar, pick, pb, nPat } = c, out = [];
       if (firstBar && c.si === 0) { out.push(['apito', this.apito, 1]); out.push(['repinique', this.chamada, 1.1]); return { part: 'chamada', out }; }
+      if (nPat >= 24 && pb === Math.floor(nPat / 2) + 1 && c.R.chance(0.5)) { out.push(['surdo1', 'Bum . . . . . . . . . . . . . . .', 1]); out.push(['apito', '. . . . . . . . . . . . Api! . Api! .', 1]); return { part: 'paradinha · holding the breath', out }; }
       if (nPat >= 16 && pb === Math.floor(nPat / 2)) { out.push(['repinique', this.parad, 1.1]); out.push(['surdo1', 'Bum . . . . . . . . . . . . . . .', 1]); return { part: 'paradinha (break)', out }; }
       if (nPat >= 16 && pb === Math.floor(nPat / 2) - 1) out.push(['apito', '. . . . . . . . Api! . . . Api! . . .', 1]);
       const order = this.order || (this.order = ['surdo1', 'surdo2'].concat(['ganza', 'caixa', 'tamborim', 'surdo3', 'agogo'].sort(() => c.R() - 0.5))), n = Math.max(3, Math.round(3 + inten * 4));
@@ -325,6 +326,7 @@ footer a{color:var(--acc)}
     bar(c) { const { r, prog, inten, lastBar, w } = c, name = this.by[c.sec.type] || 'maqsum', base = this.iqa[name], out = [];
       // each darbuka player has their own soft ka strokes in the gaps of the cycle
       let part = name + ' · plain', d = toks(base).map((t, i) => t === '.' && this.gh.includes(i) ? 'ka' : t).join(' ');
+      if (inten < 0.45 && !lastBar) { const h = c.pb % 2; d = toks(base).slice(h * 8, h * 8 + 8).map((t) => t + ' .').join(' '); part = name + ' · slow, over 2 bars'; }
       if (lastBar && !c.short) { d = this.closing; part = 'closing phrase'; } else if (inten > 0.5 && prog >= 0.3) { d = this.adorn(base, r, 0.25 + 0.5 * w + 0.2 * prog); part = name + ' · zakhrafa (ornament)'; }
       out.push(['darbuka', d, 1]);
       if (inten > 0.3) { const q = toks(this.riq); out.push(['riq', toks(base).map((t, i) => t !== '.' ? 'Sh' : q[i % q.length] === '.' ? '.' : 'sh').join(' '), 0.6]); }
@@ -348,7 +350,12 @@ footer a{color:var(--acc)}
     khali: (ph) => ph.replace(/Dha/g, 'Ta').replace(/Dhin/g, 'Tin').replace(/Ge/g, 'Ke').replace(/Dhi\b/g, 'Ti'),
     setup(c) { const R = c.R; this.k = R.pick(this.kaida); this.tala = R.chance(0.3) ? 'ektaal' : 'teentaal'; this.th = R.pick(this.tihais); this.rela = R.pick(this.relas); this.manj = R.pick(this.manjiras); },
     tlen() { return 3 * toks(this.th[0]).length + 2 * this.th[1] - 1; },
-    bar(c) { const { inten, pbIn, r, w } = c, out = [], slow = inten < 0.45, ek = !slow && this.tala === 'ektaal', cyc = slow ? this.keherwa : ek ? this.ektaal : this.theka, v = pbIn % cyc.length;
+    bar(c) { const { inten, pbIn, r, w } = c, out = [], slow = inten < 0.45 && c.sec.type !== 'intro' && c.sec.type !== 'outro' ? false : inten < 0.45, vil = inten < 0.45 && !slow;
+      // vilambit: the slow laya, one matra lasts two beats, a teentaal cycle takes eight bars
+      if (vil || (inten < 0.45 && c.sec.type === 'break')) { const all = this.theka.join(' ').split(' '), m0 = (pbIn * 2) % 16, ph = all[m0] + ' . . . . . . . ' + all[m0 + 1] + ' . . . . . . .';
+        const room = c.nPat >= 2 ? (c.nPat - c.pb) * 16 - this.tlen() : 99; out.push(['tabla', room <= 0 ? '. . . . . . . . . . . . . . . .' : room < 16 ? toks(ph).map((t, i) => i < room ? t : '.').join(' ') : ph, 1]);
+        out.push(['manjira', 'Ching . . . . . . . chak . . . . . . .', 0.4]); return { part: 'vilambit (slow laya) · teentaal ' + ['X', '2', '0', '3'][Math.floor(m0 / 4)], out }; }
+      const ek = !slow && this.tala === 'ektaal', cyc = slow ? this.keherwa : ek ? this.ektaal : this.theka, v = pbIn % cyc.length;
       // the form changes only at the start of a cycle, on sam
       const cStart = c.pb - v, cProg = c.nPat > 1 ? cStart / (c.nPat - 1) : 1;
       let ph, part;
@@ -358,12 +365,14 @@ footer a{color:var(--acc)}
         const palta = [this.k + ' ' + this.k, a + ' ' + a + ' ' + a + ' ' + b, b + ' ' + a + ' ' + a + ' ' + b, a + ' ' + b + ' ' + b + ' ' + b][Math.floor(c.pb / cyc.length) % 4];
         if (w > 0.7 && v === cyc.length - 1 && r.chance(0.5)) { ph = this.rela; part = 'rela'; } else { ph = !ek && v === 2 ? this.khali(palta) : palta; part = 'kaida'; }
       } else { ph = this.spread(cyc[v]); part = slow ? 'keherwa' : ek ? 'ektaal' : 'theka'; }
+      // drut, dugun: in the full parts the theka now and then runs at double speed, two bols to a beat
+      if (!slow && !ek && inten > 0.8 && part === 'kaida' && c.pb % 8 >= 6 && r.chance(0.6)) { const all = this.theka.join(' ').split(' '), half = (c.pb % 2) * 8; ph = all.slice(half, half + 8).map((b) => b + ' .').join(' '); part = 'drut · theka in dugun'; }
       // room for the tihai at the end of the part
       if (c.nPat >= 2) { const L = this.tlen(), endIdx = (c.nPat - c.pb) * 16; // steps from this bar's start to the end of the part
         const room = endIdx - L; if (room <= 0) ph = null; else if (room < 16) ph = toks(ph).map((t, i) => i < room ? t : '.').join(' '); }
       if (ph) out.push(['tabla', ph, 1]);
       out.push(['manjira', this.manj, 0.45]);
-      return { part: part + ' · ' + (slow ? 'keherwa ' + (v === 0 ? 'X' : '0') : ek ? 'ektaal ' + this.ekmarks[v] : 'teentaal ' + this.marks[v]), out }; },
+      return { part: part + ' · ' + (slow ? (v === 0 ? 'X' : '0') : ek ? 'ektaal ' + this.ekmarks[v] : 'teentaal ' + this.marks[v]), out }; },
     // the tihai: three times the same phrase with a rest between, the last stroke exactly on sam (the start of the next part)
     cadence(c, tEnd, stp) { const p = this.th[0], len = toks(p).length, gap = this.th[1], st = tEnd - this.tlen() * stp; let s = st;
       for (let k = 0; k < 3; k++) { layer(c, 'tabla', s, stp, p, this.map, k === 2 ? 1.15 : 1.05); s += (len + gap) * stp; } return 'tihai ×3 → sam'; } };
@@ -382,6 +391,7 @@ footer a{color:var(--acc)}
         if (k < 2) { out.push(['frame', 'Dum! Dum! Dum! Dum! Dum! Dum! Dum! . Dum! Dum! Dum! Dum! Dum! Dum! Dum! .', 1.1]); return { part: 'callback · 2 × 7', out }; }
         return { part: 'callback · fast roll', out, roll: true }; }
       if (firstBar && c.si === 0 || inten < 0.3) { out.push(['frame', this.hb, 0.95]); out.push(['rattle', 'Ra . . . ra . . . Ra . . . ra . . .', 0.4]); return { part: 'heartbeat', out }; }
+      if (inten > 0.7 && pb % 8 === 7 && c.r.chance(0.45 + 0.35 * w)) { out.push(['frame', 'Dum dum Dum dum Dum dum Dum dum Dum dum Dum dum Dum! Dum! Dum! Dum!', 1.05]); out.push(['rattle', 'Ra ra Ra ra Ra ra Ra ra Ra ra Ra ra Ra ra Ra ra', 0.6]); return { part: 'storm · fast drumming', out }; }
       out.push(['frame', pulse, 0.95]); out.push(['rattle', rat, 0.45]);
       if (inten > 0.6 && w > 0.35) out.push(['drum2', this.d2 + ' ' + this.d2, 0.6]);
       if (prog > 0.5 && pb % 4 === 0) out.push(['bells', 'Zi . . . . . . . . . . . . . . .', 0.5]);
@@ -450,7 +460,7 @@ footer a{color:var(--acc)}
     let bar0 = 0;
     song.sections.forEach((sec, si) => {
       const nb = Math.max(1, sec.bars), nPat = Math.max(1, Math.round(nb * tf)), patSec = barSec * nb / nPat, beat = patSec / 4, last = si === song.sections.length - 1;
-      const base = INTENS[sec.type] != null ? INTENS[sec.type] : 0.6, r = rng(hash(song.seed, 'taiko', si));
+      const base = INTENS[sec.type] != null ? INTENS[sec.type] : 0.6, r = rng(hash(song.seed, 'taiko', si)); let slowUntil = -1;
       for (let pb = 0; pb < nPat; pb++) {
         const t0 = bar0 * barSec + pb * patSec, prog = nPat > 1 ? pb / (nPat - 1) : 1, inten = Math.min(1, base * (0.75 + 0.5 * prog) + 0.15 * w);
         // jo, ha, kyu: open slowly, break open, end fast
@@ -477,9 +487,21 @@ footer a{color:var(--acc)}
         if (w > 0.7 && a && part === 'ha' && r.chance(0.3)) a = a.replace('doko', 'doro');
         // zen side: more ma, the second player rests more
         if (w < 0.3 && b && r.chance(0.4)) b = null;
-        play(t0, beat, od, 'odaiko', 'odaiko', 1.05, r); line.odaiko = od;
+        // the breath of this phrase: jo mostly drops in slow motion, kyu mostly storms, ha mixes; the slider moves the balance
+        let breath = 'normal';
+        if (!kime && a) { const pDrop = part === 'jo' ? 0.55 + 0.35 * (1 - w) : part === 'ha' ? 0.1 + 0.35 * (1 - w) : 0.04, pStorm = part === 'jo' ? 0 : part === 'ha' ? 0.1 + 0.3 * w : 0.45 + 0.35 * w, x = r();
+          breath = x < pDrop && pb + 1 < nPat - 1 && /[A-Za-z]/.test(a.replace(/su/g, '')) ? 'drop' : x < pDrop + pStorm ? 'storm' : 'normal'; }
+        if (pb < slowUntil) { a = null; b = null; line.lead = '(the slow phrase goes on: ma)'; }
+        // the odaiko is more than a heartbeat: it answers the nagado in ha and storms with them in kyu
+        let odx = od;
+        if (part === 'ha' && !b && r.chance(0.3)) { odx = r.pick(ANSWERS); line.odaiko = odx + ' (answers)'; }
+        else if (part === 'kyu' && r.chance(0.4 + 0.3 * w)) odx = r.pick(['doko doko DON su', 'DON doko DON doko', 'doro DON doro DON', 'DON DON doko DON']);
+        play(t0, beat, odx, 'odaiko', 'odaiko', 1.05, r); if (!line.odaiko) line.odaiko = odx;
+        if (a && breath === 'drop') { play(t0, beat * 2, a, 'don', 'ka', 0.95, r); line.lead = a + '   · slow motion, over 2 bars'; slowUntil = pb + 2; a = null; b = null; }
+        else if (a && breath === 'storm') { const st2 = r.pick(KYU); play(t0, beat / 2, st2, 'don', 'ka', 0.95 + 0.1 * inten, r); play(t0 + 2 * beat, beat / 2, st2, 'don', 'ka', 1, r); line.lead = st2 + ' ×2   · storm'; a = null; }
         if (sh) { play(t0, beat, sh, 'shime', 'shimeka', 0.7 + 0.2 * inten, r); line.shime = sh; }
         if (a) { play(t0, beat, a, 'don', 'ka', 0.9 + 0.1 * inten, r); line.lead = a; }
+        if (line.lead && !line.part2) line.breath = breath;
         if (b) { play(t0 + (kime ? 0 : 0.006), beat, b, 'don', 'ka', 0.82, r); line.second = b; }
         if (ok) { play(t0, beat, ok, 'okedo', 'ka', 0.72, r); line.okedo = ok; }
         if (kn) { play(t0, beat, words(kn).map((x) => x === 'karakara' ? 'doro' : x === 'kara' ? 'doko' : x).join(' '), 'kane', 'kane', 0.55, r); line.kane = words(kn).map((x) => x === 'karakara' ? 'chiki-chiki' : x === 'kara' ? 'chan-chiki' : x).join(' '); }
