@@ -90,13 +90,14 @@ footer a{color:var(--acc)}
     <span class="pos" id="pos">Bar 1</span>
     <label class="small" id="withBeatL" hidden><input type="checkbox" id="withBeat" checked> with my beat</label>
     <span style="flex:1"></span>
-    <button class="btn" id="dlMidi">⬇ MIDI</button><button class="btn main" id="dlWav">⬇ WAV</button>
+    <label class="small">MIDI for <select id="target" style="font:inherit;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px"></select></label><button class="btn" id="dlMidi">⬇ MIDI</button><button class="btn main" id="dlWav">⬇ WAV</button>
   </div>
   <div class="secs" id="secs"><div class="ph" id="ph"></div></div>
   <div class="small">Tap a section to play from there.</div>
   <div class="lab" style="margin-top:14px">Players · tap to mute</div>
   <div class="players" id="players"></div>
   <div class="lanes" id="lanes"></div>
+  <div class="small" id="slotInfo" style="margin-top:12px"></div>
 </section>
 
 <footer>
@@ -308,7 +309,7 @@ footer a{color:var(--acc)}
 const P = window.PercMotor, $ = (s) => document.querySelector(s);
 const store = { get: (k, d) => { try { const v = localStorage.getItem('dpm-' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set: (k, v) => { try { localStorage.setItem('dpm-' + k, JSON.stringify(v)); } catch (e) {} } };
 const SEC_COL = { intro: '#7FC8E8', verse: '#8FD18B', prechorus: '#B4D98B', build: '#E9C46A', chorus: '#E0705A', drop: '#E0705A', break: '#A79BF0', bridge: '#C88FE8', outro: '#7FA3E8', solo: '#E88FC8', fill: '#F2E0A0' };
-const st = { style: store.get('style', 'westafrica'), wild: store.get('wild', 0.5), swing: store.get('swing', 0.2), bpm: store.get('bpm', 124), struct: store.get('struct', $('#struct').value), seed: store.get('seed', (Math.random() * 2 ** 31) >>> 0), mutes: {}, beat: null, res: null };
+const st = { style: store.get('style', 'westafrica'), wild: store.get('wild', 0.5), swing: store.get('swing', 0.2), bpm: store.get('bpm', 124), struct: store.get('struct', $('#struct').value), seed: store.get('seed', (Math.random() * 2 ** 31) >>> 0), target: store.get('target', 'xo'), mutes: {}, beat: null, res: null };
 let toastT = 0; const toast = (m) => { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2400); };
 
 /* ---------- structure text ---------- */
@@ -392,19 +393,36 @@ function drawPos() { const t = now(), bar = Math.floor(t / st.res.barSec), secs 
   $('#pos').textContent = name || 'End'; $('#ph').style.left = 'calc(' + Math.min(100, 100 * t / Math.max(0.01, st.res.totalSec)) + '% - 1px)';
   if (bar !== lastBar) drawLanes(); const step = Math.floor((t / st.res.barSec - bar) * (st.res.tf === 1 ? st.res.grid : 16)); document.querySelectorAll('.cells').forEach((c) => [...c.children].forEach((i, k) => i.classList.toggle('now', AU.playing && k === step))); }
 
+/* ---------- MIDI out: plain GM, or the eight slots of a drum plugin ---------- */
+// eight slots: the voices that sound alike share one
+const SLOTS = [['Big drum', ['drum']], ['Low conga', ['clo']], ['High conga', ['chi']], ['Slap', ['slap']], ['Bongos', ['bhi', 'blo']], ['Shaker and tambourine', ['shk', 'tamb']], ['Bells', ['bell', 'bell2']], ['Wood and clave', ['wood', 'clave']]];
+const TARGETS = {
+  gm: { name: 'Plain MIDI (GM percussion)' },
+  xo: { name: 'XLN XO', keys: [36, 37, 38, 39, 40, 41, 42, 43] },
+  beatmaker: { name: 'UJAM Beatmaker 3', keys: [36, 38, 40, 43, 45, 48, 52, 59] },
+  tekno: { name: 'BABY Audio Tekno', map: { drum: [43, 'tom l'], clo: [47, 'conga l'], chi: [48, 'conga h'], slap: [46, 'rimshot'], bhi: [44, 'tom h'], blo: [44, 'tom h'], shk: [40, 'hat a'], tamb: [42, 'hat op'], bell: [51, 'cowbell'], bell2: [51, 'cowbell'], wood: [52, 'block'], clave: [52, 'block'] } },
+  impact: { name: 'Impact XT', keys: [36, 37, 38, 39, 40, 41, 42, 43] },
+  vdrummer: { name: 'UJAM Virtual Drummer', keys: [36, 41, 38, 40, 42, 46, 37, 49] }
+};
+const NN = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'], nn = (m) => NN[m % 12] + (Math.floor(m / 12) - 2);
+function noteFor(T, v) { if (T.map) return T.map[v][0]; if (T.keys) { const i = SLOTS.findIndex((s) => s[1].includes(v)); return T.keys[i]; } return P.VOICES[v].gm; }
+function slotInfo() { const T = TARGETS[st.target], el = $('#slotInfo');
+  if (T.keys) el.innerHTML = '<b>Load these sounds in ' + T.name + ':</b> ' + SLOTS.map((s, i) => (i + 1) + ' ' + s[0] + ' (' + nn(T.keys[i]) + ')').join(' · ') + '. All on one MIDI track.';
+  else if (T.map) el.innerHTML = '<b>' + T.name + ':</b> big drum on tom l, congas on conga l and h, slap on rimshot, bongos on tom h, shaker on hat a, tambourine on hat op, bells on cowbell, wood on block. All on one MIDI track.';
+  else el.innerHTML = 'Plain MIDI: one track per instrument, General MIDI percussion notes.'; }
 /* ---------- MIDI out ---------- */
 function midiOut() { const res = st.res, PPQ = 480, spq = 60 / st.bpm, vlq = (n) => { const b = [n & 127]; while ((n >>= 7)) b.unshift((n & 127) | 128); return b; };
   const trk = (bytes) => { const h = [0x4D, 0x54, 0x72, 0x6B], l = bytes.length; return h.concat([(l >>> 24) & 255, (l >>> 16) & 255, (l >>> 8) & 255, l & 255], bytes); };
   const name = (s) => { const b = [...new TextEncoder().encode(s)]; return [0, 0xFF, 3].concat(vlq(b.length), b); };
   const tempo = Math.round(60000000 / st.bpm), tracks = [trk(name('Divine Percussion Motor').concat([0, 0xFF, 0x51, 3, (tempo >> 16) & 255, (tempo >> 8) & 255, tempo & 255, 0, 0xFF, 0x58, 4, 4, 2, 24, 8, 0, 0xFF, 0x2F, 0]))];
-  const by = {}; for (const e of res.events) (by[e.v] = by[e.v] || []).push(e);
-  for (const v of Object.keys(P.VOICES)) { if (!by[v]) continue; const n = P.VOICES[v].gm, msgs = [];
-    for (const e of by[v]) { const tk = Math.round(e.t / spq * PPQ); msgs.push([tk, 0x99, n, e.vel], [tk + 60, 0x89, n, 0]); }
-    msgs.sort((a, b) => a[0] - b[0] || (a[1] === 0x89 ? -1 : 1)); let last = 0, bytes = name(P.VOICES[v].name);
+  const T = TARGETS[st.target], one = st.target !== 'gm', by = {}; for (const e of res.events) (by[one ? 'all' : e.v] = by[one ? 'all' : e.v] || []).push(e);
+  for (const v of one ? ['all'] : Object.keys(P.VOICES)) { if (!by[v]) continue; const msgs = [];
+    for (const e of by[v]) { const n = noteFor(T, e.v), tk = Math.round(e.t / spq * PPQ); msgs.push([tk, 0x99, n, e.vel], [tk + 60, 0x89, n, 0]); }
+    msgs.sort((a, b) => a[0] - b[0] || (a[1] === 0x89 ? -1 : 1)); let last = 0, bytes = name(one ? 'Percussion for ' + T.name : P.VOICES[v].name);
     for (const m of msgs) { bytes = bytes.concat(vlq(m[0] - last), [m[1], m[2], m[3]]); last = m[0]; } tracks.push(trk(bytes.concat([0, 0xFF, 0x2F, 0]))); }
   const head = [0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 1, (tracks.length >> 8) & 255, tracks.length & 255, (PPQ >> 8) & 255, PPQ & 255];
   return new Blob([new Uint8Array(head.concat(...tracks))], { type: 'audio/midi' }); }
-function fileName(ext) { return ('Divine Percussion ' + P.STYLES[st.style].name + ' ' + st.bpm + 'bpm.' + ext).replace(/\s+/g, ' '); }
+function fileName(ext) { return ('Divine Percussion ' + P.STYLES[st.style].name + ' ' + st.bpm + 'bpm' + (ext === 'mid' && st.target !== 'gm' ? ' ' + TARGETS[st.target].name : '') + '.' + ext).replace(/\s+/g, ' '); }
 function save(blob, nm) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nm; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); count('download/' + nm.split('.').pop()); }
 async function wavOut() { const sr = 44100, len = Math.ceil((st.res.totalSec + 1.2) * sr), oc = new OfflineAudioContext(2, len, sr), out = oc.createGain(); out.gain.value = 0.5; const c = oc.createDynamicsCompressor(); c.threshold.value = -10; out.connect(c); c.connect(oc.destination);
   for (const e of st.res.events) P.play(oc, out, e.v, e.t + 0.02, e.vel); const buf = await oc.startRendering(), L = buf.getChannelData(0), R = buf.getChannelData(1), n = L.length; let pk = 1e-9; for (let i = 0; i < n; i++) pk = Math.max(pk, Math.abs(L[i]), Math.abs(R[i])); const gn = 0.89 / pk; for (let i = 0; i < n; i++) { L[i] *= gn; R[i] *= gn; }
@@ -423,6 +441,8 @@ $('#dice').onclick = () => { st.seed = (Math.random() * 2 ** 31) >>> 0; store.se
 $('#play').onclick = () => { if (AU.playing) stop(); else start(AU.off >= st.res.totalSec ? 0 : AU.off); };
 $('#withBeat').onchange = () => { if (AU.playing) restartAt(now()); };
 $('#dlMidi').onclick = () => save(midiOut(), fileName('mid'));
+const TG = $('#target'); for (const k in TARGETS) { const o = document.createElement('option'); o.value = k; o.textContent = TARGETS[k].name; if (k === st.target) o.selected = true; TG.append(o); }
+TG.onchange = () => { st.target = TG.value; store.set('target', st.target); slotInfo(); }; slotInfo();
 $('#dlWav').onclick = async () => { const b = $('#dlWav'), t = b.textContent; b.textContent = 'Rendering…'; b.disabled = true; try { save(await wavOut(), fileName('wav')); } catch (e) { toast('WAV failed: ' + e.message); } b.textContent = t; b.disabled = false; };
 const D = $('#drop'); $('#file').onchange = (e) => { if (e.target.files[0]) loadFile(e.target.files[0]); e.target.value = ''; };
 D.ondragover = (e) => { e.preventDefault(); D.classList.add('on'); }; D.ondragleave = () => D.classList.remove('on'); D.ondrop = (e) => { e.preventDefault(); D.classList.remove('on'); if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); };
