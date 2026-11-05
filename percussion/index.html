@@ -64,6 +64,8 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 footer{color:var(--soft);font-size:13px;margin-top:20px;line-height:1.6}
 footer a{color:var(--acc)}
 .small{font-size:13px;color:var(--soft)}
+.listen{position:relative;overflow:hidden}.listen>*:not(canvas){position:relative;z-index:1}
+#rain{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
 .note{font-size:14px;line-height:1.55}.note b{color:var(--acc)}
 .speak{display:grid;gap:4px;margin-top:12px;font:600 14px/1.4 ui-monospace,Menlo,Consolas,monospace}
 .speak div{display:grid;grid-template-columns:110px 1fr;gap:8px}.speak span{color:var(--soft);font:12px system-ui,sans-serif;align-self:center}
@@ -91,7 +93,7 @@ footer a{color:var(--acc)}
 </div>
 
 <section class="card note"><div class="lab" id="noteT"></div><div id="noteB"></div></section>
-<section class="card">
+<section class="card listen"><canvas id="rain" aria-hidden="true"></canvas>
   <div class="lab">3 · Listen</div>
   <div class="transport">
     <button class="play" id="play" aria-label="Play">▶</button>
@@ -651,12 +653,48 @@ function beatHit(c, out, e, t) { const a = e.vel / 127; const o = c.createOscill
 let BEV = [];
 function restartAt(pos) { AU.off = Math.max(0, pos); AU.t0 = AU.ctx.currentTime + 0.05; const ev = st.res.events; AU.i = 0; while (AU.i < ev.length && ev[AU.i].t < AU.off) AU.i++; BEV = beatEvents(); AU.j = 0; while (AU.j < BEV.length && BEV[AU.j].t < AU.off) AU.j++; }
 function tick() { const c = AU.ctx, ev = st.res.events, horizon = now() + 0.25;
-  while (AU.i < ev.length && ev[AU.i].t < horizon) { const e = ev[AU.i++]; P.play(c, AU.out, e.v, AU.t0 + e.t - AU.off, e.vel); }
+  while (AU.i < ev.length && ev[AU.i].t < horizon) { const e = ev[AU.i++]; const at = AU.t0 + e.t - AU.off; P.play(c, AU.out, e.v, at, e.vel); const d = Math.max(0, (at - c.currentTime) * 1000); setTimeout(() => { if (AU.playing) drop(e); }, d); }
   while (AU.j < BEV.length && BEV[AU.j].t < horizon) { const e = BEV[AU.j++]; beatHit(c, AU.out, e, AU.t0 + e.t - AU.off); }
   if (now() > st.res.totalSec + 0.5) { stop(); AU.off = 0; } drawPos(); }
 async function start(pos) { const c = ctx(); if (c.state !== 'running') await c.resume(); AU.playing = true; restartAt(pos != null ? pos : AU.off); clearInterval(AU.timer); AU.timer = setInterval(tick, 40); $('#play').textContent = '■'; $('#play').setAttribute('aria-label', 'Stop'); }
 function stop() { AU.off = now(); AU.playing = false; clearInterval(AU.timer); $('#play').textContent = '▶'; $('#play').setAttribute('aria-label', 'Play'); drawPos(); }
 
+/* ---------- rain: every stroke rises as a small shape in the colours of its tradition ---------- */
+const RAIN = {
+  westafrica: { shape: 'skin', cols: ['#C8742E', '#E0A23C', '#A8452B', '#7A4A2A', '#E8C27A'] },
+  afrocuban: { shape: 'stick', cols: ['#D9412E', '#F2B233', '#E8792B', '#F6D365', '#B8322A'] },
+  brazil: { shape: 'confetti', cols: ['#1FA34A', '#F7D417', '#2C62C9', '#FFFFFF', '#18B5A8'] },
+  mideast: { shape: 'tile', cols: ['#2D3E8C', '#D4A537', '#1E7C88', '#E8D7A6', '#4B5BB0'] },
+  india: { shape: 'petal', cols: ['#F28C28', '#D8317A', '#F6C445', '#8E2C8A', '#E9573F'] },
+  taiko: { shape: 'ring', cols: ['#C8102E', '#F4F1EA', '#2B2B2B', '#E05A47', '#D9D2C3'] },
+  zen: { shape: 'enso', cols: ['#9AA39A', '#B9C2B0', '#7E8B86', '#D8DCD2', '#6F7D6B'] },
+  shamanic: { shape: 'spiral', cols: ['#8E1E14', '#D9531E', '#C98A2B', '#5C2414', '#F0A04B'] },
+  minimal: { shape: 'square', cols: ['#5FD3E0', '#F2F4F7', '#8AA8FF', '#3BB4C8', '#C9D6FF'] }
+};
+const RC = $('#rain'), RX = RC.getContext('2d'), parts = []; let rainOn = false;
+const calm = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
+const vIndex = (v) => Object.keys(P.VOICES).indexOf(v);
+function drop(e) { if (calm && Math.random() < 0.7) return; const R = RAIN[st.style] || RAIN.minimal, w = RC.clientWidth || 600, h = RC.clientHeight || 400;
+  parts.push({ x: 20 + Math.random() * (w - 40), y: h + 10, vy: 40 + e.vel * 0.9, sz: 4 + e.vel / 127 * 14, col: R.cols[vIndex(e.v) % R.cols.length], rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 2, life: 1, shape: R.shape });
+  if (parts.length > 260) parts.splice(0, parts.length - 260); if (!rainOn) { rainOn = true; last = performance.now(); requestAnimationFrame(rainLoop); } }
+let last = 0;
+function shapeOf(p) { const s = p.sz; RX.beginPath();
+  switch (p.shape) {
+    case 'skin': RX.arc(0, 0, s, 0, 6.28); RX.fill(); RX.beginPath(); RX.globalAlpha *= 0.6; RX.lineWidth = 1.5; RX.arc(0, 0, s * 0.62, 0, 6.28); RX.strokeStyle = '#2a1a10'; RX.stroke(); break;
+    case 'stick': RX.fillRect(-s * 1.1, -s * 0.22, s * 2.2, s * 0.44); break;
+    case 'confetti': RX.fillRect(-s * 0.6, -s * 0.35, s * 1.2, s * 0.7); break;
+    case 'tile': for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4 + Math.PI / 8; RX[k ? 'lineTo' : 'moveTo'](Math.cos(a) * s, Math.sin(a) * s); } RX.closePath(); RX.fill(); break;
+    case 'petal': RX.moveTo(0, -s); RX.quadraticCurveTo(s * 0.8, 0, 0, s); RX.quadraticCurveTo(-s * 0.8, 0, 0, -s); RX.fill(); break;
+    case 'ring': RX.arc(0, 0, s, 0, 6.28); RX.fill(); RX.beginPath(); RX.lineWidth = Math.max(1.5, s * 0.18); RX.strokeStyle = 'rgba(0,0,0,.55)'; RX.arc(0, 0, s * 0.68, 0, 6.28); RX.stroke(); break;
+    case 'enso': RX.lineWidth = Math.max(2, s * 0.28); RX.lineCap = 'round'; RX.strokeStyle = p.col; RX.arc(0, 0, s, 0.3, 5.9); RX.stroke(); break;
+    case 'spiral': RX.lineWidth = 2; RX.strokeStyle = p.col; for (let a = 0; a < 12; a += 0.3) { const rr = s * a / 12; RX[a ? 'lineTo' : 'moveTo'](Math.cos(a) * rr, Math.sin(a) * rr); } RX.stroke(); break;
+    default: RX.fillRect(-s / 2, -s / 2, s, s); } }
+function rainLoop(t) { const dt = Math.min(0.05, (t - last) / 1000); last = t; const w = RC.clientWidth, h = RC.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (RC.width !== Math.round(w * dpr) || RC.height !== Math.round(h * dpr)) { RC.width = Math.round(w * dpr); RC.height = Math.round(h * dpr); }
+  RX.setTransform(dpr, 0, 0, dpr, 0, 0); RX.clearRect(0, 0, w, h);
+  for (let i = parts.length - 1; i >= 0; i--) { const p = parts[i]; p.y -= p.vy * dt; p.vy *= 0.992; p.rot += p.vr * dt; p.life -= dt * 0.45; if (p.life <= 0 || p.y < -30) { parts.splice(i, 1); continue; }
+    RX.save(); RX.translate(p.x, p.y); RX.rotate(p.rot); RX.globalAlpha = Math.min(1, p.life) * 0.5; RX.fillStyle = p.col; shapeOf(p); RX.restore(); }
+  if (parts.length) requestAnimationFrame(rainLoop); else { rainOn = false; RX.clearRect(0, 0, w, h); } }
 /* ---------- screen ---------- */
 // what each sound is called in each tradition
 const LABELS = {
