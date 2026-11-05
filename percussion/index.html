@@ -110,7 +110,7 @@ footer a{color:var(--acc)}
 </section>
 
 <footer>
-  How it works: every style is a set of traditional timelines (bell patterns, clave, maqsum, theka) and figures for each player. The motor combines them, lets a fourth bar answer the first three, adds and removes players every eight bars, slides a polyrhythm in halfway long sections and rolls into each new section. Fast tempos make slow styles play in half time, and the other way around.<br>
+  How it works: every tradition plays in its own language (kuchi-shoga, bols, Gun Go Pa, Dum Tek ka, conga strokes) and its own form: calls and answers, signals, breaks and cadences, as the players of that tradition do. The motor follows the parts of your song: quiet parts stay sparse, full parts open up. Made with deep respect for the drummers who carry these traditions; this is a sketchbook, a teacher is the real thing.<br>
   Everything runs in your browser. No cookies, only an anonymous visit counter (GoatCounter, no personal data); your MIDI never leaves this device.<br>
   Also by Divine Monday: <a href="../">the Divine Music Suite</a> · © 2026 Divine Monday
 </footer>
@@ -133,7 +133,8 @@ footer a{color:var(--acc)}
     // taiko
     odaiko: { name: 'Odaiko', gm: 35, col: '#C0503A' }, don: { name: 'Nagado don', gm: 41, col: '#E0705A' }, ka: { name: 'Nagado ka (rim)', gm: 37, col: '#F2E0A0' },
     shime: { name: 'Shime', gm: 48, col: '#E9C46A' }, shimeka: { name: 'Shime ka (rim)', gm: 75, col: '#F7EBC0' }, okedo: { name: 'Okedo', gm: 45, col: '#E39B4C' },
-    kane: { name: 'Atarigane', gm: 56, col: '#A79BF0' }, kake: { name: 'Kakegoe (call)', gm: 54, col: '#7FC8E8' }
+    kane: { name: 'Atarigane', gm: 56, col: '#A79BF0' }, kake: { name: 'Kakegoe (call)', gm: 54, col: '#7FC8E8' },
+    apito: { name: 'Apito (whistle)', gm: 71, col: '#9FE8D8' }
   };
   // ---------- random ----------
   function rng(seed) { let a = (seed >>> 0) || 1; const f = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -237,6 +238,161 @@ footer a{color:var(--acc)}
   function timeFactor(S, bpm) { if (bpm > S.tempo[1] * 1.3) return 0.5; if (bpm < S.tempo[0] / 1.3) return 2; return 1; }
 
   /* ---------- the whole song ---------- */
+  /* ---------- the traditions: each style plays in its own language and its own form ----------
+     A phrase is a row of tokens, one per step of the grid ('.' is a rest). A capital syllable is a full stroke,
+     lower case a soft one, a '!' an accent. Each player maps syllables to sounds. */
+  const T = {};
+  const toks = (s) => s.trim().split(/\s+/);
+  const rot8 = (s) => { const a = toks(s); return a.slice(8).concat(a.slice(0, 8)).join(' '); };
+  function layer(ctx, pid, t0, stp, phrase, map, gain) {
+    const { ev, mutes, r, w, sw, grid } = ctx; if (mutes[pid]) return;
+    toks(phrase).forEach((tk, i) => { if (tk === '.' || tk === '-') return; const key = tk.replace(/[^A-Za-z]/g, '').toLowerCase(), m = map[key]; if (!m) return;
+      const acc = tk.endsWith('!'), strong = /^[A-Z]/.test(tk); let s = i; if (grid === 16 && i % 2 === 1) s += sw * 0.36;
+      const vel = (acc ? 122 : strong ? 98 : 60) * gain + (r() - 0.5) * (8 + 10 * w), jit = (r() - 0.5) * (0.004 + 0.008 * w);
+      for (const v of [].concat(m)) ev.push({ t: Math.max(0, t0 + s * stp + jit), v, vel: Math.max(15, Math.min(127, Math.round(vel))) }); });
+  }
+  const show = (ph, g) => { const a = toks(ph), o = []; for (let i = 0; i < a.length; i += g) o.push(a.slice(i, i + g).join(' ')); return o.join(' | '); };
+
+  // West Africa: a djembe and dundun ensemble in 12/8. Djembe: Gun bass, Go tone, Pa slap. The lead calls the ensemble in and out.
+  T.westafrica = { grid: 12, group: 3, players: [['bell', 'Bell'], ['djembe1', 'Djembe 1'], ['dundunba', 'Dundunba'], ['kenkeni', 'Kenkeni'], ['sangban', 'Sangban'], ['djembe2', 'Djembe 2'], ['shekere', 'Shekere'], ['lead', 'Lead djembe']],
+    map: { ting: 'bell', ken: 'bhi', san: 'blo', dun: 'drum', gun: 'clo', go: 'chi', pa: 'slap', shk: 'shk' },
+    pools: { bell: ['Ting . Ting . Ting Ting . Ting . Ting . Ting', 'Ting . . Ting . . Ting . . Ting . .', 'Ting . Ting . Ting . . Ting . Ting . .'],
+      kenkeni: ['Ken . . Ken . . Ken . . Ken . .', 'Ken . Ken . . . Ken . Ken . . .', '. . Ken . . Ken . . Ken . . Ken'],
+      sangban: ['San . . . San San . . San . . .', '. . . San . . San . . San . san', 'San . san . . San San . . . . .'],
+      dundunba: ['Dun . . . . . Dun . Dun . . .', 'Dun . . Dun . . . . . . . .', 'Dun . . . . . . . . Dun . Dun'],
+      djembe1: ['Gun . Go Pa . Pa Gun . Go Pa . Pa', 'Pa . Go Go . Pa Pa . Go Go . Pa', 'Gun Go Go Pa . . Gun Go Go Pa . .', 'Pa Pa . Go Go . Pa Pa . Go Go .', '. Pa Pa . Go Go . Pa Pa . Go Go'],
+      djembe2: ['Go . Pa Go . Pa Go . Pa Go . Pa', '. Pa Pa . Pa Pa . Go Go . Go Go', 'Pa . . Pa Go Go Pa . . Pa Go Go'],
+      shekere: ['Shk . shk Shk . shk Shk . shk Shk . shk', 'Shk shk shk Shk shk shk Shk shk shk Shk shk shk'] },
+    cells: ['Pa Pa Pa', 'Pa . Pa', 'Go Go Pa', 'Pa Go Go', 'Gun . Pa', 'Pa! . .', 'Pa Pa .', '. Pa Pa', 'Go . Go', 'Pa! Pa Pa'],
+    call: 'Pa! . . Pa Pa . Pa Pa . Pa Pa .',
+    bar(c) { const { r, prog, inten, firstBar, lastBar, lastSec, pick } = c; const out = []; const n = Math.max(2, Math.round(2 + inten * 5));
+      if (firstBar && c.si === 0) { out.push(['lead', this.call, 1.1]); return { part: 'call', out }; }
+      ['bell', 'djembe1', 'dundunba', 'kenkeni', 'sangban', 'djembe2', 'shekere'].slice(0, n).forEach((p) => out.push([p, pick(p), p === 'bell' ? 0.7 : 0.85]));
+      let part = 'ensemble';
+      if (lastBar && !c.short) { out.push(['lead', this.call, 1.15]); part = lastSec ? 'call to stop' : 'call'; }
+      else if (inten > 0.55 && prog >= 0.35) { const hot = prog > 0.8; part = hot ? 'echauffement' : 'solo'; let ph = []; for (let k = 0; k < 4; k++) ph.push(hot && r.chance(0.6) ? r.pick(['Pa Pa Pa', 'Pa! Pa Pa', 'Go Go Pa']) : r.pick(this.cells)); out.push(['lead', ph.join(' '), hot ? 1.15 : 1]); }
+      return { part, out }; } };
+
+  // Afro-Cuban: everything follows the clave and its direction. Conga strokes: h heel, t toe, S slap, O open; the quinto improvises and calls (llamada).
+  T.afrocuban = { grid: 16, group: 4, players: [['clave', 'Clave'], ['palitos', 'Palitos (cascara)'], ['segundo', 'Segundo'], ['tumba', 'Tumba'], ['quinto', 'Quinto'], ['campana', 'Campana'], ['guiro', 'Guiro']],
+    map: { x: 'clave', pi: 'wood', h: 'chi', t: 'chi', s: 'slap', o: 'chi', bo: 'clo', q: 'bhi', cam: 'bell', gu: 'shk' },
+    pools: { clave: ['X . . X . . X . . . X . X . . .', 'X . . X . . . X . . X . X . . .'],
+      palitos: ['Pi . Pi Pi . Pi . Pi Pi . Pi . Pi . Pi .', 'Pi . Pi . Pi Pi . Pi Pi . Pi . Pi Pi . Pi'],
+      segundo: ['h . t . S . t . h . t . O . O .', 'h . t . S . t . h . t . S . O O', 'h . t . S . t O h . t . S . O .'],
+      tumba: ['. . . . . . . . . . . . . . Bo Bo', '. . . . . . Bo . . . . . . . Bo .', '. . . . . . . . . . . . Bo . Bo Bo'],
+      campana: ['Cam . . . Cam . . . Cam . . . Cam . . .', 'Cam . cam . Cam . cam . Cam . cam . Cam . cam .'],
+      guiro: ['Gu . gu gu Gu . gu gu Gu . gu gu Gu . gu gu'] },
+    cells: ['S . Q .', '. Q Q .', 'S S . Q', 'Q . . S', '. . S Q', 'S . S .', 'Q Q Q S', '. . . .'],
+    call: 'S! . S . Q Q . . S! . . Q . Q . .',
+    setup(c) { this.dir = c.R.chance(0.5) ? 32 : 23; },
+    bar(c) { const { r, prog, inten, lastBar, pick } = c, d = (ph) => this.dir === 23 ? rot8(ph) : ph; const out = [['clave', d(pick('clave')), 0.9]];
+      if (inten > 0.25) out.push(['palitos', d(pick('palitos')), 0.6]); out.push(['segundo', pick('segundo'), 0.85]); if (inten > 0.4) out.push(['tumba', pick('tumba'), 0.95]);
+      const mont = inten > 0.6 && prog >= 0.4; let part = mont ? 'montuno' : 'canto';
+      if (lastBar && !c.short) { out.push(['quinto', d(this.call), 1.1]); part = 'llamada'; }
+      else if (mont || r.chance(0.2 + inten * 0.2)) { let ph = []; for (let k = 0; k < 4; k++) ph.push(r.pick(this.cells)); out.push(['quinto', ph.join(' '), mont ? 1.05 : 0.8]); }
+      if (mont) { out.push(['campana', pick('campana'), 0.6]); out.push(['guiro', pick('guiro'), 0.55]); }
+      return { part: part + ' · clave ' + (this.dir === 32 ? '3-2' : '2-3'), out }; } };
+
+  // Brazil: a samba bateria. Three surdos talk to each other, the repinique calls (chamada), the apito whistle signals the breaks (paradinha).
+  T.brazil = { grid: 16, group: 4, players: [['surdo1', 'Surdo 1 (marcação)'], ['surdo2', 'Surdo 2 (resposta)'], ['ganza', 'Ganzá'], ['caixa', 'Caixa'], ['tamborim', 'Tamborim'], ['surdo3', 'Surdo 3 (corte)'], ['agogo', 'Agogô'], ['repinique', 'Repinique'], ['apito', 'Apito']],
+    map: { bum: 'drum', tum: 'drum', dum: 'clo', cor: 'chi', x: 'tamb', tam: 'wood', ag: ['bell'], gg: 'bell2', sh: 'shk', rp: 'bhi', api: 'apito' },
+    pools: { surdo1: ['tum . . . Bum . . . tum . . . Bum . . .', '. . . . Bum . . . . . . . Bum . . .'], surdo2: ['Dum . . . . . . . Dum . . . . . . .', 'Dum . . . . . . . Dum . . . . . Dum .'],
+      surdo3: ['. . . . Cor . Cor . . . Cor . . Cor . .', '. . Cor . . . Cor Cor . . Cor . . . Cor .', 'Cor . . Cor . . Cor . . . Cor . Cor . . .'],
+      caixa: ['X x x X x x X x X x x X x x X x', 'X x X x x X x X X x X x x X x X', 'x x X x x x X x x x X x x x X x'],
+      tamborim: ['Tam . Tam . . Tam . Tam . Tam . . Tam . Tam .', 'Tam Tam Tam Tam Tam Tam Tam Tam Tam Tam Tam Tam Tam Tam Tam Tam', 'Tam . . Tam . . Tam . . . Tam . Tam . . .'],
+      agogo: ['Ag . gg . Ag Ag . gg . Ag . gg . . . .', 'Ag . . gg Ag . gg . Ag . . gg Ag . gg .'], ganza: ['Sh sh sh sh Sh sh sh sh Sh sh sh sh Sh sh sh sh'] },
+    chamada: 'Rp! . Rp . Rp! . Rp . Rp! . Rp . Rp! Rp Rp Rp', apito: 'Api! . . . Api! . . . . . . . . . . .', parad: 'Rp! . . Rp! . . Rp! . . . Rp! . Rp! . . .',
+    bar(c) { const { r, inten, firstBar, lastBar, pick, pb, nPat } = c, out = [];
+      if (firstBar && c.si === 0) { out.push(['apito', this.apito, 1]); out.push(['repinique', this.chamada, 1.1]); return { part: 'chamada', out }; }
+      if (nPat >= 16 && pb === Math.floor(nPat / 2)) { out.push(['repinique', this.parad, 1.1]); out.push(['surdo1', 'Bum . . . . . . . . . . . . . . .', 1]); return { part: 'paradinha (break)', out }; }
+      if (nPat >= 16 && pb === Math.floor(nPat / 2) - 1) out.push(['apito', '. . . . . . . . Api! . . . Api! . . .', 1]);
+      const order = ['surdo1', 'surdo2', 'ganza', 'caixa', 'tamborim', 'surdo3', 'agogo'], n = Math.max(3, Math.round(3 + inten * 4));
+      order.slice(0, n).forEach((p) => out.push([p, pick(p), p.startsWith('surdo') ? 1 : 0.7]));
+      let part = 'batucada'; if (lastBar && !c.short) { out.push(['apito', this.apito, 1]); out.push(['repinique', this.chamada, 1.05]); part = 'chamada'; }
+      return { part, out }; } };
+
+  // Middle East: rhythmic cycles (iqa'at) in Dum (low centre), Tek (high edge), ka (soft other hand). Each part of the song can have its own cycle.
+  T.mideast = { grid: 16, group: 4, players: [['darbuka', 'Darbuka'], ['riq', 'Riq'], ['bendir', 'Bendir'], ['zills', 'Zills']],
+    map: { dum: 'clo', tek: 'slap', ka: 'bhi', sh: 'tamb', bd: 'drum', zi: 'bell' },
+    iqa: { maqsum: 'Dum . Tek . . . Tek . Dum . . . Tek . . .', baladi: 'Dum . Dum . . . Tek . Dum . . . Tek . . .', saidi: 'Dum . Tek . . . Dum . Dum . . . Tek . . .', malfuf: 'Dum . . Tek . . Tek . Dum . . Tek . . Tek .', ayoub: 'Dum . . ka Dum . Tek . Dum . . ka Dum . Tek .' },
+    setup(c) { const R = c.R; this.by = { intro: R.pick(['malfuf', 'maqsum']), verse: 'maqsum', build: R.pick(['malfuf', 'ayoub']), drop: R.pick(['saidi', 'baladi', 'maqsum']), chorus: R.pick(['saidi', 'baladi']), break: R.pick(['malfuf', 'ayoub']), outro: 'maqsum' }; },
+    adorn(ph, r, amt) { return toks(ph).map((t, i) => t !== '.' ? t : r.chance(amt) ? (i % 2 ? 'ka' : r.pick(['ka', 'tek'])) : '.').join(' '); },
+    closing: 'Dum . Tek ka Tek ka Tek ka Dum . Tek ka Dum! . . .',
+    bar(c) { const { r, prog, inten, lastBar, w } = c, name = this.by[c.sec.type] || 'maqsum', base = this.iqa[name], out = [];
+      let part = name + ' · plain', d = base;
+      if (lastBar && !c.short) { d = this.closing; part = 'closing phrase'; } else if (inten > 0.5 && prog >= 0.3) { d = this.adorn(base, r, 0.25 + 0.5 * w + 0.2 * prog); part = name + ' · zakhrafa (ornament)'; }
+      out.push(['darbuka', d, 1]);
+      if (inten > 0.3) out.push(['riq', toks(base).map((t) => t === '.' ? (r.chance(0.5) ? 'sh' : '.') : 'Sh').join(' '), 0.6]);
+      if (inten > 0.45) out.push(['bendir', toks(base).map((t) => /dum/i.test(t) ? 'Bd' : '.').join(' '), 0.9]);
+      if (inten > 0.7) out.push(['zills', '. . Zi . . . Zi . . . Zi . . . Zi .', 0.5]);
+      return { part, out }; } };
+
+  // India: the tabla speaks in bols. Teentaal is a cycle of 16 matras (here one matra is one beat, so four bars):
+  // sam (X) on the first, khali (0) on the ninth where the bass falls silent. A tihai, a phrase three times, lands on sam.
+  T.india = { grid: 16, group: 4, players: [['tabla', 'Tabla'], ['manjira', 'Manjira']],
+    map: { dha: ['clo', 'bhi'], dhin: ['clo', 'blo'], dhi: ['clo', 'blo'], tin: 'blo', ta: 'bhi', na: 'bhi', ti: 'bhi', ra: 'bhi', ki: 'slap', ke: 'slap', ka: 'slap', ge: 'clo', ching: 'bell', chak: 'bell2' },
+    theka: ['Dha Dhin Dhin Dha', 'Dha Dhin Dhin Dha', 'Dha Tin Tin Ta', 'Ta Dhin Dhin Dha'], keherwa: ['Dha Ge Na Ti', 'Na Ka Dhi Na'], marks: ['X', '2', '0', '3'],
+    kaida: ['Dha Ti Dha Ge Na Dha Tin Na', 'Dha Dha Ti Ta Dha Dha Tin Na', 'Dha Ti Ra Ki Ta Dha Tin Na'],
+    spread: (ws) => ws.split(' ').map((b) => b + ' . . .').join(' '),
+    khali: (ph) => ph.replace(/Dha/g, 'Ta').replace(/Dhin/g, 'Tin').replace(/Ge/g, 'Ke').replace(/Dhi\b/g, 'Ti'),
+    setup(c) { this.k = c.R.pick(this.kaida); },
+    bar(c) { const { inten, prog, pbIn } = c, out = [], slow = inten < 0.45, cyc = slow ? this.keherwa : this.theka, v = pbIn % cyc.length;
+      // the form changes only at the start of a cycle, on sam
+      const cStart = c.pb - v, cProg = c.nPat > 1 ? cStart / (c.nPat - 1) : 1;
+      let ph, part; if (!slow && inten > 0.55 && cProg >= 0.25) { const th = this.k + ' ' + this.k; ph = v === 2 ? this.khali(th) : th; part = 'kaida'; }
+      else { ph = this.spread(cyc[v]); part = slow ? 'keherwa' : 'theka'; }
+      // make room for the tihai at the end of the part: it starts eleven sixteenths into the bar before last
+      if (c.nPat >= 2 && c.pb === c.nPat - 1) ph = null; else if (c.nPat >= 2 && c.pb === c.nPat - 2) ph = toks(ph).map((t, i) => i < 11 ? t : '.').join(' ');
+      if (ph) out.push(['tabla', ph, 1]); out.push(['manjira', 'Ching . . . chak . . . chak . . . chak . . .', 0.45]);
+      return { part: part + ' · ' + (slow ? (v === 0 ? 'X' : '0') : this.marks[v]), out, cycle: (slow ? 'keherwa' : 'teentaal') }; },
+    // the tihai: three times the same phrase with a rest between, the last stroke exactly on sam (the start of the next part)
+    cadence(c, tEnd, stp) { const p = 'Dha Ti Ra Ki Ta Dha', len = 6, gap = 2, tot = 3 * len + 2 * gap - 1; const st = tEnd - tot * stp; let s = st;
+      for (let k = 0; k < 3; k++) { layer(c, 'tabla', s, stp, p, this.map, k === 2 ? 1.15 : 1.05); s += (len + gap) * stp; } return 'tihai ×3 → sam'; } };
+
+  // Shamanic: one steady pulse of about four to seven strokes a second, a rattle with it. At the end of the journey the callback:
+  // four rounds of seven strong strokes, a fast roll, one last stroke.
+  T.shamanic = { grid: 16, group: 4, players: [['frame', 'Frame drum'], ['rattle', 'Rattle'], ['drum2', 'Second drum'], ['bells', 'Bells']],
+    map: { dum: 'drum', ra: 'shk', lo: 'clo', zi: 'bell' },
+    bar(c) { const { bpm, inten, prog, w, pb, nPat, lastSec, firstBar } = c, out = [];
+      const sub = bpm * 2 / 60 >= 3.8 && bpm * 2 / 60 <= 7.5 ? 2 : bpm * 4 / 60 <= 7.5 ? 1 : 4, pulse = Array.from({ length: 16 }, (_, i) => i % sub ? '.' : i % 4 === 0 ? 'Dum' : 'dum').join(' ');
+      if (lastSec && nPat >= 4 && pb >= nPat - 3) { const k = pb - (nPat - 3);
+        if (k < 2) { out.push(['frame', 'Dum! Dum! Dum! Dum! Dum! Dum! Dum! . Dum! Dum! Dum! Dum! Dum! Dum! Dum! .', 1.1]); return { part: 'callback · 2 × 7', out }; }
+        return { part: 'callback · fast roll', out, roll: true }; }
+      if (firstBar && c.si === 0 || inten < 0.3) { out.push(['frame', 'Dum . dum . . . . . Dum . dum . . . . .', 0.95]); out.push(['rattle', 'Ra . . . ra . . . Ra . . . ra . . .', 0.4]); return { part: 'heartbeat', out }; }
+      out.push(['frame', pulse, 0.95]); out.push(['rattle', Array.from({ length: 16 }, (_, i) => i % 2 ? 'ra' : 'Ra').join(' '), 0.45]);
+      if (inten > 0.6 && w > 0.35) out.push(['drum2', pulse.replace(/Dum/g, 'Lo').replace(/dum/g, 'lo'), 0.6]);
+      if (prog > 0.5 && pb % 4 === 0) out.push(['bells', 'Zi . . . . . . . . . . . . . . .', 0.5]);
+      return { part: 'journey · ' + (sub === 2 ? 'eighths' : sub === 1 ? 'sixteenths' : 'quarters') + ', ' + (bpm * 4 / 60 / sub).toFixed(1) + ' strokes a second', out }; } };
+
+  function generateTrad(song) {
+    const Tm = T[song.style], w = song.wild, sw = song.swing || 0, bpm = song.bpm, barSec = 240 / bpm, grid = Tm.grid, stp = barSec / grid, mutes = song.mutes || {}, ev = [], words = [];
+    const R = rng(hash(song.seed, song.style, 'trad')), choice = {}; const pick = (p) => { if (!choice[p]) choice[p] = R.pick(Tm.pools[p]); return choice[p]; };
+    if (Tm.setup) Tm.setup({ R, w });
+    // now and then a player changes figure between parts, as players do
+    let bar0 = 0;
+    song.sections.forEach((sec, si) => {
+      const nb = Math.max(1, sec.bars), base = INTENS[sec.type] != null ? INTENS[sec.type] : 0.6, lastSec = si === song.sections.length - 1, r = rng(hash(song.seed, song.style, si));
+      if (si > 0 && Tm.pools) for (const k in choice) if (r.chance(0.35)) choice[k] = r.pick(Tm.pools[k]);
+      for (let pb = 0; pb < nb; pb++) {
+        const t0 = (bar0 + pb) * barSec, prog = nb > 1 ? pb / (nb - 1) : 1, inten = Math.min(1, base * (0.8 + 0.4 * prog) + 0.12 * w);
+        const c = { ev, mutes, r, w, sw, grid, R, bpm, si, sec, pb, nPat: nb, pbIn: pb, prog, inten, firstBar: pb === 0, lastBar: pb === nb - 1, lastSec, short: nb < 2, pick };
+        const res = Tm.bar(c), line = { bar: bar0 + pb, part: res.part, lines: [] };
+        for (const [pid, ph, g] of res.out) { layer(c, pid, t0, stp, ph, Tm.map, g * (0.85 + 0.2 * inten)); const nm = (Tm.players.find((p) => p[0] === pid) || [pid, pid])[1]; line.lines.push([nm, show(ph, Tm.group)]); }
+        if (res.roll) { const n = 24 + Math.round(16 * w); for (let k = 0; k < n; k++) ev.push({ t: t0 + (k / n) * barSec * 0.9, v: 'drum', vel: 70 + Math.round(40 * k / n) }); ev.push({ t: t0 + barSec * 0.95, v: 'drum', vel: 124 }); line.lines.push(['Frame drum', 'roll, faster and faster, one last stroke']); }
+        words.push(line);
+      }
+      bar0 += nb;
+      // a cadence that lands on the first beat of the next part (India's tihai)
+      if (Tm.cadence && nb >= 2) { const lbl = Tm.cadence({ ev, mutes, r, w, sw: 0, grid }, bar0 * barSec, stp); const L = words[words.length - 1]; L.part += ' · ' + lbl; }
+    });
+    // play around a loaded beat: the low drums give the kick room
+    if (song.beat && song.beat.bars) { const B = song.beat; for (const e of ev) { const bi = Math.floor(e.t / barSec), b = B.bars[bi]; if (!b) continue; const s16 = (e.t - bi * barSec) / barSec * 16; if ((e.v === 'drum' || e.v === 'clo') && b.k.some((k) => Math.abs(k - s16) < 0.35)) e.vel = Math.round(e.vel * 0.5); } }
+    ev.sort((a, b) => a.t - b.t);
+    const players = Tm.players.map(([id, name]) => ({ id, name, voices: [] }));
+    for (const p of players) { const syl = Object.entries(Tm.map); p.voices = [...new Set(syl.map(([, v]) => [].concat(v)).flat())].slice(0, 1); }
+    return { events: ev, barSec, totalSec: bar0 * barSec, tf: 1, grid, players, words, trad: true };
+  }
+
   /* ---------- Taiko: kumi-daiko in its own language ----------
      Kuchi-shoga, one word per beat (four sixteenths): capitals are full strokes, ka/ra are rim strokes, su is a held silence (ma). */
   const KS = {
@@ -313,6 +469,7 @@ footer a{color:var(--acc)}
   }
   function generate(song) {
     if (STYLES[song.style] && STYLES[song.style].taiko) return generateTaiko(song);
+    if (T[song.style]) return generateTrad(song);
     const { S, ps, poly, G } = band(song), w = song.wild, sw = song.swing || 0, bpm = song.bpm, barSec = 240 / bpm, tf = timeFactor(S, bpm);
     const ev = [], mutes = song.mutes || {}; let bar0 = 0;
     const maxN = Math.max(2, Math.round(ps.length * (0.5 + 0.5 * w)));
@@ -393,10 +550,11 @@ footer a{color:var(--acc)}
       case 'shimeka': tone(ctx, out, t, 1900, 1850, 0.04, 0.22 * a); break;
       case 'okedo': tone(ctx, out, t, 170, 120, 0.35, 0.6 * a); nz(ctx, out, t, 'bandpass', 900, 1.5, 0.04, 0.2 * a); break;
       case 'kane': tone(ctx, out, t, 2200, 2200, 0.25, 0.12 * a, 'square'); tone(ctx, out, t, 3170, 3170, 0.18, 0.06 * a, 'square'); nz(ctx, out, t, 'highpass', 5000, 1, 0.05, 0.1 * a); break;
+      case 'apito': { const o = ctx.createOscillator(), l = ctx.createOscillator(), lg = ctx.createGain(), g = ctx.createGain(); o.frequency.value = 2900; l.frequency.value = 38; lg.gain.value = 120; l.connect(lg); lg.connect(o.frequency); env(g, t, 0.01, 0.18 * a, 0.22); o.connect(g); g.connect(out); o.start(t); l.start(t); o.stop(t + 0.3); l.stop(t + 0.3); break; }
       case 'kake': { const o = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain(); o.type = 'sawtooth'; o.frequency.setValueAtTime(240, t); o.frequency.linearRampToValueAtTime(180, t + 0.25); f.type = 'bandpass'; f.frequency.value = 800; f.Q.value = 3; env(g, t, 0.01, 0.35 * a, 0.25); o.connect(f); f.connect(g); g.connect(out); o.start(t); o.stop(t + 0.3); nz(ctx, out, t, 'bandpass', 1500, 2, 0.06, 0.2 * a); break; }
     } }
 
-  root.PercMotor = { VOICES, STYLES, ORDER, INTENS, generate, play, rng, hash, euclid, timeFactor };
+  root.PercMotor = { VOICES, STYLES, ORDER, INTENS, generate, play, rng, hash, euclid, timeFactor, TRAD: T };
 })(window);
 /* PERC ENGINE END */
 
@@ -474,19 +632,30 @@ async function start(pos) { const c = ctx(); if (c.state !== 'running') await c.
 function stop() { AU.off = now(); AU.playing = false; clearInterval(AU.timer); $('#play').textContent = '▶'; $('#play').setAttribute('aria-label', 'Play'); drawPos(); }
 
 /* ---------- screen ---------- */
+// what each sound is called in each tradition
+const LABELS = {
+  westafrica: { drum: 'Dundunba', clo: 'Djembe Gun (bass)', chi: 'Djembe Go (tone)', slap: 'Djembe Pa (slap)', bhi: 'Kenkeni', blo: 'Sangban', bell: 'Bell', shk: 'Shekere' },
+  afrocuban: { clave: 'Clave', wood: 'Palitos', chi: 'Segundo (h t O)', slap: 'Slap (S)', clo: 'Tumba', bhi: 'Quinto', bell: 'Campana', shk: 'Guiro' },
+  brazil: { drum: 'Surdo 1', clo: 'Surdo 2', chi: 'Surdo 3', tamb: 'Caixa', wood: 'Tamborim', bell: 'Agogô high', bell2: 'Agogô low', shk: 'Ganzá', bhi: 'Repinique', apito: 'Apito' },
+  mideast: { clo: 'Darbuka Dum', slap: 'Darbuka Tek', bhi: 'Darbuka ka', tamb: 'Riq', drum: 'Bendir', bell: 'Zills' },
+  india: { clo: 'Bayan (Ge, bass)', bhi: 'Dayan (Na, Ta)', blo: 'Dayan (Tin)', slap: 'Ke (closed)', bell: 'Manjira open', bell2: 'Manjira closed' },
+  shamanic: { drum: 'Frame drum', shk: 'Rattle', clo: 'Second drum', bell: 'Bells' }
+};
+const vname = (v) => (LABELS[st.style] || {})[v] || P.VOICES[v].name;
 const NOTES = {
-  westafrica: ['West Africa', 'Rhythms of the Mande drum ensembles. A <b>bell</b> keeps the timeline, three <b>dundun</b> (dundunba, sangban, kenkeni) talk in low tones, the <b>djembe</b> plays bass, tone and slap on top. Felt in 12/8: three against two is the heart of it.'],
-  afrocuban: ['Afro-Cuban', 'Everything leans on the <b>clave</b>, two bars of 3 and 2 strokes. The <b>conga tumbao</b> (heel, toe, slap, open tones), the <b>bongo martillo</b> and the <b>cascara</b> all follow its direction.'],
-  brazil: ['Brazil', 'A samba bateria: the <b>surdo</b> marks beats 2 and 4, the <b>ganza</b> shakes all sixteenths, the <b>tamborim</b> and <b>agogo</b> play the syncopations, the <b>caixa</b> drives.'],
-  mideast: ['Middle East', 'Rhythmic cycles (iqa\'at) like <b>maqsum</b>, <b>baladi</b> and <b>saidi</b>, spoken as <b>doum</b> (low centre), <b>tek</b> (high edge) and <b>ka</b> (soft ornament). The <b>riq</b> adds jingles.'],
-  india: ['India', 'The tabla speaks in <b>bols</b>: Dha, Dhin, Na, Tin. A <b>theka</b> fixes the tala, such as teentaal in 16 beats. A <b>tihai</b>, a phrase played three times, lands on <b>sam</b>, the first beat.'],
+  westafrica: ['West Africa · djembe and dundun', 'From the Mande drum ensembles. The djembe speaks in three sounds: <b>Gun</b> (bass, centre), <b>Go</b> (tone, edge) and <b>Pa</b> (slap). Three dunduns, <b>dundunba</b>, <b>sangban</b> and <b>kenkeni</b>, play a melody together, held by a <b>bell</b>. Felt in 12/8: three against two is the heart. The <b>lead djembe</b> plays the <b>call</b> that brings everyone in and out, solos over the ensemble and lifts it in the <b>echauffement</b>, the heating up before the end.'],
+  afrocuban: ['Afro-Cuban · rumba and son', 'Everything follows the <b>clave</b> and its direction, <b>3-2</b> or <b>2-3</b>: the palitos (cascara) turn with it. The conga strokes are <b>h</b> heel, <b>t</b> toe, <b>S</b> slap and <b>O</b> open. <b>Segundo</b> and <b>tumba</b> hold the tumbao, the <b>quinto</b> improvises and calls the changes with a <b>llamada</b>. A part moves from the calm <b>canto</b> to the hot <b>montuno</b>.'],
+  brazil: ['Brazil · samba bateria', 'Three <b>surdos</b> talk to each other: <b>marcação</b> on the second beat, <b>resposta</b> answering on the first, <b>corte</b> cutting between. <b>Caixa</b>, <b>tamborim</b>, <b>ganzá</b> and <b>agogô</b> fill the sixteenths. The <b>repinique</b> plays the <b>chamada</b>, the call, and the <b>apito</b> whistle signals the <b>paradinha</b>, the break where the bateria stops and comes back as one.'],
+  mideast: ['Middle East · iqa\'at', 'Rhythmic cycles, each with a name: <b>maqsum</b>, <b>baladi</b>, <b>saidi</b>, <b>malfuf</b>, <b>ayoub</b>. They are spoken in <b>Dum</b> (low centre), <b>Tek</b> (high edge) and <b>ka</b> (the soft other hand). Here each part of your song gets its own cycle. The darbuka plays it plain first, then ornaments it (<b>zakhrafa</b>), and ends with a closing phrase. <b>Riq</b>, <b>bendir</b> and <b>zills</b> follow.'],
+  india: ['India · tabla', 'The tabla speaks in <b>bols</b>: Dha, Dhin, Ta, Tin, Na, Ge, Ke. <b>Teentaal</b> is a cycle of 16 matras; one matra is one beat here, so a cycle lasts four bars: <b>sam</b> (X) is the first beat, <b>khali</b> (0) the ninth, where the bass falls silent. Quieter parts play <b>keherwa</b>, 8 matras. A <b>kaida</b> develops a theme, and every part ends with a <b>tihai</b>: one phrase three times that lands exactly on sam, the first beat of the next part.'],
   taiko: ['Taiko · kumi-daiko', 'Japanese ensemble drumming, rooted in Shinto festivals. Drummers speak their rhythms in <b>kuchi-shoga</b>: <b>don</b> centre, <b>doko</b> two strokes, <b>tsu</b> soft, <b>ka</b> rim, <b>su</b> silence. The <b>shime</b> keeps the <b>ji-uchi</b> ground, the <b>nagado</b> call and answer (and pass the call on to the rim), the <b>odaiko</b> is the deep heartbeat. A piece moves from <b>jo</b> (slow) through <b>ha</b> (opening) to <b>kyu</b> (fast). <b>Ma</b> is the silence that matters, <b>kime</b> the stroke all play together, <b>oroshi</b> the roll that opens and closes, <b>kakegoe</b> the calls that carry the players.'],
   zen: ['Japanese zen', 'Not a tradition, a mood: taiko sounds with much space between them, for slow and quiet music. For the real ensemble, choose Taiko.'],
-  shamanic: ['Shamanic', 'A steady <b>frame drum</b> pulse with rattles, the kind used to carry a trance. It grows slowly within a section and does not stop to show off.'],
+  shamanic: ['Shamanic · frame drum journey', 'One steady pulse of about <b>four to seven strokes a second</b>, a rattle with it: the drumming used in many cultures to carry a journey. It opens with a <b>heartbeat</b>, holds the pulse without showing off, and ends with the <b>callback</b>: rounds of seven strong strokes, a fast roll, one last stroke. The motor picks the pulse that fits your tempo.'],
   minimal: ['Minimal house', 'A modern club tradition: shaker, conga and rim figures that repeat with small changes, made to lock with a four on the floor kick.']
 };
 function speak() { const S = $('#speak'); S.innerHTML = ''; if (!st.res.words) return; const bar = Math.floor(now() / st.res.barSec), w = st.res.words.find((x) => x.bar === bar);
   if (!w) return; const row = (k, v) => { const d = document.createElement('div'); d.innerHTML = '<span>' + k + '</span>' + v; S.append(d); };
+  if (w.lines) { row('This bar', '<i>' + w.part + '</i>'); for (const [n, t] of w.lines) row(n, t); return; }
   row('This bar', '<i>' + ({ jo: 'jo · opening slowly', ha: 'ha · breaking open', kyu: 'kyu · fast to the end' })[w.part] + '</i>');
   for (const [k, n] of [['odaiko', 'Odaiko'], ['shime', 'Shime'], ['lead', 'Nagado 1'], ['second', 'Nagado 2'], ['okedo', 'Okedo'], ['kane', 'Atarigane'], ['kake', 'Kakegoe']]) if (w[k]) row(n, w[k]); }
 function render() {
@@ -495,14 +664,14 @@ function render() {
   const tf = st.res.tf; $('#tfInfo').textContent = tf === 0.5 ? 'Plays in half time at this tempo.' : tf === 2 ? 'Plays in double time at this tempo.' : '';
   const secs = parseStruct(st.struct), tot = secs.reduce((a, s) => a + s.bars, 0), SC = $('#secs'); SC.querySelectorAll('button').forEach((b) => b.remove()); let b0 = 0;
   secs.forEach((s) => { const b = document.createElement('button'); b.style.flex = s.bars + ' 1 0'; b.style.background = SEC_COL[s.type] || '#ccc'; b.textContent = s.type + ' ' + s.bars; b.title = s.type + ', ' + s.bars + ' bars'; const at = b0 * st.res.barSec; b.onclick = () => { start(at); }; SC.append(b); b0 += s.bars; });
-  const PL = $('#players'); PL.innerHTML = ''; for (const p of st.res.players.concat(st.res.players.length && !st.res.words ? [{ id: 'poly3', role: 'poly', voices: [] }] : [])) { const b = document.createElement('button'); const col = p.voices.length ? P.VOICES[p.voices[0]].col : '#888'; b.innerHTML = '<i style="background:' + col + '"></i>' + (p.id === 'poly3' ? 'Polyrhythm' : st.res.words ? ({ odaiko: 'Odaiko', shime: 'Shime', don: 'Nagado', okedo: 'Okedo', kane: 'Atarigane', kake: 'Kakegoe' })[p.id] : p.id[0].toUpperCase() + p.id.slice(1)); b.setAttribute('aria-pressed', !st.mutes[p.id]); b.onclick = () => { st.mutes[p.id] = !st.mutes[p.id]; regen(true); }; PL.append(b); }
+  const PL = $('#players'); PL.innerHTML = ''; for (const p of st.res.players.concat(st.res.players.length && !st.res.words ? [{ id: 'poly3', role: 'poly', voices: [] }] : [])) { const b = document.createElement('button'); const PAL = ['#E0705A', '#E9C46A', '#E39B4C', '#8FD18B', '#7FC8E8', '#A79BF0', '#E88FC8', '#9FE8D8', '#C88FE8']; const col = p.name ? PAL[st.res.players.indexOf(p) % PAL.length] : p.voices.length ? P.VOICES[p.voices[0]].col : '#888'; b.innerHTML = '<i style="background:' + col + '"></i>' + (p.name ? p.name : p.id === 'poly3' ? 'Polyrhythm' : st.res.words ? ({ odaiko: 'Odaiko', shime: 'Shime', don: 'Nagado', okedo: 'Okedo', kane: 'Atarigane', kake: 'Kakegoe' })[p.id] : p.id[0].toUpperCase() + p.id.slice(1)); b.setAttribute('aria-pressed', !st.mutes[p.id]); b.onclick = () => { st.mutes[p.id] = !st.mutes[p.id]; regen(true); }; PL.append(b); }
   drawLanes(); drawPos();
 }
 let lastBar = -1;
 function drawLanes() { const L = $('#lanes'), bar = Math.floor(now() / st.res.barSec), ev = st.res.events, bs = st.res.barSec, a = bar * bs, used = {};
   for (const e of ev) { if (e.t < a - 0.01) continue; if (e.t >= a + bs - 0.01) break; const G = st.res.tf === 1 ? st.res.grid : 16, s = Math.min(G - 1, Math.max(0, Math.round((e.t - a) / bs * G))); (used[e.v] = used[e.v] || {})[s] = Math.max((used[e.v] || {})[s] || 0, e.vel); }
   const vs = Object.keys(P.VOICES).filter((v) => used[v]); L.innerHTML = '';
-  for (const v of vs) { const row = document.createElement('div'); row.className = 'lane'; const nm = document.createElement('span'); nm.textContent = P.VOICES[v].name; const c = document.createElement('div'); c.className = 'cells'; c.style.gridTemplateColumns = 'repeat(' + (st.res.tf === 1 ? st.res.grid : 16) + ',1fr)';
+  for (const v of vs) { const row = document.createElement('div'); row.className = 'lane'; const nm = document.createElement('span'); nm.textContent = vname(v); const c = document.createElement('div'); c.className = 'cells'; c.style.gridTemplateColumns = 'repeat(' + (st.res.tf === 1 ? st.res.grid : 16) + ',1fr)';
     for (let s = 0; s < (st.res.tf === 1 ? st.res.grid : 16); s++) { const i = document.createElement('i'); const vel = used[v][s]; if (vel) { i.style.background = P.VOICES[v].col; i.style.opacity = 0.35 + vel / 127 * 0.65; } c.append(i); } row.append(nm, c); L.append(row); }
   if (!vs.length) L.innerHTML = '<div class="small">This bar is quiet.</div>'; lastBar = bar; speak(); }
 function drawPos() { const t = now(), bar = Math.floor(t / st.res.barSec), secs = parseStruct(st.struct), tot = secs.reduce((a, s) => a + s.bars, 0);
@@ -514,19 +683,19 @@ function drawPos() { const t = now(), bar = Math.floor(t / st.res.barSec), secs 
 // eight slots: the voices that sound alike share one
 const TAIKO_SLOTS = [['Odaiko', ['odaiko']], ['Nagado don', ['don']], ['Nagado ka (rim)', ['ka']], ['Shime', ['shime']], ['Shime ka (rim)', ['shimeka']], ['Okedo', ['okedo']], ['Atarigane', ['kane']], ['Kakegoe (call)', ['kake']]];
 const slots = () => P.STYLES[st.style].taiko ? TAIKO_SLOTS : SLOTS;
-const SLOTS = [['Big drum', ['drum']], ['Low conga', ['clo']], ['High conga', ['chi']], ['Slap', ['slap']], ['Bongos', ['bhi', 'blo']], ['Shaker and tambourine', ['shk', 'tamb']], ['Bells', ['bell', 'bell2']], ['Wood and clave', ['wood', 'clave']]];
+const SLOTS = [['Big drum', ['drum']], ['Low conga', ['clo']], ['High conga', ['chi']], ['Slap', ['slap']], ['Bongos', ['bhi', 'blo']], ['Shaker and tambourine', ['shk', 'tamb']], ['Bells and whistle', ['bell', 'bell2', 'apito']], ['Wood and clave', ['wood', 'clave']]];
 const TARGETS = {
   gm: { name: 'Plain MIDI (GM percussion)' },
   xo: { name: 'XLN XO', keys: [36, 37, 38, 39, 40, 41, 42, 43] },
   beatmaker: { name: 'UJAM Beatmaker 3', keys: [36, 38, 40, 43, 45, 48, 52, 59] },
-  tekno: { name: 'BABY Audio Tekno', map: { drum: [43, 'tom l'], clo: [47, 'conga l'], chi: [48, 'conga h'], slap: [46, 'rimshot'], bhi: [44, 'tom h'], blo: [44, 'tom h'], shk: [40, 'hat a'], tamb: [42, 'hat op'], bell: [51, 'cowbell'], bell2: [51, 'cowbell'], wood: [52, 'block'], clave: [52, 'block'], odaiko: [36, 'kick a'], don: [43, 'tom l'], ka: [46, 'rimshot'], shime: [44, 'tom h'], shimeka: [52, 'block'], okedo: [47, 'conga l'], kane: [51, 'cowbell'], kake: [45, 'clap'] } },
+  tekno: { name: 'BABY Audio Tekno', map: { drum: [43, 'tom l'], clo: [47, 'conga l'], chi: [48, 'conga h'], slap: [46, 'rimshot'], bhi: [44, 'tom h'], blo: [44, 'tom h'], shk: [40, 'hat a'], tamb: [42, 'hat op'], bell: [51, 'cowbell'], bell2: [51, 'cowbell'], wood: [52, 'block'], clave: [52, 'block'], odaiko: [36, 'kick a'], don: [43, 'tom l'], ka: [46, 'rimshot'], shime: [44, 'tom h'], shimeka: [52, 'block'], okedo: [47, 'conga l'], kane: [51, 'cowbell'], kake: [45, 'clap'], apito: [50, 'tonal'] } },
   impact: { name: 'Impact XT', keys: [36, 37, 38, 39, 40, 41, 42, 43] },
   vdrummer: { name: 'UJAM Virtual Drummer', keys: [36, 41, 38, 40, 42, 46, 37, 49] }
 };
 const NN = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'], nn = (m) => NN[m % 12] + (Math.floor(m / 12) - 2);
 function noteFor(T, v) { if (T.map) return T.map[v][0]; if (T.keys) { const i = slots().findIndex((s) => s[1].includes(v)); return T.keys[i]; } return P.VOICES[v].gm; }
 function slotInfo() { const T = TARGETS[st.target], el = $('#slotInfo');
-  if (T.keys) el.innerHTML = '<b>Load these sounds in ' + T.name + ':</b> ' + slots().map((s, i) => (i + 1) + ' ' + s[0] + ' (' + nn(T.keys[i]) + ')').join(' · ') + '. All on one MIDI track.';
+  if (T.keys) el.innerHTML = '<b>Load these sounds in ' + T.name + ':</b> ' + slots().map((s, i) => { const L = LABELS[st.style], used = L ? s[1].filter((v) => L[v]).map((v) => L[v]) : []; return (i + 1) + ' ' + (used.length ? used.join(' / ') : L ? '(free)' : s[0]) + ' (' + nn(T.keys[i]) + ')'; }).join(' · ') + '. All on one MIDI track.';
   else if (T.map && P.STYLES[st.style].taiko) el.innerHTML = '<b>' + T.name + ':</b> odaiko on kick a, nagado on tom l with its rim on rimshot, shime on tom h with its rim on block, okedo on conga l, atarigane on cowbell, kakegoe on clap. All on one MIDI track.';
   else if (T.map) el.innerHTML = '<b>' + T.name + ':</b> big drum on tom l, congas on conga l and h, slap on rimshot, bongos on tom h, shaker on hat a, tambourine on hat op, bells on cowbell, wood on block. All on one MIDI track.';
   else el.innerHTML = 'Plain MIDI: one track per instrument, General MIDI percussion notes.'; }
