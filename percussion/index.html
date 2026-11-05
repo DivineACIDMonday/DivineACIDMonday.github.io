@@ -596,6 +596,20 @@ const SEC_COL = { intro: '#7FC8E8', verse: '#8FD18B', prechorus: '#B4D98B', buil
 const NATIVE = { westafrica: [110, 'intro 4, verse 16, drop 16, break 8, drop 16, outro 4'], afrocuban: [100, 'intro 4, verse 16, drop 16, verse 8, drop 16, outro 4'], brazil: [104, 'intro 4, verse 16, drop 16, break 4, drop 16, outro 4'],
   mideast: [100, 'intro 8, verse 16, drop 16, break 8, drop 16, outro 8'], india: [90, 'intro 8, verse 16, drop 16, outro 8'], taiko: [120, 'intro 8, verse 16, drop 16, break 8, drop 16, outro 8'],
   zen: [70, 'intro 8, verse 16, break 8, outro 8'], shamanic: [120, 'intro 4, verse 32, drop 32, outro 4'], minimal: [124, 'intro 16, verse 16, build 8, drop 32, break 16, drop 32, outro 16'] };
+// forms each tradition knows: an order of parts, and the lengths that suit them
+const FORMS = {
+  westafrica: { f: [['intro', 'verse', 'drop', 'break', 'drop', 'outro'], ['intro', 'verse', 'drop', 'drop', 'outro'], ['intro', 'verse', 'drop', 'verse', 'drop', 'outro']], b: { intro: [2, 4], verse: [8, 12, 16], drop: [12, 16, 24], break: [4, 8], outro: [2, 4] } },
+  afrocuban: { f: [['intro', 'verse', 'drop', 'outro'], ['intro', 'verse', 'drop', 'verse', 'drop', 'outro'], ['intro', 'verse', 'verse', 'drop', 'drop', 'outro']], b: { intro: [4], verse: [8, 16], drop: [16, 24], outro: [2, 4] } },
+  brazil: { f: [['intro', 'verse', 'drop', 'break', 'drop', 'outro'], ['intro', 'drop', 'break', 'drop', 'break', 'drop', 'outro'], ['intro', 'verse', 'drop', 'outro']], b: { intro: [2, 4], verse: [8, 16], drop: [16, 24, 32], break: [2, 4], outro: [2, 4] } },
+  mideast: { f: [['intro', 'verse', 'build', 'drop', 'break', 'drop', 'outro'], ['intro', 'verse', 'drop', 'verse', 'drop', 'outro'], ['intro', 'break', 'verse', 'drop', 'outro']], b: { intro: [4, 8], verse: [8, 16], build: [4, 8], drop: [16, 24], break: [8], outro: [4, 8] } },
+  india: { f: [['intro', 'verse', 'drop', 'outro'], ['intro', 'verse', 'drop', 'verse', 'drop', 'outro'], ['verse', 'drop', 'drop', 'outro']], b: { intro: [8], verse: [8, 12, 16], drop: [12, 16, 24], outro: [4, 8] } },
+  taiko: { f: [['intro', 'verse', 'drop', 'outro'], ['intro', 'verse', 'drop', 'break', 'drop', 'outro'], ['intro', 'drop', 'break', 'drop', 'outro']], b: { intro: [4, 8, 12], verse: [8, 12, 16], drop: [12, 16, 24], break: [4, 8], outro: [4, 8] } },
+  zen: { f: [['intro', 'verse', 'break', 'outro'], ['intro', 'break', 'verse', 'break', 'outro'], ['intro', 'verse', 'outro']], b: { intro: [8, 12], verse: [8, 12, 16], break: [8, 12], outro: [8] } },
+  shamanic: { f: [['intro', 'verse', 'drop', 'outro'], ['intro', 'verse', 'outro'], ['intro', 'drop', 'drop', 'outro']], b: { intro: [4, 8], verse: [24, 32, 48], drop: [24, 32], outro: [4] } },
+  minimal: { f: [['intro', 'verse', 'build', 'drop', 'break', 'drop', 'outro'], ['intro', 'drop', 'break', 'build', 'drop', 'outro'], ['intro', 'verse', 'drop', 'outro']], b: { intro: [8, 16], verse: [16], build: [8], drop: [16, 32], break: [8, 16], outro: [8, 16] } }
+};
+function newForm() { const F = FORMS[st.style]; if (!F) return; const pick = (a) => a[Math.floor(Math.random() * a.length)];
+  st.struct = pick(F.f).map((t) => t + ' ' + pick(F.b[t] || [8])).join(', '); $('#struct').value = st.struct; }
 const st = { style: store.get('style', 'westafrica'), wild: store.get('wild', 0.5), swing: store.get('swing', 0.2), bpm: store.get('bpm', 124), struct: store.get('struct', $('#struct').value), seed: store.get('seed', (Math.random() * 2 ** 31) >>> 0), target: store.get('target', 'xo'), mutes: {}, beat: null, res: null };
 let toastT = 0; const toast = (m) => { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2400); };
 
@@ -806,7 +820,7 @@ $('#wild').oninput = (e) => { st.wild = e.target.value / 100; store.set('wild', 
 $('#swing').oninput = (e) => { st.swing = e.target.value / 100; store.set('swing', st.swing); regen(true); };
 $('#bpm').onchange = (e) => { st.bpm = Math.max(40, Math.min(220, +e.target.value || 120)); e.target.value = st.bpm; store.set('bpm', st.bpm); regen(false); if (AU.playing) restartAt(0); };
 $('#struct').onchange = (e) => { st.struct = e.target.value; store.set('struct', st.struct); regen(false); };
-$('#dice').onclick = () => { st.seed = (Math.random() * 2 ** 31) >>> 0; store.set('seed', st.seed); st.mutes = {}; regen(true); toast('Other players, same style.'); };
+$('#dice').onclick = () => { st.seed = (Math.random() * 2 ** 31) >>> 0; store.set('seed', st.seed); st.mutes = {}; if (!st.beat) { newForm(); regen(false); if (AU.playing) restartAt(0); toast('Other players and another form, true to the tradition.'); } else { regen(true); toast('Other players, the form of your beat.'); } };
 $('#play').onclick = () => { if (AU.playing) stop(); else start(AU.off >= st.res.totalSec ? 0 : AU.off); };
 $('#withBeat').onchange = () => { if (AU.playing) restartAt(now()); };
 $('#dlMidi').onclick = () => save(midiOut(), fileName('mid'));
