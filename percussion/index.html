@@ -842,7 +842,7 @@ $('#wild').oninput = (e) => { st.wild = e.target.value / 100; store.set('wild', 
 $('#swing').oninput = (e) => { st.swing = e.target.value / 100; store.set('swing', st.swing); regen(true); };
 $('#bpm').onchange = (e) => { st.bpm = Math.max(40, Math.min(220, +e.target.value || 120)); e.target.value = st.bpm; store.set('bpm', st.bpm); regen(false); if (AU.playing) restartAt(0); };
 $('#struct').onchange = (e) => { st.struct = e.target.value; store.set('struct', st.struct); regen(false); };
-$('#dice').onclick = () => { st.seed = (Math.random() * 2 ** 31) >>> 0; store.set('seed', st.seed); st.mutes = {}; if (!st.beat) { newForm(); regen(false); if (AU.playing) restartAt(0); toast('Other players and another form, true to the tradition.'); } else { regen(true); toast('Other players, the form of your beat.'); } };
+$('#dice').onclick = () => { st.seed = (Math.random() * 2 ** 31) >>> 0; store.set('seed', st.seed); st.mutes = {}; if (!st.beat) { newForm(); regen(false); const secs = parseStruct(st.struct); let b0 = 0, at = 0; for (const x of secs) { if (/drop|chorus/.test(x.type)) { at = b0; break; } b0 += x.bars; } if (AU.playing) restartAt(at * st.res.barSec); else { AU.off = at * st.res.barSec; drawLanes(); drawPos(); } toast('Other players and another form. Showing the first drop.'); } else { regen(true); toast('Other players, the form of your beat.'); } };
 $('#play').onclick = () => { if (AU.playing) stop(); else start(AU.off >= st.res.totalSec ? 0 : AU.off); };
 $('#withBeat').onchange = () => { if (AU.playing) restartAt(now()); };
 $('#dlMidi').onclick = () => save(midiOut(), fileName('mid'));
