@@ -214,7 +214,8 @@ footer a{color:var(--acc)}
   };
   STYLES.taiko = { name: 'Taiko', grid: 16, tempo: [70, 160], taiko: true, players: [] };
   STYLES.marching = { name: 'Marching', grid: 16, tempo: [90, 140], players: [] };
-  const ORDER = ['westafrica', 'afrocuban', 'brazil', 'mideast', 'india', 'taiko', 'zen', 'shamanic', 'marching', 'minimal'];
+  STYLES.powwow = { name: 'Powwow (social dances)', grid: 16, tempo: [80, 170], players: [] };
+  const ORDER = ['westafrica', 'afrocuban', 'brazil', 'mideast', 'india', 'taiko', 'zen', 'shamanic', 'powwow', 'marching', 'minimal'];
   const INTENS = { intro: 0.3, verse: 0.55, prechorus: 0.65, build: 0.6, chorus: 0.95, drop: 1, break: 0.25, bridge: 0.45, outro: 0.35, fill: 0.7, solo: 0.8 };
 
   // parse a figure into strokes { s step (may be fractional), voices, soft }
@@ -496,6 +497,35 @@ footer a{color:var(--acc)}
       if (prog > 0.5 && pb % 4 === 0) out.push(['bells', 'Zi . . . . . . . . . . . . . . .', 0.5]);
       return { part: 'journey · ' + (sub === 2 ? 'eighths' : sub === 1 ? 'sixteenths' : 'quarters') + ', ' + (bpm * 4 / 60 / sub).toFixed(1) + ' strokes a second', out }; } };
 
+  // Powwow, the social dances only: one big drum, the singers around it strike together, a little apart, so each stroke is wide.
+  // A song is sung in push-ups (rounds); honor beats (hard beats) fall in the middle of a round; it ends with a tail, and the drum stops dead.
+  // No songs, no words, no ceremonial or honor songs here: those belong to the people and their occasions.
+  T.powwow = { grid: 16, group: 4, players: [['drum', 'The drum (all singers)'], ['bells', "Dancers' bells"]],
+    map: { d: ['drum', 'clo'], bel: 'tamb' },
+    kinds: ['intertribal', 'intertribal', 'round dance', 'crow hop', 'sneak-up'],
+    setup(c) { const R = c.R; this.kind = R.pick(this.kinds); this.grid = this.kind === 'round dance' || this.kind === 'crow hop' ? 12 : 16; this.group = this.grid === 12 ? 3 : 4; this.hb = R.pick([1, 2]); },
+    beat(G, kind, hard) { // one bar of the drum
+      if (kind === 'round dance') return 'D! . d D! . d D! . d D! . d';
+      if (kind === 'crow hop') return hard ? 'D! . . D! . . D! . . D! . .' : 'd . D! d . D! d . D! d . D!';
+      return hard ? 'D! . . . d . . . D! . . . d . . .' : 'D . . . D . . . D . . . D . . .'; },
+    bar(c) { const { r, inten, prog, pb, nPat, lastBar, lastSec, firstBar } = c, G = this.grid, out = [], kind = this.kind, inR = pb % 8, rnd = Math.floor(pb / 8) + 1;
+      const bells = (n) => Array.from({ length: G }, (_, i) => i % (G / 4) === 0 ? 'Bel' : r.chance(0.18 * n) ? 'bel' : '.').join(' ');
+      // the end of the song: the tail, and on its last beat the drum stops and the dancers stand still
+      if (lastSec && lastBar) { out.push(['drum', G === 16 ? 'D . . . D . . . D . . . D! . . .' : 'D! . d D! . d D! . . . . .', 1.05]); return { part: 'the tail · the drum stops, the dancers stop with it', out }; }
+      if (firstBar && c.si === 0) { out.push(['drum', G === 16 ? 'd . . . d . . . d . . . d . . .' : 'd . . d . . d . . d . .', 0.7]); return { part: 'the lead singer opens · the drum comes in soft', out }; }
+      // the sneak-up: a trembling roll while the dancers crouch and search, then hard single beats while they move in
+      if (kind === 'sneak-up' && c.sec.type !== 'outro') { const ph = pb % 4;
+        if (ph < 2) { out.push(['drum', Array(G).fill(0).map((_, i) => i % 2 ? 'd' : 'D').join(' '), 0.65 + 0.2 * ph]); return { part: 'sneak-up · the roll, the dancers crouch and search', out }; }
+        out.push(['drum', ph === 2 ? 'D! . . . . . . . D! . . . . . . .' : 'D! . . . D! . . . . . . . . . . .', 1.1]); out.push(['bells', 'Bel . . . . . . . Bel . . . . . . .', 0.6]); return { part: 'sneak-up · hard beats, the dancers move in', out }; }
+      // honor beats: in the middle of a round, a few bars of hard beats, loud and soft by turns
+      const honor = nPat >= 8 && inR >= 4 && inR < 4 + this.hb * 2 && inten > 0.4;
+      let ph = this.beat(G, kind, honor);
+      if (!honor && r.chance(0.12 + 0.2 * c.w)) ph = toks(ph).map((t, i) => t === '.' && i % (G / 4) === (G === 16 ? 2 : 2) && r.chance(0.3) ? 'd' : t).join(' ');
+      out.push(['drum', ph, honor ? 1.15 : 0.8 + 0.25 * inten]);
+      if (inten > 0.35) out.push(['bells', bells(inten), 0.45 + 0.2 * inten]);
+      const nm = kind === 'intertribal' ? 'intertribal · the straight beat' : kind === 'round dance' ? 'round dance · strong and soft, the circle sways' : 'crow hop · ' + (honor ? 'on the beat' : 'the hop on the off-beat');
+      return { part: (honor ? 'honor beats · ' : '') + nm + ' · push-up ' + rnd, out }; } };
+
   function generateTrad(song) {
     const Tm = T[song.style], w = song.wild, sw = song.swing || 0, bpm = song.bpm, barSec = 240 / bpm, mutes = song.mutes || {}, ev = [], words = [];
     const R = rng(hash(song.seed, song.style, 'trad')), choice = {}, fixed = Tm.fixed || [];
@@ -739,7 +769,7 @@ const SEC_COL = { intro: '#7FC8E8', verse: '#8FD18B', prechorus: '#B4D98B', buil
 // without a beat, tempo and form belong to the tradition
 const NATIVE = { marching: [116, 'intro 4, verse 16, build 8, drop 16, break 8, verse 16, outro 4'], westafrica: [110, 'intro 4, verse 16, drop 16, break 8, drop 16, outro 4'], afrocuban: [100, 'intro 4, verse 16, drop 16, verse 8, drop 16, outro 4'], brazil: [104, 'intro 4, verse 16, drop 16, break 4, drop 16, outro 4'],
   mideast: [100, 'intro 8, verse 16, drop 16, break 8, drop 16, outro 8'], india: [90, 'intro 8, verse 16, drop 16, outro 8'], taiko: [120, 'intro 8, verse 16, drop 16, break 8, drop 16, outro 8'],
-  zen: [70, 'intro 8, verse 16, break 8, outro 8'], shamanic: [120, 'intro 4, verse 32, drop 32, outro 4'], minimal: [124, 'intro 16, verse 16, build 8, drop 32, break 16, drop 32, outro 16'] };
+  zen: [70, 'intro 8, verse 16, break 8, outro 8'], powwow: [138, 'intro 2, verse 16, drop 16, verse 16, drop 16, outro 2'], shamanic: [120, 'intro 4, verse 32, drop 32, outro 4'], minimal: [124, 'intro 16, verse 16, build 8, drop 32, break 16, drop 32, outro 16'] };
 // forms each tradition knows: an order of parts, and the lengths that suit them
 const FORMS = {
   westafrica: { f: [['intro', 'verse', 'drop', 'break', 'drop', 'outro'], ['intro', 'verse', 'drop', 'drop', 'outro'], ['intro', 'verse', 'drop', 'verse', 'drop', 'outro']], b: { intro: [2, 4], verse: [8, 12, 16], drop: [12, 16, 24], break: [4, 8], outro: [2, 4] } },
@@ -748,6 +778,7 @@ const FORMS = {
   mideast: { f: [['intro', 'verse', 'build', 'drop', 'break', 'drop', 'outro'], ['intro', 'verse', 'drop', 'verse', 'drop', 'outro'], ['intro', 'break', 'verse', 'drop', 'outro']], b: { intro: [4, 8], verse: [8, 16], build: [4, 8], drop: [16, 24], break: [8], outro: [4, 8] } },
   india: { f: [['intro', 'verse', 'drop', 'outro'], ['intro', 'verse', 'drop', 'verse', 'drop', 'outro'], ['verse', 'drop', 'drop', 'outro']], b: { intro: [8], verse: [8, 12, 16], drop: [12, 16, 24], outro: [4, 8] } },
   taiko: { f: [['intro', 'verse', 'drop', 'outro'], ['intro', 'verse', 'drop', 'break', 'drop', 'outro'], ['intro', 'drop', 'break', 'drop', 'outro']], b: { intro: [4, 8, 12], verse: [8, 12, 16], drop: [12, 16, 24], break: [4, 8], outro: [4, 8] } },
+  powwow: { f: [['intro', 'verse', 'drop', 'verse', 'drop', 'outro'], ['intro', 'verse', 'drop', 'drop', 'outro'], ['intro', 'verse', 'verse', 'drop', 'drop', 'outro']], b: { intro: [2], verse: [8, 16], drop: [16], outro: [2] } },
   zen: { f: [['intro', 'verse', 'break', 'outro'], ['intro', 'break', 'verse', 'break', 'outro'], ['intro', 'verse', 'outro']], b: { intro: [8, 12], verse: [8, 12, 16], break: [8, 12], outro: [8] } },
   marching: { f: [['intro', 'verse', 'build', 'drop', 'break', 'verse', 'outro'], ['intro', 'verse', 'drop', 'verse', 'outro'], ['intro', 'verse', 'break', 'drop', 'drop', 'outro']], b: { intro: [2, 4], verse: [8, 16], build: [4, 8], drop: [16, 24], break: [4, 8], outro: [2, 4] } },
   shamanic: { f: [['intro', 'verse', 'drop', 'outro'], ['intro', 'verse', 'outro'], ['intro', 'drop', 'drop', 'outro']], b: { intro: [4, 8], verse: [24, 32, 48], drop: [24, 32], outro: [4] } },
@@ -830,6 +861,7 @@ const RAIN = {
   mideast: { shape: 'tile', cols: ['#2D3E8C', '#D4A537', '#1E7C88', '#E8D7A6', '#4B5BB0'] },
   india: { shape: 'petal', cols: ['#F28C28', '#D8317A', '#F6C445', '#8E2C8A', '#E9573F'] },
   taiko: { shape: 'ring', cols: ['#C8102E', '#F4F1EA', '#2B2B2B', '#E05A47', '#D9D2C3'] },
+  powwow: { shape: 'circle', cols: ['#B8322A', '#2FA39A', '#F2E3C6', '#E0A23C', '#3B2A20'] },
   zen: { shape: 'enso', cols: ['#9AA39A', '#B9C2B0', '#7E8B86', '#D8DCD2', '#6F7D6B'] },
   shamanic: { shape: 'spiral', cols: ['#8E1E14', '#D9531E', '#C98A2B', '#5C2414', '#F0A04B'] },
   marching: { shape: 'chevron', cols: ['#D4A537', '#B8322A', '#1F2E5C', '#F2F4F7', '#E8C468'], rows: true },
@@ -852,6 +884,7 @@ function shapeOf(p) { const s = p.sz; RX.beginPath();
     case 'tile': for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4 + Math.PI / 8; RX[k ? 'lineTo' : 'moveTo'](Math.cos(a) * s, Math.sin(a) * s); } RX.closePath(); RX.fill(); break;
     case 'petal': RX.moveTo(0, -s); RX.quadraticCurveTo(s * 0.8, 0, 0, s); RX.quadraticCurveTo(-s * 0.8, 0, 0, -s); RX.fill(); break;
     case 'ring': RX.arc(0, 0, s, 0, 6.28); RX.fill(); RX.beginPath(); RX.lineWidth = Math.max(1.5, s * 0.18); RX.strokeStyle = 'rgba(0,0,0,.55)'; RX.arc(0, 0, s * 0.68, 0, 6.28); RX.stroke(); break;
+    case 'circle': RX.arc(0, 0, s * 0.35, 0, 6.28); RX.fill(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; RX.beginPath(); RX.arc(Math.cos(a) * s, Math.sin(a) * s, s * 0.18, 0, 6.28); RX.fill(); } break;
     case 'enso': RX.lineWidth = Math.max(2, s * 0.28); RX.lineCap = 'round'; RX.strokeStyle = p.col; RX.arc(0, 0, s, 0.3, 5.9); RX.stroke(); break;
     case 'spiral': RX.lineWidth = 2; RX.strokeStyle = p.col; for (let a = 0; a < 12; a += 0.3) { const rr = s * a / 12; RX[a ? 'lineTo' : 'moveTo'](Math.cos(a) * rr, Math.sin(a) * rr); } RX.stroke(); break;
     case 'chevron': RX.lineWidth = Math.max(2.5, s * 0.32); RX.lineJoin = 'miter'; RX.strokeStyle = p.col; RX.moveTo(-s, s * 0.5); RX.lineTo(0, -s * 0.4); RX.lineTo(s, s * 0.5); RX.stroke(); break;
@@ -870,7 +903,8 @@ const LABELS = {
   brazil: { drum: 'Surdo 1', clo: 'Surdo 2', chi: 'Surdo 3', tamb: 'Caixa', wood: 'Tamborim', bell: 'Agogô high', bell2: 'Agogô low', shk: 'Ganzá', bhi: 'Repinique', apito: 'Apito' },
   mideast: { clo: 'Darbuka Dum', slap: 'Darbuka Tek', bhi: 'Darbuka ka', tamb: 'Riq', drum: 'Bendir', bell: 'Zills' },
   india: { clo: 'Bayan (Ge, bass)', bhi: 'Dayan (Na, Ta)', blo: 'Dayan (Tin)', slap: 'Ke (closed)', bell: 'Manjira open', bell2: 'Manjira closed' },
-  shamanic: { drum: 'Frame drum', shk: 'Rattle', clo: 'Second drum', bell: 'Bells' }
+  shamanic: { drum: 'Frame drum', shk: 'Rattle', clo: 'Second drum', bell: 'Bells' },
+  powwow: { drum: 'The drum', clo: 'The drum (body)', tamb: "Dancers' bells" }
 };
 const vname = (v) => (LABELS[st.style] || {})[v] || P.VOICES[v].name;
 const NOTES = {
@@ -883,6 +917,7 @@ const NOTES = {
   zen: ['Japanese zen', 'Not a tradition, a mood: taiko sounds with much space between them, for slow and quiet music. For the real ensemble, choose Taiko.'],
   marching: ['Marching · drum line and taptoe', 'Military drumming, from the Swiss and Scottish traditions and the Dutch <b>taptoe</b> to the drum corps. The snare speaks in <b>rudiments</b>, written as <b>stickings</b>: <b>R</b> right hand, <b>L</b> left, <b>~</b> a <b>flam</b> (a grace note just before), <b>=</b> a <b>diddle</b> (two strokes on one, the stuff of rolls), small letters soft taps, <b>!</b> an accent. The <b>paradiddle</b> is R L R R L R L L. A show opens with the <b>roll-off</b>, the signal to step off, then the <b>cadence</b> or street beat; in <b>mark time</b> the line stands in place and the bass drums keep the step; in the <b>drum feature</b> the corps walks its figures; the <b>cut-off</b> ends all as one. The <b>bass line</b> is split: three drums play one melody together.'],
   shamanic: ['Shamanic · frame drum journey', 'One steady pulse of about <b>four to seven strokes a second</b>, a rattle with it: the drumming used in many cultures to carry a journey. It opens with a <b>heartbeat</b>, holds the pulse without showing off, and ends with the <b>callback</b>: rounds of seven strong strokes, a fast roll, one last stroke. The motor picks the pulse that fits your tempo.'],
+  powwow: ['Powwow · the social dances', 'One big drum in the middle, the singers sit around it and strike it together, a little apart, so every stroke is wide. A song is sung in <b>push-ups</b> (rounds). In the middle of a round come the <b>honor beats</b>: hard beats, loud and soft by turns. A song ends with a <b>tail</b>, and on the last beat the drum stops dead; a good dancer stops exactly with it. The dances here: <b>intertribal</b> (the straight beat, everyone dances), <b>round dance</b> (strong, soft, the circle sways), <b>crow hop</b> (the hop on the off-beat) and <b>sneak-up</b> (a trembling roll while the dancers crouch and search, then hard beats while they move in). <b>Northern</b> drums sing high and fast, <b>Southern</b> lower and slower. Out of respect this style plays only the drum of the social dances: no songs, no words, and no ceremonial or honor songs, which belong to the people and their occasions. To hear the real thing, visit a powwow.'],
   minimal: ['Minimal house', 'A modern club tradition: shaker, conga and rim figures that repeat with small changes, made to lock with a four on the floor kick.']
 };
 // the parts of a piece in the words of each tradition (with your own beat loaded, the beat's names stay)
@@ -894,6 +929,7 @@ const PARTS = {
   india: { intro: 'Keherwa', verse: 'Madhya laya', build: 'Madhya laya', drop: 'Drut laya', chorus: 'Drut laya', break: 'Vilambit', outro: 'Keherwa' },
   marching: { intro: 'Roll-off', verse: 'Cadence', build: 'Mark time', drop: 'Drum feature', chorus: 'Drum feature', break: 'Mark time', outro: 'Cut-off' },
   shamanic: { intro: 'Heartbeat', verse: 'Journey', build: 'Journey', drop: 'Deep journey', chorus: 'Deep journey', break: 'Journey', outro: 'Callback' },
+  powwow: { intro: 'Lead', verse: 'Push-up', build: 'Push-up', drop: 'Push-up · honor beats', chorus: 'Push-up · honor beats', break: 'Push-up', outro: 'Tail' },
   zen: { intro: 'Stillness', verse: 'Breath', build: 'Breath', drop: 'Breath', chorus: 'Breath', break: 'Ma', outro: 'Silence' }
 };
 function partName(s, startBar) { if (st.beat) return s.type;
