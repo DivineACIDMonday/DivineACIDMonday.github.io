@@ -100,7 +100,7 @@ footer a{color:var(--acc)}
     <span class="pos" id="pos">Bar 1</span>
     <label class="small" id="withBeatL" hidden><input type="checkbox" id="withBeat" checked> with my beat</label>
     <span style="flex:1"></span>
-    <label class="small">MIDI for <select id="target" style="font:inherit;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px"></select></label><button class="btn" id="dlMidi">⬇ MIDI</button><button class="btn main" id="dlWav">⬇ WAV</button>
+    <label class="small">MIDI for <select id="target" style="font:inherit;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px"></select></label><label class="small" title="One MIDI track with only the drum notes" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="beatOnly"> Only one track</label><button class="btn" id="dlMidi">⬇ MIDI</button><button class="btn main" id="dlWav">⬇ WAV</button>
   </div>
   <div class="secs" id="secs"><div class="ph" id="ph"></div></div>
   <div class="small">Tap a section to play from there.</div>
@@ -987,6 +987,7 @@ function slotInfo() { const T = TARGETS[st.target], el = $('#slotInfo');
   else if (T.map) el.innerHTML = '<b>' + T.name + ':</b> big drum on tom l, congas on conga l and h, slap on rimshot, bongos on tom h, shaker on hat a, tambourine on hat op, bells on cowbell, wood on block. All on one MIDI track.';
   else el.innerHTML = 'Plain MIDI: one track per instrument, General MIDI percussion notes.'; }
 /* ---------- MIDI out ---------- */
+const beatOnly = () => { try { return localStorage.getItem('dm_beat_only') === '1'; } catch (e) { return false; } };
 function midiOut() { const res = st.res, PPQ = 480, spq = 60 / st.bpm, vlq = (n) => { const b = [n & 127]; while ((n >>= 7)) b.unshift((n & 127) | 128); return b; };
   const trk = (bytes) => { const h = [0x4D, 0x54, 0x72, 0x6B], l = bytes.length; return h.concat([(l >>> 24) & 255, (l >>> 16) & 255, (l >>> 8) & 255, l & 255], bytes); };
   const name = (s) => { const b = [...new TextEncoder().encode(s)]; return [0, 0xFF, 3].concat(vlq(b.length), b); };
@@ -996,6 +997,9 @@ function midiOut() { const res = st.res, PPQ = 480, spq = 60 / st.bpm, vlq = (n)
     for (const e of by[v]) { const n = noteFor(T, e.v), tk = Math.round(e.t / spq * PPQ); msgs.push([tk, 0x99, n, e.vel], [tk + 60, 0x89, n, 0]); }
     msgs.sort((a, b) => a[0] - b[0] || (a[1] === 0x89 ? -1 : 1)); let last = 0, bytes = name(one ? 'Percussion for ' + T.name : P.VOICES[v].name);
     for (const m of msgs) { bytes = bytes.concat(vlq(m[0] - last), [m[1], m[2], m[3]]); last = m[0]; } tracks.push(trk(bytes.concat([0, 0xFF, 0x2F, 0]))); }
+  // only the beat: one track (MIDI type 0), tempo and meter inside it, nothing else
+  if (one && beatOnly() && tracks.length === 2) { const tk = tracks[1].slice(8), tm = [0, 0xFF, 0x51, 3, (tempo >> 16) & 255, (tempo >> 8) & 255, tempo & 255, 0, 0xFF, 0x58, 4, 4, 2, 24, 8], nb = name('Percussion for ' + T.name).length;
+    const body = tk.slice(0, nb).concat(tm, tk.slice(nb)); return new Blob([new Uint8Array([0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 0, 0, 1, (PPQ >> 8) & 255, PPQ & 255].concat(trk(body)))], { type: 'audio/midi' }); }
   const head = [0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 1, (tracks.length >> 8) & 255, tracks.length & 255, (PPQ >> 8) & 255, PPQ & 255];
   return new Blob([new Uint8Array(head.concat(...tracks))], { type: 'audio/midi' }); }
 const TAGS = { xo: 'XLNXO', beatmaker: 'Beatmaker3', tekno: 'Tekno', tr909: 'TR909', impact: 'ImpactXT', vdrummer: 'VirtualDrummer', gm: 'GM' };
@@ -1029,6 +1033,7 @@ $('#dice').onclick = () => { st.seed = (Math.random() * 2 ** 31) >>> 0; store.se
 $('#play').onclick = () => { if (AU.playing) stop(); else start(AU.off >= st.res.totalSec ? 0 : AU.off); };
 $('#withBeat').onchange = () => { if (AU.playing) restartAt(now()); };
 $('#dlMidi').onclick = () => save(midiOut(), fileName('mid'));
+{ const bo = $('#beatOnly'); bo.checked = beatOnly(); bo.onchange = () => { try { localStorage.setItem('dm_beat_only', bo.checked ? '1' : '0'); } catch (e) {} }; }
 const TG = $('#target'); for (const k in TARGETS) { const o = document.createElement('option'); o.value = k; o.textContent = TARGETS[k].name; if (k === st.target) o.selected = true; TG.append(o); }
 TG.onchange = () => { st.target = TG.value; store.set('target', st.target); slotInfo(); }; slotInfo();
 $('#dlWav').onclick = async () => { const b = $('#dlWav'), t = b.textContent; b.textContent = 'Rendering…'; b.disabled = true; try { save(await wavOut(), fileName('wav')); } catch (e) { toast('WAV failed: ' + e.message); } b.textContent = t; b.disabled = false; };
