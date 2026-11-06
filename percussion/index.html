@@ -973,6 +973,8 @@ const TARGETS = {
   beatmaker: { name: 'UJAM Beatmaker 3', keys: [36, 38, 40, 43, 45, 48, 52, 59] },
   tekno: { name: 'BABY Audio Tekno', map: { drum: [43, 'tom l'], clo: [47, 'conga l'], chi: [48, 'conga h'], slap: [46, 'rimshot'], bhi: [44, 'tom h'], blo: [44, 'tom h'], shk: [40, 'hat a'], tamb: [42, 'hat op'], bell: [51, 'cowbell'], bell2: [51, 'cowbell'], wood: [52, 'block'], clave: [52, 'block'], odaiko: [36, 'kick a'], don: [43, 'tom l'], ka: [46, 'rimshot'], shime: [44, 'tom h'], shimeka: [52, 'block'], okedo: [47, 'conga l'], kane: [51, 'cowbell'], kake: [45, 'clap'], apito: [50, 'tonal'], bass1: [36, 'kick a'], bass2: [36, 'kick a'], bass3: [37, 'kick b'], bass4: [43, 'tom l'], bass5: [43, 'tom l'], snare: [38, 'snare a'], rim: [46, 'rimshot'], tenor1: [44, 'tom h'], tenor2: [44, 'tom h'], tenor3: [48, 'conga h'], tenor4: [47, 'conga l'], cym: [53, 'crash'], cyc: [53, 'crash'] } },
   impact: { name: 'Impact XT', keys: [36, 37, 38, 39, 40, 41, 42, 43] },
+  // Roland TR-909 Software: only the notes from its manual; 24 to 33 switch its patterns and start or stop it, so they are never sent
+  tr909: { name: 'Roland TR-909', map: { drum: [41, 'Low Tom'], clo: [45, 'Mid Tom'], chi: [48, 'High Tom'], slap: [37, 'Rim Shot'], bhi: [48, 'High Tom'], blo: [45, 'Mid Tom'], shk: [42, 'Closed HiHat'], tamb: [46, 'Open HiHat'], bell: [51, 'Ride'], bell2: [51, 'Ride'], clave: [37, 'Rim Shot'], wood: [39, 'Hand Clap'], odaiko: [36, 'Bass Drum'], don: [41, 'Low Tom'], ka: [37, 'Rim Shot'], shime: [48, 'High Tom'], shimeka: [39, 'Hand Clap'], okedo: [45, 'Mid Tom'], kane: [51, 'Ride'], kake: [39, 'Hand Clap'], apito: [46, 'Open HiHat'], snare: [38, 'Snare Drum'], rim: [37, 'Rim Shot'], tenor1: [48, 'High Tom'], tenor2: [48, 'High Tom'], tenor3: [45, 'Mid Tom'], tenor4: [41, 'Low Tom'], bass1: [36, 'Bass Drum'], bass2: [35, 'Bass Drum'], bass3: [41, 'Low Tom'], bass4: [41, 'Low Tom'], bass5: [45, 'Mid Tom'], cym: [49, 'Crash'], cyc: [49, 'Crash'] } },
   vdrummer: { name: 'UJAM Virtual Drummer', keys: [36, 41, 38, 40, 42, 46, 37, 49] }
 };
 const NN = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'], nn = (m) => NN[m % 12] + (Math.floor(m / 12) - 2);
@@ -981,6 +983,7 @@ function slotInfo() { const T = TARGETS[st.target], el = $('#slotInfo');
   if (T.keys) el.innerHTML = '<b>Load these sounds in ' + T.name + ':</b> ' + slots().map((s, i) => { const L = LABELS[st.style], used = L ? s[1].filter((v) => L[v]).map((v) => L[v]) : []; return (i + 1) + ' ' + (used.length ? used.join(' / ') : L ? '(free)' : s[0]) + ' (' + nn(T.keys[i]) + ')'; }).join(' · ') + '. All on one MIDI track.';
   else if (T.map && st.style === 'marching') el.innerHTML = '<b>' + T.name + ':</b> bass drums on kick a, kick b and tom l, snare on snare a with its rim click on rimshot, tenors on tom h and conga l, cymbals on crash. All on one MIDI track.';
   else if (T.map && P.STYLES[st.style].taiko) el.innerHTML = '<b>' + T.name + ':</b> odaiko on kick a, nagado on tom l with its rim on rimshot, shime on tom h with its rim on block, okedo on conga l, atarigane on cowbell, kakegoe on clap. All on one MIDI track.';
+  else if (st.target === 'tr909') el.innerHTML = '<b>Roland TR-909:</b> one MIDI track on the 909 kit. Low drums on the toms (Low, Mid, High), the lowest on the Bass Drum, slaps and clicks on Rim Shot, shakers on the HiHats, bells on Ride, wood and calls on Hand Clap, cymbals on Crash.';
   else if (T.map) el.innerHTML = '<b>' + T.name + ':</b> big drum on tom l, congas on conga l and h, slap on rimshot, bongos on tom h, shaker on hat a, tambourine on hat op, bells on cowbell, wood on block. All on one MIDI track.';
   else el.innerHTML = 'Plain MIDI: one track per instrument, General MIDI percussion notes.'; }
 /* ---------- MIDI out ---------- */
@@ -995,7 +998,7 @@ function midiOut() { const res = st.res, PPQ = 480, spq = 60 / st.bpm, vlq = (n)
     for (const m of msgs) { bytes = bytes.concat(vlq(m[0] - last), [m[1], m[2], m[3]]); last = m[0]; } tracks.push(trk(bytes.concat([0, 0xFF, 0x2F, 0]))); }
   const head = [0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 1, (tracks.length >> 8) & 255, tracks.length & 255, (PPQ >> 8) & 255, PPQ & 255];
   return new Blob([new Uint8Array(head.concat(...tracks))], { type: 'audio/midi' }); }
-const TAGS = { xo: 'XLNXO', beatmaker: 'Beatmaker3', tekno: 'Tekno', impact: 'ImpactXT', vdrummer: 'VirtualDrummer', gm: 'GM' };
+const TAGS = { xo: 'XLNXO', beatmaker: 'Beatmaker3', tekno: 'Tekno', tr909: 'TR909', impact: 'ImpactXT', vdrummer: 'VirtualDrummer', gm: 'GM' };
 function fileName(ext) {
   if (st.beat && st.beat.name) { const sty = P.STYLES[st.style].name.replace(/[^A-Za-z]/g, ''); let n = st.beat.name, tag = ext === 'mid' ? TAGS[st.target] : 'Audio';
     n = /beat/i.test(n) ? n.replace(/beat/i, 'Percussion_' + sty) : n + '_Percussion_' + sty;
