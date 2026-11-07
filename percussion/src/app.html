@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Divine Percussion Machine</title>
+<meta name="description" content="A percussion band that plays over any beat: West Africa, Afro-Cuban, Brazil, Middle East, India, Japanese zen, Shamanic and Minimal house. Load your beat as MIDI, it takes over the structure. Export MIDI and WAV. No AI. By Divine Monday.">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Divine Monday"><meta property="og:title" content="Divine Percussion Machine">
+<meta property="og:description" content="A percussion band that plays over any beat, from zen to shamanic. Load your beat MIDI, take MIDI and WAV home. No AI.">
+<meta property="og:url" content="https://divineacidmonday.github.io/percussion/">
+<meta property="og:image" content="https://divineacidmonday.github.io/percussion/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Divine Percussion Machine"><meta name="twitter:description" content="A percussion band that plays over any beat, from zen to shamanic. Load your beat MIDI, take MIDI and WAV home. No AI."><meta name="twitter:image" content="https://divineacidmonday.github.io/percussion/og.png">
+<link rel="canonical" href="https://divineacidmonday.github.io/percussion/"><meta name="author" content="Divine Monday"><meta name="theme-color" content="#12131B">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230E0F16'/%3E%3Cellipse cx='32' cy='22' rx='18' ry='7' fill='none' stroke='%23F0C25A' stroke-width='4'/%3E%3Cpath d='M14 22v18c0 4 8 8 18 8s18-4 18-8V22' fill='none' stroke='%23F0C25A' stroke-width='4'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#12131B;--card:#1C1E2A;--card2:#242737;--line:#33364A;--ink:#F3F1EA;--soft:#A9A8B8;--acc:#F0C25A;--hot:#E0705A}
+@media (prefers-color-scheme: light){:root:not([data-theme=dark]){--bg:#F4F2EC;--card:#FFFFFF;--card2:#F0EDE4;--line:#E2DED2;--ink:#1E1D2B;--soft:#666275;--acc:#B8860B;--hot:#C7503A}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+[hidden]{display:none!important}
+main{max-width:1100px;margin:0 auto;padding:16px 16px 60px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 14px}
+.back{padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:var(--ink);text-decoration:none;font-weight:700;font-size:14px}
+h1{font-size:24px;margin:0}h1 b{color:var(--acc)}
+.sub{color:var(--soft);font-size:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+.lab{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-bottom:8px;font-weight:700}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;color:inherit}
+.btn{padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card2);font-weight:700}
+.btn.main{background:var(--acc);color:#14151E;border-color:var(--acc)}
+.btn:disabled{opacity:.4;cursor:default}
+.drop{display:block;border:2px dashed var(--line);border-radius:14px;padding:16px;text-align:center;color:var(--soft);cursor:pointer}
+.drop.on{border-color:var(--acc);color:var(--ink)}
+.drop b{color:var(--ink)}
+input[type=text],input[type=number]{font:inherit;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+input[type=text]{width:100%}
+.styles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+@media(max-width:520px){.styles{grid-template-columns:repeat(2,1fr)}}
+.styles button{padding:10px 6px;border-radius:12px;border:1px solid var(--line);background:var(--card2);font-weight:700;font-size:14px}
+.styles button[aria-pressed=true]{background:var(--acc);color:#14151E;border-color:var(--acc)}
+.slider{display:grid;grid-template-columns:90px 1fr 90px;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--soft)}
+.slider span:last-child{text-align:right}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.players{display:flex;gap:6px;flex-wrap:wrap}
+.players button{padding:7px 11px;border-radius:999px;border:1px solid var(--line);background:var(--card2);font-size:13px;font-weight:700;display:flex;gap:6px;align-items:center}
+.players button i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.players button[aria-pressed=false]{opacity:.38;text-decoration:line-through}
+.secs{display:flex;gap:3px;height:46px;margin:6px 0 4px;position:relative}
+.secs button{border:0;border-radius:8px;font-size:12px;font-weight:700;color:#14151E;overflow:hidden;white-space:nowrap;padding:0 4px;min-width:0}
+.ph{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--ink);border-radius:2px;pointer-events:none;left:0}
+.lanes{display:grid;gap:4px;margin-top:10px}
+.lane{display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:center;font-size:12px;color:var(--soft)}
+.cells{display:grid;gap:2px}
+.cells i{height:16px;border-radius:4px;background:var(--card2)}
+.cells i.now{outline:2px solid var(--ink)}
+.transport{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.play{width:56px;height:56px;border-radius:50%;border:0;background:var(--acc);color:#14151E;font-size:22px;font-weight:800}
+.pos{color:var(--soft);font-size:14px;min-width:140px}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:92vw}
+.toast.on{opacity:1}
+footer{color:var(--soft);font-size:13px;margin-top:20px;line-height:1.6}
+footer a{color:var(--acc)}
+.small{font-size:13px;color:var(--soft)}
+#rain{position:fixed;inset:0;width:100vw;height:100vh;z-index:50;pointer-events:none}
+.note{font-size:14px;line-height:1.55}.note b{color:var(--acc)}
+.speak{display:grid;gap:4px;margin-top:12px;font:600 14px/1.4 ui-monospace,Menlo,Consolas,monospace}
+.speak div{display:grid;grid-template-columns:110px 1fr;gap:8px}.speak span{color:var(--soft);font:12px system-ui,sans-serif;align-self:center}
+</style>
+</head>
+<body>
+<main>
+<header><a class="back" href="../" title="Back to the Divine Music Suite">← Suite</a><h1>Divine <b>Percussion</b> Machine</h1><span class="sub">A percussion band for any beat. Rules, no AI.</span></header>
+
+<div class="grid2">
+  <section class="card">
+    <div class="lab">1 · Your beat</div>
+    <label class="drop" id="drop"><input type="file" id="file" accept=".mid,.midi,audio/midi" hidden><b>Drop your beat MIDI here</b><br><span class="small">or tap to choose. It reads the tempo, the bars and where the beat gets full or empty.</span></label>
+    <p class="small" id="beatInfo">No beat loaded: the band plays on its own, in the tempo and form of its tradition.</p>
+    <div class="row" style="margin-top:8px"><label class="small">Tempo <input type="number" id="bpm" min="40" max="220" value="124" style="width:80px"> bpm</label></div>
+    <div style="margin-top:10px"><div class="small" style="margin-bottom:4px">Structure (type and bars, change it as you like)</div><input type="text" id="struct" value="intro 8, verse 16, build 8, drop 32, break 8, drop 32, outro 8"></div>
+  </section>
+  <section class="card">
+    <div class="lab">2 · The band</div>
+    <div class="styles" id="styles"></div>
+    <div class="slider"><span>🧘 Zen</span><input type="range" id="wild" min="0" max="100" value="50" aria-label="From zen to shamanic"><span>Shamanic 🔥</span></div>
+    <div class="slider"><span>Straight</span><input type="range" id="swing" min="0" max="100" value="20" aria-label="Swing"><span>Swing</span></div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="dice">⚄ Other players</button><span class="small" id="tfInfo"></span></div>
+  </section>
+</div>
+
+<section class="card note"><div class="lab" id="noteT"></div><div id="noteB"></div></section>
+<canvas id="rain" aria-hidden="true"></canvas>
+<section class="card listen">
+  <div class="lab">3 · Listen</div>
+  <div class="transport">
+    <button class="play" id="play" aria-label="Play">▶</button>
+    <span class="pos" id="pos">Bar 1</span>
+    <label class="small" id="withBeatL" hidden><input type="checkbox" id="withBeat" checked> with my beat</label>
+    <span style="flex:1"></span>
+    <label class="small">MIDI for <select id="target" style="font:inherit;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px"></select></label><label class="small" title="One MIDI track with only the drum notes" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="beatOnly"> Only one track</label><button class="btn" id="dlMidi">⬇ MIDI</button><button class="btn main" id="dlWav">⬇ WAV</button>
+  </div>
+  <div class="secs" id="secs"><div class="ph" id="ph"></div></div>
+  <div class="small">Tap a section to play from there.</div>
+  <div class="lab" style="margin-top:14px">Players · tap to mute</div>
+  <div class="players" id="players"></div>
+  <div class="lanes" id="lanes"></div>
+  <div id="speak" class="speak"></div>
+  <div class="small" id="slotInfo" style="margin-top:12px"></div>
+</section>
+
+<footer>
+  How it works: every tradition plays in its own language (kuchi-shoga, bols, Gun Go Pa, Dum Tek ka, conga strokes) and its own form: calls and answers, signals, breaks and cadences, as the players of that tradition do. The motor follows the parts of your song: quiet parts stay sparse, full parts open up. Made with deep respect for the drummers who carry these traditions; this is a sketchbook, a teacher is the real thing.<br>
+  Everything runs in your browser. No cookies, only an anonymous visit counter (GoatCounter, no personal data); your MIDI never leaves this device.<br>
+  Also by Divine Monday: <a href="../">the Divine Music Suite</a> · © 2026 Divine Monday
+</footer>
+</main>
+<div class="toast" id="toast"></div>
+
+<!--ENGINE-->
+<script>
+'use strict';
+const P = window.PercMotor, $ = (s) => document.querySelector(s);
+const store = { get: (k, d) => { try { const v = localStorage.getItem('dpm-' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set: (k, v) => { try { localStorage.setItem('dpm-' + k, JSON.stringify(v)); } catch (e) {} } };
+const SEC_COL = { intro: '#7FC8E8', verse: '#8FD18B', prechorus: '#B4D98B', build: '#E9C46A', chorus: '#E0705A', drop: '#E0705A', break: '#A79BF0', bridge: '#C88FE8', outro: '#7FA3E8', solo: '#E88FC8', fill: '#F2E0A0' };
+// without a beat, tempo and form belong to the tradition
+const NATIVE = { marching: [116, 'intro 4, verse 16, build 8, drop 16, break 8, verse 16, outro 4'], westafrica: [110, 'intro 4, verse 16, drop 16, break 8, drop 16, outro 4'], afrocuban: [100, 'intro 4, verse 16, drop 16, verse 8, drop 16, outro 4'], brazil: [104, 'intro 4, verse 16, drop 16, break 4, drop 16, outro 4'],
+  mideast: [100, 'intro 8, verse 16, drop 16, break 8, drop 16, outro 8'], india: [90, 'intro 8, verse 16, drop 16, outro 8'], taiko: [120, 'intro 8, verse 16, drop 16, break 8, drop 16, outro 8'],
+  zen: [70, 'intro 8, verse 16, break 8, outro 8'], powwow: [138, 'intro 2, verse 16, drop 16, verse 16, drop 16, outro 2'], shamanic: [120, 'intro 4, verse 32, drop 32, outro 4'], minimal: [124, 'intro 16, verse 16, build 8, drop 32, break 16, drop 32, outro 16'] };
+// forms each tradition knows: an order of parts, and the lengths that suit them
+const FORMS = {
+  westafrica: { f: [['intro', 'verse', 'drop', 'break', 'drop', 'outro'], ['intro', 'verse', 'drop', 'drop', 'outro'], ['intro', 'verse', 'drop', 'verse', 'drop', 'outro']], b: { intro: [2, 4], verse: [8, 12, 16], drop: [12, 16, 24], break: [4, 8], outro: [2, 4] } },
+  afrocuban: { f: [['intro', 'verse', 'drop', 'outro'], ['intro', 'verse', 'drop', 'verse', 'drop', 'outro'], ['intro', 'verse', 'verse', 'drop', 'drop', 'outro']], b: { intro: [4], verse: [8, 16], drop: [16, 24], outro: [2, 4] } },
+  brazil: { f: [['intro', 'verse', 'drop', 'break', 'drop', 'outro'], ['intro', 'drop', 'break', 'drop', 'break', 'drop', 'outro'], ['intro', 'verse', 'drop', 'outro']], b: { intro: [2, 4], verse: [8, 16], drop: [16, 24, 32], break: [2, 4], outro: [2, 4] } },
+  mideast: { f: [['intro', 'verse', 'build', 'drop', 'break', 'drop', 'outro'], ['intro', 'verse', 'drop', 'verse', 'drop', 'outro'], ['intro', 'break', 'verse', 'drop', 'outro']], b: { intro: [4, 8], verse: [8, 16], build: [4, 8], drop: [16, 24], break: [8], outro: [4, 8] } },
+  india: { f: [['intro', 'verse', 'drop', 'outro'], ['intro', 'verse', 'drop', 'verse', 'drop', 'outro'], ['verse', 'drop', 'drop', 'outro']], b: { intro: [8], verse: [8, 12, 16], drop: [12, 16, 24], outro: [4, 8] } },
+  taiko: { f: [['intro', 'verse', 'drop', 'outro'], ['intro', 'verse', 'drop', 'break', 'drop', 'outro'], ['intro', 'drop', 'break', 'drop', 'outro']], b: { intro: [4, 8, 12], verse: [8, 12, 16], drop: [12, 16, 24], break: [4, 8], outro: [4, 8] } },
+  powwow: { f: [['intro', 'verse', 'drop', 'verse', 'drop', 'outro'], ['intro', 'verse', 'drop', 'drop', 'outro'], ['intro', 'verse', 'verse', 'drop', 'drop', 'outro']], b: { intro: [2], verse: [8, 16], drop: [16], outro: [2] } },
+  zen: { f: [['intro', 'verse', 'break', 'outro'], ['intro', 'break', 'verse', 'break', 'outro'], ['intro', 'verse', 'outro']], b: { intro: [8, 12], verse: [8, 12, 16], break: [8, 12], outro: [8] } },
+  marching: { f: [['intro', 'verse', 'build', 'drop', 'break', 'verse', 'outro'], ['intro', 'verse', 'drop', 'verse', 'outro'], ['intro', 'verse', 'break', 'drop', 'drop', 'outro']], b: { intro: [2, 4], verse: [8, 16], build: [4, 8], drop: [16, 24], break: [4, 8], outro: [2, 4] } },
+  shamanic: { f: [['intro', 'verse', 'drop', 'outro'], ['intro', 'verse', 'outro'], ['intro', 'drop', 'drop', 'outro']], b: { intro: [4, 8], verse: [24, 32, 48], drop: [24, 32], outro: [4] } },
+  minimal: { f: [['intro', 'verse', 'build', 'drop', 'break', 'drop', 'outro'], ['intro', 'drop', 'break', 'build', 'drop', 'outro'], ['intro', 'verse', 'drop', 'outro']], b: { intro: [8, 16], verse: [16], build: [8], drop: [16, 32], break: [8, 16], outro: [8, 16] } }
+};
+function newForm() { const F = FORMS[st.style]; if (!F) return; const pick = (a) => a[Math.floor(Math.random() * a.length)];
+  st.struct = pick(F.f).map((t) => t + ' ' + pick(F.b[t] || [8])).join(', '); $('#struct').value = st.struct; }
+const st = { style: store.get('style', 'westafrica'), wild: store.get('wild', 0.5), swing: store.get('swing', 0.2), bpm: store.get('bpm', 124), struct: store.get('struct', $('#struct').value), seed: store.get('seed', (Math.random() * 2 ** 31) >>> 0), target: store.get('target', 'xo'), mutes: {}, beat: null, res: null };
+let toastT = 0; const toast = (m) => { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2400); };
+
+/* ---------- structure text ---------- */
+const TYPES = Object.keys(P.INTENS);
+function parseStruct(s) { const out = []; for (const part of s.split(/[,;\n]+/)) { const m = part.trim().toLowerCase().match(/^([a-z]+)\s*(\d+)?/); if (!m) continue; const ty = TYPES.find((t) => t.startsWith(m[1])) || 'verse'; const n = Math.max(1, Math.min(256, +(m[2] || 8))); out.push({ type: ty, bars: n }); } return out.length ? out : [{ type: 'drop', bars: 16 }]; }
+
+/* ---------- MIDI in ---------- */
+function readMidi(buf) { const d = new DataView(buf); let p = 0; const str = (n) => { let s = ''; for (let i = 0; i < n; i++) s += String.fromCharCode(d.getUint8(p + i)); p += n; return s; };
+  const u32 = () => { const v = d.getUint32(p); p += 4; return v; }, u16 = () => { const v = d.getUint16(p); p += 2; return v; }, vlq = () => { let v = 0, b; do { b = d.getUint8(p++); v = (v << 7) | (b & 127); } while (b & 128); return v; };
+  if (str(4) !== 'MThd') throw new Error('not a MIDI file'); const hl = u32(); u16(); const nt = u16(), div = u16(); p = 8 + hl; if (div & 0x8000) throw new Error('SMPTE timing');
+  const notes = [], marks = []; let tempo = null, ts = [4, 4];
+  for (let k = 0; k < nt && p < d.byteLength; k++) { if (str(4) !== 'MTrk') break; const len = u32(), end = p + len; let t = 0, rs = 0;
+    while (p < end) { t += vlq(); let s = d.getUint8(p); if (s & 128) p++; else s = rs;
+      if (s === 0xFF) { const ty = d.getUint8(p++), l = vlq(); if (ty === 0x51 && tempo == null) tempo = (d.getUint8(p) << 16) | (d.getUint8(p + 1) << 8) | d.getUint8(p + 2); if (ty === 0x58) ts = [d.getUint8(p), 2 ** d.getUint8(p + 1)]; if (ty === 0x06 && l) { let tx = ''; for (let i = 0; i < l; i++) tx += String.fromCharCode(d.getUint8(p + i)); marks.push({ tick: t, text: tx }); } p += l; continue; }
+      if (s === 0xF0 || s === 0xF7) { p += vlq(); continue; }
+      rs = s; const hi = s & 0xF0; if (hi === 0xC0 || hi === 0xD0) { p += 1; continue; } const a = d.getUint8(p), b = d.getUint8(p + 1); p += 2;
+      if (hi === 0x90 && b > 0) notes.push({ tick: t, note: a, vel: b }); }
+    p = end; }
+  return { ppq: div, notes, marks, bpm: tempo ? Math.round(60000000 / tempo) : null, ts }; }
+const KICKS = [35, 36], SNARES = [37, 38, 39, 40], HATS = [42, 44, 46, 49, 51];
+function analyse(m) {
+  const barT = m.ppq * 4 * m.ts[0] / m.ts[1], nBars = Math.max(1, Math.ceil((Math.max(0, ...m.notes.map((n) => n.tick)) + 1) / barT));
+  const hasGM = m.notes.some((n) => KICKS.includes(n.note)); const lowest = Math.min(...m.notes.map((n) => n.note));
+  const bars = Array.from({ length: nBars }, () => ({ k: [], s: [], n: 0 }));
+  const beatNotes = m.notes.map((n) => { const b = Math.floor(n.tick / barT), step = (n.tick - b * barT) / barT * 16; const kind = (hasGM ? KICKS.includes(n.note) : n.note === lowest) ? 'k' : SNARES.includes(n.note) ? 's' : HATS.includes(n.note) ? 'h' : 'o';
+    if (bars[b]) { bars[b].n += kind === 'h' ? 0.5 : 1; if (kind === 'k') bars[b].k.push(step); if (kind === 's') bars[b].s.push(step); } return { q: n.tick / m.ppq, kind, vel: n.vel }; });
+  // structure from how full the beat is, in blocks of four bars
+  const blk = []; for (let b = 0; b < nBars; b += 4) { let s = 0, c = 0; for (let i = b; i < Math.min(nBars, b + 4); i++) { s += bars[i].n; c++; } blk.push(s / c); }
+  const mx = Math.max(...blk, 1e-9), lvl = blk.map((v) => v < 0.42 * mx ? 0 : v < 0.78 * mx ? 1 : 2);
+  const segs = []; lvl.forEach((l, i) => { const n = Math.min(4, nBars - i * 4); if (segs.length && segs[segs.length - 1].l === l) segs[segs.length - 1].bars += n; else segs.push({ l, bars: n }); });
+  const sec = segs.map((s, i) => ({ bars: s.bars, type: s.l === 2 ? 'drop' : s.l === 1 ? (segs[i + 1] && segs[i + 1].l === 2 ? 'build' : 'verse') : i === 0 ? 'intro' : i === segs.length - 1 ? 'outro' : 'break' }));
+  // markers in the file (Intro 1, Drop 2 ...) win over the guess
+  const mk = (m.marks || []).filter((x) => x.tick < nBars * barT).sort((a, b) => a.tick - b.tick);
+  if (mk.length >= 2) { const ms = mk.map((x, i) => { const end = i + 1 < mk.length ? mk[i + 1].tick : nBars * barT, w = x.text.trim().toLowerCase().match(/[a-z]+/); return { type: (w && TYPES.find((t) => t.startsWith(w[0].slice(0, 4)))) || 'verse', bars: Math.max(1, Math.round((end - x.tick) / barT)) }; });
+    if (mk[0].tick >= barT) ms.unshift({ type: 'intro', bars: Math.round(mk[0].tick / barT) }); return { bars, beatNotes, nBars, sections: ms, fromMarkers: true }; }
+  return { bars, beatNotes, nBars, sections: sec };
+}
+async function loadFile(f) { try { const m = readMidi(await f.arrayBuffer()); if (!m.notes.length) throw new Error('no notes'); const a = analyse(m);
+    a.name = f.name.replace(/\.(mid|midi)$/i, ''); st.beat = a; if (m.bpm) { st.bpm = m.bpm; $('#bpm').value = m.bpm; store.set('bpm', m.bpm); }
+    st.struct = a.sections.map((s) => s.type + ' ' + s.bars).join(', '); $('#struct').value = st.struct; store.set('struct', st.struct);
+    $('#beatInfo').innerHTML = '<b>' + f.name.replace(/</g, '') + '</b>: ' + a.nBars + ' bars' + (m.bpm ? ' at ' + m.bpm + ' bpm' : '') + ', ' + a.sections.length + ' sections ' + (a.fromMarkers ? 'from the markers in your file' : 'found') + '. The band plays around your kick and snare.';
+    $('#withBeatL').hidden = false; $('#beatInfo').insertAdjacentHTML('beforeend', ' <button class="btn" id="unload" style="padding:4px 10px;font-size:13px">✕ Remove beat</button>'); $('#unload').onclick = () => { st.beat = null; $('#withBeatL').hidden = true; $('#beatInfo').textContent = 'No beat loaded: the band plays on its own, in the tempo and form of its tradition.'; native(); regen(false); if (AU.playing) restartAt(0); }; regen(true); toast('Beat loaded: ' + a.sections.length + ' sections.'); }
+  catch (e) { toast('Could not read that MIDI file (' + e.message + ').'); } }
+
+/* ---------- the song ---------- */
+function song() { return { bpm: st.bpm, sections: parseStruct(st.struct), style: st.style, seed: st.seed, wild: st.wild, swing: st.swing, mutes: st.mutes, beat: st.beat ? { bars: st.beat.bars } : null }; }
+function regen(keepPos) { const pos = AU.playing ? now() : null; st.res = P.generate(song()); render(); if (AU.playing && keepPos) restartAt(pos); }
+
+/* ---------- audio ---------- */
+const AU = { ctx: null, playing: false, t0: 0, off: 0, i: 0, j: 0, timer: 0, out: null };
+function ctx() { if (!AU.ctx) { AU.ctx = new (window.AudioContext || window.webkitAudioContext)(); AU.out = AU.ctx.createGain(); AU.out.gain.value = 0.5; const c = AU.ctx.createDynamicsCompressor(); c.threshold.value = -10; AU.out.connect(c); c.connect(AU.ctx.destination); } return AU.ctx; }
+const now = () => AU.playing ? AU.ctx.currentTime - AU.t0 + AU.off : AU.off;
+function beatEvents() { if (!st.beat || !$('#withBeat').checked) return []; const spq = 60 / st.bpm; return st.beat.beatNotes.map((n) => ({ t: n.q * spq, kind: n.kind, vel: n.vel })); }
+function beatHit(c, out, e, t) { const a = e.vel / 127; const o = c.createOscillator(), g = c.createGain();
+  if (e.kind === 'k') { o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12); g.gain.setValueAtTime(0.9 * a, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.35); o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.4); return; }
+  const s = c.createBufferSource(), f = c.createBiquadFilter(); s.buffer = (function () { const b = c.createBuffer(1, c.sampleRate * 0.3, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; })();
+  f.type = e.kind === 'h' ? 'highpass' : 'bandpass'; f.frequency.value = e.kind === 'h' ? 8000 : 1800; g.gain.setValueAtTime((e.kind === 'h' ? 0.18 : 0.45) * a, t); g.gain.exponentialRampToValueAtTime(0.001, t + (e.kind === 'h' ? 0.05 : 0.18)); s.connect(f); f.connect(g); g.connect(out); s.start(t); s.stop(t + 0.3); }
+let BEV = [];
+function restartAt(pos) { AU.off = Math.max(0, pos); AU.t0 = AU.ctx.currentTime + 0.05; const ev = st.res.events; AU.i = 0; while (AU.i < ev.length && ev[AU.i].t < AU.off) AU.i++; BEV = beatEvents(); AU.j = 0; while (AU.j < BEV.length && BEV[AU.j].t < AU.off) AU.j++; }
+function tick() { const c = AU.ctx, ev = st.res.events, horizon = now() + 0.25;
+  while (AU.i < ev.length && ev[AU.i].t < horizon) { const e = ev[AU.i++]; const at = AU.t0 + e.t - AU.off; P.play(c, AU.out, e.v, at, e.vel); const d = Math.max(0, (at - c.currentTime) * 1000); setTimeout(() => { if (AU.playing) drop(e); }, d); }
+  while (AU.j < BEV.length && BEV[AU.j].t < horizon) { const e = BEV[AU.j++]; beatHit(c, AU.out, e, AU.t0 + e.t - AU.off); }
+  if (now() > st.res.totalSec + 0.5) { stop(); AU.off = 0; } drawPos(); }
+async function start(pos) { const c = ctx(); if (c.state !== 'running') await c.resume(); AU.playing = true; restartAt(pos != null ? pos : AU.off); clearInterval(AU.timer); AU.timer = setInterval(tick, 40); $('#play').textContent = '■'; $('#play').setAttribute('aria-label', 'Stop'); }
+function stop() { AU.off = now(); AU.playing = false; clearInterval(AU.timer); $('#play').textContent = '▶'; $('#play').setAttribute('aria-label', 'Play'); drawPos(); }
+
+/* ---------- rain: every stroke rises as a small shape in the colours of its tradition ---------- */
+const RAIN = {
+  westafrica: { shape: 'skin', cols: ['#C8742E', '#E0A23C', '#A8452B', '#7A4A2A', '#E8C27A'] },
+  afrocuban: { shape: 'stick', cols: ['#D9412E', '#F2B233', '#E8792B', '#F6D365', '#B8322A'] },
+  brazil: { shape: 'confetti', cols: ['#1FA34A', '#F7D417', '#2C62C9', '#FFFFFF', '#18B5A8'] },
+  mideast: { shape: 'tile', cols: ['#2D3E8C', '#D4A537', '#1E7C88', '#E8D7A6', '#4B5BB0'] },
+  india: { shape: 'petal', cols: ['#F28C28', '#D8317A', '#F6C445', '#8E2C8A', '#E9573F'] },
+  taiko: { shape: 'ring', cols: ['#C8102E', '#F4F1EA', '#2B2B2B', '#E05A47', '#D9D2C3'] },
+  powwow: { shape: 'circle', cols: ['#B8322A', '#2FA39A', '#F2E3C6', '#E0A23C', '#3B2A20'] },
+  zen: { shape: 'enso', cols: ['#9AA39A', '#B9C2B0', '#7E8B86', '#D8DCD2', '#6F7D6B'] },
+  shamanic: { shape: 'spiral', cols: ['#8E1E14', '#D9531E', '#C98A2B', '#5C2414', '#F0A04B'] },
+  marching: { shape: 'chevron', cols: ['#D4A537', '#B8322A', '#1F2E5C', '#F2F4F7', '#E8C468'], rows: true },
+  minimal: { shape: 'square', cols: ['#5FD3E0', '#F2F4F7', '#8AA8FF', '#3BB4C8', '#C9D6FF'] }
+};
+const RC = $('#rain'), RX = RC.getContext('2d'), parts = []; let rainOn = false;
+const calm = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
+const vIndex = (v) => Object.keys(P.VOICES).indexOf(v);
+let rowT = 0, rowK = 0;
+function drop(e) { if (calm && Math.random() < 0.7) return; const R = RAIN[st.style] || RAIN.minimal, w = RC.clientWidth || 600, h = RC.clientHeight || 400;
+  let x = 20 + Math.random() * (w - 40); if (R.rows) { const now = performance.now(); if (now - rowT > 120) { rowT = now; rowK = 0; } x = w / 2 + ((rowK % 2 ? 1 : -1) * Math.ceil(rowK / 2)) * 46; rowK++; }
+  parts.push({ x, steady: !!R.rows, y: h + 10, vy: 40 + e.vel * 0.9, sz: 4 + e.vel / 127 * 14, col: R.cols[vIndex(e.v) % R.cols.length], rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 2, life: 1, shape: R.shape });
+  if (parts.length > 260) parts.splice(0, parts.length - 260); if (!rainOn) { rainOn = true; last = performance.now(); requestAnimationFrame(rainLoop); } }
+let last = 0;
+function shapeOf(p) { const s = p.sz; RX.beginPath();
+  switch (p.shape) {
+    case 'skin': RX.arc(0, 0, s, 0, 6.28); RX.fill(); RX.beginPath(); RX.globalAlpha *= 0.6; RX.lineWidth = 1.5; RX.arc(0, 0, s * 0.62, 0, 6.28); RX.strokeStyle = '#2a1a10'; RX.stroke(); break;
+    case 'stick': RX.fillRect(-s * 1.1, -s * 0.22, s * 2.2, s * 0.44); break;
+    case 'confetti': RX.fillRect(-s * 0.6, -s * 0.35, s * 1.2, s * 0.7); break;
+    case 'tile': for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4 + Math.PI / 8; RX[k ? 'lineTo' : 'moveTo'](Math.cos(a) * s, Math.sin(a) * s); } RX.closePath(); RX.fill(); break;
+    case 'petal': RX.moveTo(0, -s); RX.quadraticCurveTo(s * 0.8, 0, 0, s); RX.quadraticCurveTo(-s * 0.8, 0, 0, -s); RX.fill(); break;
+    case 'ring': RX.arc(0, 0, s, 0, 6.28); RX.fill(); RX.beginPath(); RX.lineWidth = Math.max(1.5, s * 0.18); RX.strokeStyle = 'rgba(0,0,0,.55)'; RX.arc(0, 0, s * 0.68, 0, 6.28); RX.stroke(); break;
+    case 'circle': RX.arc(0, 0, s * 0.35, 0, 6.28); RX.fill(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; RX.beginPath(); RX.arc(Math.cos(a) * s, Math.sin(a) * s, s * 0.18, 0, 6.28); RX.fill(); } break;
+    case 'enso': RX.lineWidth = Math.max(2, s * 0.28); RX.lineCap = 'round'; RX.strokeStyle = p.col; RX.arc(0, 0, s, 0.3, 5.9); RX.stroke(); break;
+    case 'spiral': RX.lineWidth = 2; RX.strokeStyle = p.col; for (let a = 0; a < 12; a += 0.3) { const rr = s * a / 12; RX[a ? 'lineTo' : 'moveTo'](Math.cos(a) * rr, Math.sin(a) * rr); } RX.stroke(); break;
+    case 'chevron': RX.lineWidth = Math.max(2.5, s * 0.32); RX.lineJoin = 'miter'; RX.strokeStyle = p.col; RX.moveTo(-s, s * 0.5); RX.lineTo(0, -s * 0.4); RX.lineTo(s, s * 0.5); RX.stroke(); break;
+    default: RX.fillRect(-s / 2, -s / 2, s, s); } }
+function rainLoop(t) { const dt = Math.min(0.05, (t - last) / 1000); last = t; const w = RC.clientWidth, h = RC.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (RC.width !== Math.round(w * dpr) || RC.height !== Math.round(h * dpr)) { RC.width = Math.round(w * dpr); RC.height = Math.round(h * dpr); }
+  RX.setTransform(dpr, 0, 0, dpr, 0, 0); RX.clearRect(0, 0, w, h);
+  for (let i = parts.length - 1; i >= 0; i--) { const p = parts[i]; if (p.steady) { p.vy = 150; p.rot = 0; } p.y -= p.vy * dt; p.vy *= p.steady ? 1 : 0.992; if (!p.steady) p.rot += p.vr * dt; p.life -= dt * 0.45; if (p.life <= 0 || p.y < -30) { parts.splice(i, 1); continue; }
+    RX.save(); RX.translate(p.x, p.y); RX.rotate(p.rot); RX.globalAlpha = Math.min(1, p.life) * 0.5; RX.fillStyle = p.col; shapeOf(p); RX.restore(); }
+  if (parts.length) requestAnimationFrame(rainLoop); else { rainOn = false; RX.clearRect(0, 0, w, h); } }
+/* ---------- screen ---------- */
+// what each sound is called in each tradition
+const LABELS = {
+  westafrica: { drum: 'Dundunba', clo: 'Djembe Gun (bass)', chi: 'Djembe Go (tone)', slap: 'Djembe Pa (slap)', bhi: 'Kenkeni', blo: 'Sangban', bell: 'Bell', shk: 'Shekere' },
+  afrocuban: { clave: 'Clave', wood: 'Palitos', chi: 'Segundo (h t O)', slap: 'Slap (S)', clo: 'Tumba', bhi: 'Quinto', bell: 'Campana', shk: 'Guiro' },
+  brazil: { drum: 'Surdo 1', clo: 'Surdo 2', chi: 'Surdo 3', tamb: 'Caixa', wood: 'Tamborim', bell: 'Agogô high', bell2: 'Agogô low', shk: 'Ganzá', bhi: 'Repinique', apito: 'Apito' },
+  mideast: { clo: 'Darbuka Dum', slap: 'Darbuka Tek', bhi: 'Darbuka ka', tamb: 'Riq', drum: 'Bendir', bell: 'Zills' },
+  india: { clo: 'Bayan (Ge, bass)', bhi: 'Dayan (Na, Ta)', blo: 'Dayan (Tin)', slap: 'Ke (closed)', bell: 'Manjira open', bell2: 'Manjira closed' },
+  shamanic: { drum: 'Frame drum', shk: 'Rattle', clo: 'Second drum', bell: 'Bells' },
+  powwow: { drum: 'The drum', clo: 'The drum (body)', tamb: "Dancers' bells" }
+};
+const vname = (v) => (LABELS[st.style] || {})[v] || P.VOICES[v].name;
+const NOTES = {
+  westafrica: ['West Africa · djembe and dundun', 'From the Mande drum ensembles. The djembe speaks in three sounds: <b>Gun</b> (bass, centre), <b>Go</b> (tone, edge) and <b>Pa</b> (slap). Three dunduns, <b>dundunba</b>, <b>sangban</b> and <b>kenkeni</b>, play a melody together, held by a <b>bell</b>. Felt in 12/8: three against two is the heart. The <b>lead djembe</b> plays the <b>call</b> that brings everyone in and out, solos over the ensemble and lifts it in the <b>echauffement</b>, the heating up before the end.'],
+  afrocuban: ['Afro-Cuban · rumba and son', 'Everything follows the <b>clave</b> and its direction, <b>3-2</b> or <b>2-3</b>: the palitos (cascara) turn with it. The conga strokes are <b>h</b> heel, <b>t</b> toe, <b>S</b> slap and <b>O</b> open. <b>Segundo</b> and <b>tumba</b> hold the tumbao, the <b>quinto</b> improvises and calls the changes with a <b>llamada</b>. A part moves from the calm <b>canto</b> to the hot <b>montuno</b>. Sometimes the song plays the <b>6/8 side</b>, <b>bembé</b> or <b>rumba columbia</b>: the <b>bell</b> keeps a seven-stroke timeline, the drums feel four big beats of three, and the quinto now and then plays in twos across them. That is <b>3 against 2</b>, the same feeling that makes West Africa roll.'],
+  brazil: ['Brazil · samba bateria', 'Three <b>surdos</b> talk to each other: <b>marcação</b> on the second beat, <b>resposta</b> answering on the first, <b>corte</b> cutting between. <b>Caixa</b>, <b>tamborim</b>, <b>ganzá</b> and <b>agogô</b> fill the sixteenths. The <b>repinique</b> plays the <b>chamada</b>, the call, and the <b>apito</b> whistle signals the <b>paradinha</b>, the break where the bateria stops and comes back as one.'],
+  mideast: ['Middle East · iqa\'at', 'Rhythmic cycles, each with a name: <b>maqsum</b>, <b>baladi</b>, <b>saidi</b>, <b>malfuf</b>, <b>ayoub</b>. They are spoken in <b>Dum</b> (low centre), <b>Tek</b> (high edge) and <b>ka</b> (the soft other hand). Here each part of your song gets its own cycle. The darbuka plays it plain first, then ornaments it (<b>zakhrafa</b>), and ends with a closing phrase. <b>Riq</b>, <b>bendir</b> and <b>zills</b> follow.'],
+  india: ['India · tabla', 'The tabla speaks in <b>bols</b>: Dha, Dhin, Ta, Tin, Na, Ge, Ke. <b>Teentaal</b> is a cycle of 16 matras; one matra is one beat here, so a cycle lasts four bars: <b>sam</b> (X) is the first beat, <b>khali</b> (0) the ninth, where the bass falls silent. Quieter parts play <b>keherwa</b>, 8 matras. A <b>kaida</b> develops a theme, and every part ends with a <b>tihai</b>: one phrase three times that lands exactly on sam, the first beat of the next part.'],
+  taiko: ['Taiko · kumi-daiko', 'Japanese ensemble drumming, rooted in Shinto festivals. Drummers speak their rhythms in <b>kuchi-shoga</b>: <b>don</b> centre, <b>doko</b> two strokes, <b>tsu</b> soft, <b>ka</b> rim, <b>su</b> silence. The <b>shime</b> keeps the <b>ji-uchi</b> ground, the <b>nagado</b> call and answer (and pass the call on to the rim), the <b>odaiko</b> is the deep heartbeat. A piece moves from <b>jo</b> (slow) through <b>ha</b> (opening) to <b>kyu</b> (fast). <b>Ma</b> is the silence that matters, <b>kime</b> the stroke all play together, <b>oroshi</b> the roll that opens and closes, <b>kakegoe</b> the calls that carry the players.'],
+  zen: ['Japanese zen', 'Not a tradition, a mood: taiko sounds with much space between them, for slow and quiet music. For the real ensemble, choose Taiko.'],
+  marching: ['Marching · drum line and taptoe', 'Military drumming, from the Swiss and Scottish traditions and the Dutch <b>taptoe</b> to the drum corps. The snare speaks in <b>rudiments</b>, written as <b>stickings</b>: <b>R</b> right hand, <b>L</b> left, <b>~</b> a <b>flam</b> (a grace note just before), <b>=</b> a <b>diddle</b> (two strokes on one, the stuff of rolls), small letters soft taps, <b>!</b> an accent. The <b>paradiddle</b> is R L R R L R L L. A show opens with the <b>roll-off</b>, the signal to step off, then the <b>cadence</b> or street beat; in <b>mark time</b> the line stands in place and the bass drums keep the step; in the <b>drum feature</b> the corps walks its figures; the <b>cut-off</b> ends all as one. The <b>bass line</b> is split: three drums play one melody together.'],
+  shamanic: ['Shamanic · frame drum journey', 'One steady pulse of about <b>four to seven strokes a second</b>, a rattle with it: the drumming used in many cultures to carry a journey. It opens with a <b>heartbeat</b>, holds the pulse without showing off, and ends with the <b>callback</b>: rounds of seven strong strokes, a fast roll, one last stroke. The motor picks the pulse that fits your tempo.'],
+  powwow: ['Powwow · the social dances', 'One big drum in the middle, the singers sit around it and strike it together, a little apart, so every stroke is wide. A song is sung in <b>push-ups</b> (rounds). In the middle of a round come the <b>honor beats</b>: hard beats, loud and soft by turns. A song ends with a <b>tail</b>, and on the last beat the drum stops dead; a good dancer stops exactly with it. The dances here: <b>intertribal</b> (the straight beat, everyone dances), <b>round dance</b> (strong, soft, the circle sways), <b>crow hop</b> (the hop on the off-beat) and <b>sneak-up</b> (a trembling roll while the dancers crouch and search, then hard beats while they move in). <b>Northern</b> drums sing high and fast, <b>Southern</b> lower and slower. Out of respect this style plays only the drum of the social dances: no songs, no words, and no ceremonial or honor songs, which belong to the people and their occasions. To hear the real thing, visit a powwow.'],
+  minimal: ['Minimal house', 'A modern club tradition: shaker, conga and rim figures that repeat with small changes, made to lock with a four on the floor kick.']
+};
+// the parts of a piece in the words of each tradition (with your own beat loaded, the beat's names stay)
+const PARTS = {
+  taiko: { intro: 'Jo', verse: 'Ha', build: 'Ha', drop: 'Kyū', chorus: 'Kyū', break: 'Ma', outro: 'Owari' },
+  westafrica: { intro: 'Call', verse: 'Ensemble', build: 'Ensemble', drop: 'Solo', chorus: 'Solo', break: 'Break', outro: 'Call · end' },
+  afrocuban: { intro: 'Diana', verse: 'Canto', build: 'Canto', drop: 'Montuno', chorus: 'Montuno', break: 'Canto', outro: 'Final' },
+  brazil: { intro: 'Chamada', verse: 'Batucada', build: 'Batucada', drop: 'Batucada forte', chorus: 'Batucada forte', break: 'Paradinha', outro: 'Final' },
+  india: { intro: 'Keherwa', verse: 'Madhya laya', build: 'Madhya laya', drop: 'Drut laya', chorus: 'Drut laya', break: 'Vilambit', outro: 'Keherwa' },
+  marching: { intro: 'Roll-off', verse: 'Cadence', build: 'Mark time', drop: 'Drum feature', chorus: 'Drum feature', break: 'Mark time', outro: 'Cut-off' },
+  shamanic: { intro: 'Heartbeat', verse: 'Journey', build: 'Journey', drop: 'Deep journey', chorus: 'Deep journey', break: 'Journey', outro: 'Callback' },
+  powwow: { intro: 'Lead', verse: 'Push-up', build: 'Push-up', drop: 'Push-up · honor beats', chorus: 'Push-up · honor beats', break: 'Push-up', outro: 'Tail' },
+  zen: { intro: 'Stillness', verse: 'Breath', build: 'Breath', drop: 'Breath', chorus: 'Breath', break: 'Ma', outro: 'Silence' }
+};
+function partName(s, startBar) { if (st.beat) return s.type;
+  if (st.style === 'mideast' && st.res.words) { const w = st.res.words.find((x) => x.bar === startBar); if (w) { const n = w.part.split(' · ')[0]; return n === 'closing phrase' ? s.type : n[0].toUpperCase() + n.slice(1); } }
+  return (PARTS[st.style] || {})[s.type] || s.type; }
+function speak() { const S = $('#speak'); S.innerHTML = ''; if (!st.res.words) return; const bar = Math.floor(now() / st.res.barSec), w = st.res.words.find((x) => x.bar === bar);
+  if (!w) return; const row = (k, v) => { const d = document.createElement('div'); d.innerHTML = '<span>' + k + '</span>' + v; S.append(d); };
+  if (w.lines) { row('This bar', '<i>' + w.part + '</i>'); for (const [n, t] of w.lines) row(n, t); return; }
+  row('This bar', '<i>' + ({ jo: 'jo · opening slowly', ha: 'ha · breaking open', kyu: 'kyu · fast to the end' })[w.part] + '</i>');
+  for (const [k, n] of [['odaiko', 'Odaiko'], ['shime', 'Shime'], ['lead', 'Nagado 1'], ['second', 'Nagado 2'], ['okedo', 'Okedo'], ['kane', 'Atarigane'], ['kake', 'Kakegoe']]) if (w[k]) row(n, w[k]); }
+function render() {
+  const nt = NOTES[st.style] || ['', '']; $('#noteT').textContent = 'About ' + nt[0]; $('#noteB').innerHTML = nt[1];
+  const S = $('#styles'); S.innerHTML = ''; for (const k of P.ORDER) { const b = document.createElement('button'); b.textContent = P.STYLES[k].name; b.setAttribute('aria-pressed', k === st.style); b.onclick = () => { st.style = k; store.set('style', k); st.mutes = {}; if (!st.beat) native(); regen(true); slotInfo(); }; S.append(b); }
+  const tf = st.res.tf; $('#tfInfo').textContent = tf === 0.5 ? 'Plays in half time at this tempo.' : tf === 2 ? 'Plays in double time at this tempo.' : '';
+  const secs = parseStruct(st.struct), tot = secs.reduce((a, s) => a + s.bars, 0), SC = $('#secs'); SC.querySelectorAll('button').forEach((b) => b.remove()); let b0 = 0;
+  secs.forEach((s) => { const b = document.createElement('button'); b.style.flex = s.bars + ' 1 0'; b.style.background = SEC_COL[s.type] || '#ccc'; b.textContent = partName(s, b0) + ' ' + s.bars; b.title = s.type + ', ' + s.bars + ' bars'; const at = b0 * st.res.barSec; b.onclick = () => { start(at); }; SC.append(b); b0 += s.bars; });
+  const PL = $('#players'); PL.innerHTML = ''; for (const p of st.res.players.concat(st.res.players.length && !st.res.words ? [{ id: 'poly3', role: 'poly', voices: [] }] : [])) { const b = document.createElement('button'); const PAL = ['#E0705A', '#E9C46A', '#E39B4C', '#8FD18B', '#7FC8E8', '#A79BF0', '#E88FC8', '#9FE8D8', '#C88FE8']; const col = p.name ? PAL[st.res.players.indexOf(p) % PAL.length] : p.voices.length ? P.VOICES[p.voices[0]].col : '#888'; b.innerHTML = '<i style="background:' + col + '"></i>' + (p.name ? p.name : p.id === 'poly3' ? 'Polyrhythm' : st.res.words ? ({ odaiko: 'Odaiko', shime: 'Shime', don: 'Nagado', okedo: 'Okedo', kane: 'Atarigane', kake: 'Kakegoe' })[p.id] : p.id[0].toUpperCase() + p.id.slice(1)); b.setAttribute('aria-pressed', !st.mutes[p.id]); b.onclick = () => { st.mutes[p.id] = !st.mutes[p.id]; regen(true); }; PL.append(b); }
+  drawLanes(); drawPos();
+}
+let lastBar = -1;
+function drawLanes() { const L = $('#lanes'), bar = Math.floor(now() / st.res.barSec), ev = st.res.events, bs = st.res.barSec, a = bar * bs, used = {};
+  for (const e of ev) { if (e.t < a - 0.01) continue; if (e.t >= a + bs - 0.01) break; const G = st.res.tf === 1 ? st.res.grid : 16, s = Math.min(G - 1, Math.max(0, Math.round((e.t - a) / bs * G))); (used[e.v] = used[e.v] || {})[s] = Math.max((used[e.v] || {})[s] || 0, e.vel); }
+  const vs = Object.keys(P.VOICES).filter((v) => used[v]); L.innerHTML = '';
+  for (const v of vs) { const row = document.createElement('div'); row.className = 'lane'; const nm = document.createElement('span'); nm.textContent = vname(v); const c = document.createElement('div'); c.className = 'cells'; c.style.gridTemplateColumns = 'repeat(' + (st.res.tf === 1 ? st.res.grid : 16) + ',1fr)';
+    for (let s = 0; s < (st.res.tf === 1 ? st.res.grid : 16); s++) { const i = document.createElement('i'); const vel = used[v][s]; if (vel) { i.style.background = P.VOICES[v].col; i.style.opacity = 0.35 + vel / 127 * 0.65; } c.append(i); } row.append(nm, c); L.append(row); }
+  if (!vs.length) L.innerHTML = '<div class="small">This bar is quiet.</div>'; lastBar = bar; speak(); }
+function drawPos() { const t = now(), bar = Math.floor(t / st.res.barSec), secs = parseStruct(st.struct), tot = secs.reduce((a, s) => a + s.bars, 0);
+  let b0 = 0, name = ''; for (const s of secs) { if (bar < b0 + s.bars) { name = partName(s, b0) + ' · bar ' + (bar - b0 + 1) + ' of ' + s.bars; break; } b0 += s.bars; }
+  $('#pos').textContent = name || 'End'; $('#ph').style.left = 'calc(' + Math.min(100, 100 * t / Math.max(0.01, st.res.totalSec)) + '% - 1px)';
+  if (bar !== lastBar) drawLanes(); const step = Math.floor((t / st.res.barSec - bar) * (st.res.tf === 1 ? st.res.grid : 16)); document.querySelectorAll('.cells').forEach((c) => [...c.children].forEach((i, k) => i.classList.toggle('now', AU.playing && k === step))); }
+
+/* ---------- MIDI out: plain GM, or the eight slots of a drum plugin ---------- */
+// eight slots: the voices that sound alike share one
+const TAIKO_SLOTS = [['Odaiko', ['odaiko']], ['Nagado don', ['don']], ['Nagado ka (rim)', ['ka']], ['Shime', ['shime']], ['Shime ka (rim)', ['shimeka']], ['Okedo', ['okedo']], ['Atarigane', ['kane']], ['Kakegoe (call)', ['kake']]];
+const MARCH_SLOTS = [['Bass low (1, 2)', ['bass1', 'bass2']], ['Bass mid (3)', ['bass3']], ['Bass high (4, 5)', ['bass4', 'bass5']], ['Snare', ['snare']], ['Snare rim click', ['rim']], ['Tenors high (1, 2)', ['tenor1', 'tenor2']], ['Tenors low (3, 4)', ['tenor3', 'tenor4']], ['Cymbals', ['cym', 'cyc']]];
+const slots = () => P.STYLES[st.style].taiko ? TAIKO_SLOTS : st.style === 'marching' ? MARCH_SLOTS : SLOTS;
+const SLOTS = [['Big drum', ['drum']], ['Low conga', ['clo']], ['High conga', ['chi']], ['Slap', ['slap']], ['Bongos', ['bhi', 'blo']], ['Shaker and tambourine', ['shk', 'tamb']], ['Bells and whistle', ['bell', 'bell2', 'apito']], ['Wood and clave', ['wood', 'clave']]];
+const TARGETS = {
+  gm: { name: 'Plain MIDI (GM percussion)' },
+  xo: { name: 'XLN XO', keys: [36, 37, 38, 39, 40, 41, 42, 43] },
+  beatmaker: { name: 'UJAM Beatmaker 3', keys: [36, 38, 40, 43, 45, 48, 52, 59] },
+  tekno: { name: 'BABY Audio Tekno', map: { drum: [43, 'tom l'], clo: [47, 'conga l'], chi: [48, 'conga h'], slap: [46, 'rimshot'], bhi: [44, 'tom h'], blo: [44, 'tom h'], shk: [40, 'hat a'], tamb: [42, 'hat op'], bell: [51, 'cowbell'], bell2: [51, 'cowbell'], wood: [52, 'block'], clave: [52, 'block'], odaiko: [36, 'kick a'], don: [43, 'tom l'], ka: [46, 'rimshot'], shime: [44, 'tom h'], shimeka: [52, 'block'], okedo: [47, 'conga l'], kane: [51, 'cowbell'], kake: [45, 'clap'], apito: [50, 'tonal'], bass1: [36, 'kick a'], bass2: [36, 'kick a'], bass3: [37, 'kick b'], bass4: [43, 'tom l'], bass5: [43, 'tom l'], snare: [38, 'snare a'], rim: [46, 'rimshot'], tenor1: [44, 'tom h'], tenor2: [44, 'tom h'], tenor3: [48, 'conga h'], tenor4: [47, 'conga l'], cym: [53, 'crash'], cyc: [53, 'crash'] } },
+  impact: { name: 'Impact XT', keys: [36, 37, 38, 39, 40, 41, 42, 43] },
+  // Roland TR-909 Software: only the notes from its manual; 24 to 33 switch its patterns and start or stop it, so they are never sent
+  tr909: { name: 'Roland TR-909', map: { drum: [41, 'Low Tom'], clo: [45, 'Mid Tom'], chi: [48, 'High Tom'], slap: [37, 'Rim Shot'], bhi: [48, 'High Tom'], blo: [45, 'Mid Tom'], shk: [42, 'Closed HiHat'], tamb: [46, 'Open HiHat'], bell: [51, 'Ride'], bell2: [51, 'Ride'], clave: [37, 'Rim Shot'], wood: [39, 'Hand Clap'], odaiko: [36, 'Bass Drum'], don: [41, 'Low Tom'], ka: [37, 'Rim Shot'], shime: [48, 'High Tom'], shimeka: [39, 'Hand Clap'], okedo: [45, 'Mid Tom'], kane: [51, 'Ride'], kake: [39, 'Hand Clap'], apito: [46, 'Open HiHat'], snare: [38, 'Snare Drum'], rim: [37, 'Rim Shot'], tenor1: [48, 'High Tom'], tenor2: [48, 'High Tom'], tenor3: [45, 'Mid Tom'], tenor4: [41, 'Low Tom'], bass1: [36, 'Bass Drum'], bass2: [35, 'Bass Drum'], bass3: [41, 'Low Tom'], bass4: [41, 'Low Tom'], bass5: [45, 'Mid Tom'], cym: [49, 'Crash'], cyc: [49, 'Crash'] } },
+  vdrummer: { name: 'UJAM Virtual Drummer', keys: [36, 41, 38, 40, 42, 46, 37, 49] }
+};
+const NN = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'], nn = (m) => NN[m % 12] + (Math.floor(m / 12) - 2);
+function noteFor(T, v) { if (T.map) return T.map[v][0]; if (T.keys) { const i = slots().findIndex((s) => s[1].includes(v)); return T.keys[i]; } return P.VOICES[v].gm; }
+function slotInfo() { const T = TARGETS[st.target], el = $('#slotInfo');
+  if (T.keys) el.innerHTML = '<b>Load these sounds in ' + T.name + ':</b> ' + slots().map((s, i) => { const L = LABELS[st.style], used = L ? s[1].filter((v) => L[v]).map((v) => L[v]) : []; return (i + 1) + ' ' + (used.length ? used.join(' / ') : L ? '(free)' : s[0]) + ' (' + nn(T.keys[i]) + ')'; }).join(' · ') + '. All on one MIDI track.';
+  else if (T.map && st.style === 'marching') el.innerHTML = '<b>' + T.name + ':</b> bass drums on kick a, kick b and tom l, snare on snare a with its rim click on rimshot, tenors on tom h and conga l, cymbals on crash. All on one MIDI track.';
+  else if (T.map && P.STYLES[st.style].taiko) el.innerHTML = '<b>' + T.name + ':</b> odaiko on kick a, nagado on tom l with its rim on rimshot, shime on tom h with its rim on block, okedo on conga l, atarigane on cowbell, kakegoe on clap. All on one MIDI track.';
+  else if (st.target === 'tr909') el.innerHTML = '<b>Roland TR-909:</b> one MIDI track on the 909 kit. Low drums on the toms (Low, Mid, High), the lowest on the Bass Drum, slaps and clicks on Rim Shot, shakers on the HiHats, bells on Ride, wood and calls on Hand Clap, cymbals on Crash.';
+  else if (T.map) el.innerHTML = '<b>' + T.name + ':</b> big drum on tom l, congas on conga l and h, slap on rimshot, bongos on tom h, shaker on hat a, tambourine on hat op, bells on cowbell, wood on block. All on one MIDI track.';
+  else el.innerHTML = 'Plain MIDI: one track per instrument, General MIDI percussion notes.'; }
+/* ---------- MIDI out ---------- */
+const beatOnly = () => { try { return localStorage.getItem('dm_beat_only') === '1'; } catch (e) { return false; } };
+function midiOut() { const res = st.res, PPQ = 480, spq = 60 / st.bpm, vlq = (n) => { const b = [n & 127]; while ((n >>= 7)) b.unshift((n & 127) | 128); return b; };
+  const trk = (bytes) => { const h = [0x4D, 0x54, 0x72, 0x6B], l = bytes.length; return h.concat([(l >>> 24) & 255, (l >>> 16) & 255, (l >>> 8) & 255, l & 255], bytes); };
+  const name = (s) => { const b = [...new TextEncoder().encode(s)]; return [0, 0xFF, 3].concat(vlq(b.length), b); };
+  const tempo = Math.round(60000000 / st.bpm), tracks = [trk(name('Divine Percussion Machine').concat([0, 0xFF, 0x51, 3, (tempo >> 16) & 255, (tempo >> 8) & 255, tempo & 255, 0, 0xFF, 0x58, 4, 4, 2, 24, 8, 0, 0xFF, 0x2F, 0]))];
+  const T = TARGETS[st.target], one = st.target !== 'gm', by = {}; for (const e of res.events) (by[one ? 'all' : e.v] = by[one ? 'all' : e.v] || []).push(e);
+  for (const v of one ? ['all'] : Object.keys(P.VOICES)) { if (!by[v]) continue; const msgs = [];
+    for (const e of by[v]) { const n = noteFor(T, e.v), tk = Math.round(e.t / spq * PPQ); msgs.push([tk, 0x99, n, e.vel], [tk + 60, 0x89, n, 0]); }
+    msgs.sort((a, b) => a[0] - b[0] || (a[1] === 0x89 ? -1 : 1)); let last = 0, bytes = name(one ? 'Percussion for ' + T.name : P.VOICES[v].name);
+    for (const m of msgs) { bytes = bytes.concat(vlq(m[0] - last), [m[1], m[2], m[3]]); last = m[0]; } tracks.push(trk(bytes.concat([0, 0xFF, 0x2F, 0]))); }
+  // only the beat: one track (MIDI type 0), tempo and meter inside it, nothing else
+  if (one && beatOnly() && tracks.length === 2) { const tk = tracks[1].slice(8), tm = [0, 0xFF, 0x51, 3, (tempo >> 16) & 255, (tempo >> 8) & 255, tempo & 255, 0, 0xFF, 0x58, 4, 4, 2, 24, 8], nb = name('Percussion for ' + T.name).length;
+    const body = tk.slice(0, nb).concat(tm, tk.slice(nb)); return new Blob([new Uint8Array([0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 0, 0, 1, (PPQ >> 8) & 255, PPQ & 255].concat(trk(body)))], { type: 'audio/midi' }); }
+  const head = [0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 1, (tracks.length >> 8) & 255, tracks.length & 255, (PPQ >> 8) & 255, PPQ & 255];
+  return new Blob([new Uint8Array(head.concat(...tracks))], { type: 'audio/midi' }); }
+const TAGS = { xo: 'XLNXO', beatmaker: 'Beatmaker3', tekno: 'Tekno', tr909: 'TR909', impact: 'ImpactXT', vdrummer: 'VirtualDrummer', gm: 'GM' };
+function fileName(ext) {
+  if (st.beat && st.beat.name) { const sty = P.STYLES[st.style].name.replace(/[^A-Za-z]/g, ''); let n = st.beat.name, tag = ext === 'mid' ? TAGS[st.target] : 'Audio';
+    n = /beat/i.test(n) ? n.replace(/beat/i, 'Percussion_' + sty) : n + '_Percussion_' + sty;
+    const has = Object.values(TAGS).find((t) => n.toLowerCase().includes(t.toLowerCase())); n = has ? n.replace(new RegExp(has, 'i'), tag) : n + '_' + tag;
+    return n + '.' + ext; } return ('Divine Percussion ' + P.STYLES[st.style].name + ' ' + st.bpm + 'bpm' + (ext === 'mid' && st.target !== 'gm' ? ' ' + TARGETS[st.target].name : '') + '.' + ext).replace(/\s+/g, ' '); }
+function save(blob, nm) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nm; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); count('download/' + nm.split('.').pop()); }
+async function wavOut() { const sr = 44100, n = Math.ceil((st.res.totalSec + 1.2) * sr), L = new Float32Array(n), R = new Float32Array(n), smp = {};
+  // each instrument rendered once, then laid down at every hit: fast even for long songs
+  for (const v of Object.keys(P.VOICES)) { const oc = new OfflineAudioContext(1, Math.round(sr * 0.7), sr); P.play(oc, oc.destination, v, 0, 127); smp[v] = (await oc.startRendering()).getChannelData(0); }
+  const pan = { drum: 0, clo: -0.25, chi: 0.25, slap: 0.15, bhi: 0.4, blo: -0.4, shk: 0.55, tamb: -0.55, bell: 0.35, bell2: -0.35, clave: 0.5, wood: -0.5 };
+  for (const e of st.res.events) { const x = smp[e.v], o = Math.round((e.t + 0.02) * sr), g = Math.pow(e.vel / 127, 1.5) / Math.pow(1, 1.5), pp = pan[e.v] || 0, gl = g * Math.cos((pp + 1) * Math.PI / 4), gr = g * Math.sin((pp + 1) * Math.PI / 4);
+    for (let i = 0, m = Math.min(x.length, n - o); i < m; i++) { L[o + i] += x[i] * gl; R[o + i] += x[i] * gr; } }
+  let pk = 1e-9; for (let i = 0; i < n; i++) pk = Math.max(pk, Math.abs(L[i]), Math.abs(R[i])); const gn = 0.89 / pk;
+  const b = new ArrayBuffer(44 + n * 4), v = new DataView(b), w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 4, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 2, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 4, true); v.setUint16(32, 4, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 4, true);
+  for (let i = 0; i < n; i++) { v.setInt16(44 + i * 4, Math.max(-1, Math.min(1, L[i] * gn)) * 32767, true); v.setInt16(46 + i * 4, Math.max(-1, Math.min(1, R[i] * gn)) * 32767, true); }
+  return new Blob([b], { type: 'audio/wav' }); }
+
+/* ---------- wiring ---------- */
+function native() { const n = NATIVE[st.style] || [120, $('#struct').value]; st.bpm = n[0]; st.struct = n[1]; $('#bpm').value = st.bpm; $('#struct').value = st.struct; }
+native();
+$('#wild').value = Math.round(st.wild * 100); $('#swing').value = Math.round(st.swing * 100); $('#bpm').value = st.bpm; $('#struct').value = st.struct;
+$('#wild').oninput = (e) => { st.wild = e.target.value / 100; store.set('wild', st.wild); regen(true); };
+$('#swing').oninput = (e) => { st.swing = e.target.value / 100; store.set('swing', st.swing); regen(true); };
+$('#bpm').onchange = (e) => { st.bpm = Math.max(40, Math.min(220, +e.target.value || 120)); e.target.value = st.bpm; store.set('bpm', st.bpm); regen(false); if (AU.playing) restartAt(0); };
+$('#struct').onchange = (e) => { st.struct = e.target.value; store.set('struct', st.struct); regen(false); };
+$('#dice').onclick = () => { st.seed = (Math.random() * 2 ** 31) >>> 0; store.set('seed', st.seed); st.mutes = {}; if (!st.beat) { newForm(); regen(false); const secs = parseStruct(st.struct); let b0 = 0, at = 0; for (const x of secs) { if (/drop|chorus/.test(x.type)) { at = b0; break; } b0 += x.bars; } if (AU.playing) restartAt(at * st.res.barSec); else { AU.off = at * st.res.barSec; drawLanes(); drawPos(); } toast('Other players and another form. Showing the first drop.'); } else { regen(true); toast('Other players, the form of your beat.'); } };
+$('#play').onclick = () => { if (AU.playing) stop(); else start(AU.off >= st.res.totalSec ? 0 : AU.off); };
+$('#withBeat').onchange = () => { if (AU.playing) restartAt(now()); };
+$('#dlMidi').onclick = () => save(midiOut(), fileName('mid'));
+{ const bo = $('#beatOnly'); bo.checked = beatOnly(); bo.onchange = () => { try { localStorage.setItem('dm_beat_only', bo.checked ? '1' : '0'); } catch (e) {} }; }
+const TG = $('#target'); for (const k in TARGETS) { const o = document.createElement('option'); o.value = k; o.textContent = TARGETS[k].name; if (k === st.target) o.selected = true; TG.append(o); }
+TG.onchange = () => { st.target = TG.value; store.set('target', st.target); slotInfo(); }; slotInfo();
+$('#dlWav').onclick = async () => { const b = $('#dlWav'), t = b.textContent; b.textContent = 'Rendering…'; b.disabled = true; try { save(await wavOut(), fileName('wav')); } catch (e) { toast('WAV failed: ' + e.message); } b.textContent = t; b.disabled = false; };
+const D = $('#drop'); $('#file').onchange = (e) => { if (e.target.files[0]) loadFile(e.target.files[0]); e.target.value = ''; };
+D.ondragover = (e) => { e.preventDefault(); D.classList.add('on'); }; D.ondragleave = () => D.classList.remove('on'); D.ondrop = (e) => { e.preventDefault(); D.classList.remove('on'); if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); };
+document.addEventListener('keydown', (e) => { if (e.code === 'Space' && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); $('#play').click(); } });
+function count(path) { try { if (!/\.github\.io$/.test(location.hostname)) return; const q = new URLSearchParams({ p: location.pathname + path, t: document.title, e: 'true' }); const u = 'https://divine-monday.goatcounter.com/count?' + q; if (!(navigator.sendBeacon && navigator.sendBeacon(u))) new Image().src = u; } catch (e) {} }
+window.__dpm = { st, P, regen, analyse, readMidi, midiOut, wavOut };
+regen(false);
+</script>
+<script>(function(){try{if(!/\.github\.io$/.test(location.hostname))return;var q=new URLSearchParams({p:location.pathname,t:document.title,s:screen.width+','+screen.height,rnd:Math.random().toString(36).slice(2)});if(document.referrer&&document.referrer.indexOf(location.hostname)<0)q.set('r',document.referrer.split('?')[0]);var u='https://divine-monday.goatcounter.com/count?'+q;if(!(navigator.sendBeacon&&navigator.sendBeacon(u)))new Image().src=u;}catch(e){}})();</script>
+</body>
+</html>
