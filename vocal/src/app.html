@@ -337,7 +337,8 @@ function writeVocal(secs, opt) {
       const role = secs[i].role, usable = (x) => !/intro/i.test(x.text) && (role === 'outro' || !/outro/i.test(x.text) || j >= parts.length - 1);
       let k = -1; for (let q = j; q < Math.min(parts.length, j + 3); q++) if (usable(parts[q]) && FIT[role].test(parts[q].text)) { k = q; break; }
       if (k < 0) for (let q = j; q < parts.length; q++) if (usable(parts[q])) { k = q; break; }
-      if (k >= 0) { const len = parts[k].z - parts[k].a, nat = secs.slice(i, k2 + 1).reduce((a2, x) => a2 + natural(x, opt.tight), 0); blockAt[i] = parts[k].a;
+      if (k >= 0) { // after a chorus the band gets its moment: a chorus part of 12 bars or more keeps its last 4 bars for the instruments
+        const full = parts[k].z - parts[k].a, len = role === 'chorus' && full >= 12 * BAR && k < parts.length - 1 ? full - 4 * BAR : full, nat = secs.slice(i, k2 + 1).reduce((a2, x) => a2 + natural(x, opt.tight), 0); blockAt[i] = parts[k].a;
         if (nat > len + 2 * TB) for (let x = i; x <= k2; x++) tightSec[x] = true; j = k + 1; }
       i = k2 + 1; } }
   secs.forEach((sec, si) => {
