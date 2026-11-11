@@ -198,8 +198,11 @@ function sylCount(word) {
   const m = w.match(/[aeiouy]{1,2}/g); return Math.max(1, m ? m.length : 1);
 }
 const DIGRAPH = /^(th|sh|ch|ph|wh|ck|ng|gh|qu)$/, ONSET = /^(wr|bl|br|cl|cr|dr|fl|fr|gl|gr|pl|pr|tr|tw|kn|sk|sl|sm|sn|sp|st|sw)$/;
+// words that Synthesizer V (its dictionary) sings with fewer syllables than they are written
+const SPOKEN = { every: 'ev-ery', everything: 'ev-ery-thing', everyone: 'ev-ery-one', everybody: 'ev-ery-bo-dy', everywhere: 'ev-ery-where', evening: 'eve-ning', chocolate: 'choc-olate', different: 'dif-ferent', interest: 'in-terest', business: 'bus-iness', camera: 'cam-era', family: 'fam-ily', vegetable: 'veg-eta-ble', comfortable: 'com-forta-ble', temperature: 'tem-pera-ture', fire: 'fire', hour: 'hour', our: 'our', flower: 'flow-er', power: 'pow-er', tower: 'tow-er' };
 function splitWord(raw) {
   if (/[a-z]-[a-z]/i.test(raw)) return raw.split('-').filter(Boolean); // the user chose the split
+  const sp = SPOKEN[raw.toLowerCase()]; if (sp) { const out = []; let k = 0; sp.split('-').forEach((x) => { out.push(raw.slice(k, k + x.length)); k += x.length; }); return out; }
   const n = sylCount(raw); if (n <= 1) return [raw];
   const lw = raw.toLowerCase(), groups = []; let m; const re = /[aeiouy]+/g;
   while ((m = re.exec(lw))) { if (m.index === 0 && m[0] === 'y' && lw.length > 1) continue; groups.push([m.index, m.index + m[0].length]); }
@@ -330,6 +333,10 @@ function writeVocal(secs, opt) {
           rh = rhythms[rk] = { st, ds };
         }
         // pitch
+        // a long vowel (rise, high, cry, way, free, you) never gets the shortest note when a little word next to it can give its time
+        const ds = rh.ds.slice(), LONGV = /(i.e|igh|y$|ay|ee|ea|oo|ou|ow|oa|ai|a.e|o.e|u.e)/i, LITTLE = /^(a|an|the|is|of|to|in|on|and|we|my|it|at|by|i|so|or|be|me)$/i;
+        ln.syl.forEach((x, i) => { if (ds[i] >= 12 || !LONGV.test(x.text)) return; for (const j of [i - 1, i + 1, i - 2]) { if (j < 0 || j >= n || ds[j] <= ds[i] || !LITTLE.test(ln.syl[j].text)) continue; const tmp = ds[i]; ds[i] = ds[j]; ds[j] = tmp; break; }
+          if (ds[i] < 12) for (const j of [i + 1, i - 1]) { if (j >= 0 && j < n && ds[j] >= 12 && ds[j] - 6 >= ds[i] - 3) { const g = ds[i] % 6 ? 3 : 6; ds[j] -= g; ds[i] += g; if (ds[i] >= 12) break; } } });
         line = []; let t = rh.st, idx = prevIdx;
         for (let i = 0; i < n; i++) {
           const x = n > 1 ? i / (n - 1) : 0, amp = G.arc === 'chant' && sec.role !== 'chorus' ? 1 : 2.6;
@@ -343,12 +350,12 @@ function writeVocal(secs, opt) {
             let best = -1; for (let k = 0; k < A.length; k++) { if (!ct.has(A[k] % 12)) continue; if (wantRoot && A[k] % 12 !== opt.key.root) continue; if (Math.abs(k - idx) > G.leap + 1) continue; if (best < 0 || Math.abs(k - idx) < Math.abs(best - idx) || (Math.abs(k - idx) === Math.abs(best - idx) && Math.abs(k - target) < Math.abs(best - target))) best = k; }
             if (best >= 0) idx = best;
           }
-          line.push({ t, d: rh.ds[i], m: A[idx], lyr: ln.syl[i].text, word: ln.syl[i].word, syllabic: ln.syl[i].syllabic });
-          t += rh.ds[i];
+          line.push({ t, d: ds[i], m: A[idx], lyr: ln.syl[i].text, word: ln.syl[i].word, syllabic: ln.syl[i].syllabic });
+          t += ds[i];
         }
         // a small run on the last syllable
         const last = line[line.length - 1];
-        if (last.d >= 12 && chance(G.mel)) { const k = last.d >= 24 ? 3 : 2, d1 = Math.floor(last.d / k / 3) * 3 || 3; let li2 = A.indexOf(last.m); const tot = last.d; last.d = d1;
+        if (last.d >= 24 && chance(G.mel)) { const k = last.d >= 36 ? 3 : 2, d1 = Math.max(12, Math.floor(last.d / k / 3) * 3); let li2 = A.indexOf(last.m); const tot = last.d; last.d = d1;
           for (let j = 1; j < k; j++) { li2 = Math.max(0, li2 - 1); line.push({ t: last.t + d1 * j, d: j === k - 1 ? tot - d1 * j : d1, m: A[li2], lyr: '-', syllabic: 'cont' }); } }
         melodies[mkey] = line; prevIdx = idx;
       }
