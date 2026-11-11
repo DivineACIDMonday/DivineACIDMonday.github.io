@@ -390,7 +390,8 @@ function singVocal(secs, mel, voice) {
   return out;
 }
 
-/* Synthesizer V reads a whole word best: the word on its first note, + for each next syllable (its own dictionary splits it), - to hold the vowel */
+/* Synthesizer V: in MusicXML the syllables of a word (begin, middle, end) become the word plus a + per next syllable on import, which sings best;
+   in MIDI the same is written out: the word on its first note, + for each next syllable, - to hold the vowel */
 const svLyr = (n) => (n.syllabic === 'cont' || n.lyr === '-' ? '-' : n.syllabic === 'single' || n.syllabic === 'begin' ? (n.syllabic === 'single' ? n.lyr : n.word || n.lyr) : '+');
 /* ---------- MusicXML ---------- */
 const TYPES = [[48, 'whole', 0, 0], [36, 'half', 1, 0], [24, 'half', 0, 0], [18, 'quarter', 1, 0], [12, 'quarter', 0, 0], [9, 'eighth', 1, 0], [8, 'quarter', 0, 1], [6, 'eighth', 0, 0], [4, 'eighth', 0, 1], [3, '16th', 0, 0], [2, '16th', 0, 1], [1, '32nd', 0, 1]];
@@ -418,7 +419,7 @@ function toXml(notes, bpm, key, title) {
         if (tieStop) s += '<tie type="stop"/>'; if (tieStart) s += '<tie type="start"/>';
         s += '<voice>1</voice><type>' + p[1] + '</type>' + (p[2] ? '<dot/>' : '') + (p[3] ? '<time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>' : '');
         if (tieStop || tieStart) s += '<notations>' + (tieStop ? '<tied type="stop"/>' : '') + (tieStart ? '<tied type="start"/>' : '') + '</notations>';
-        if (!n.rest && firstP) s += '<lyric number="1"><syllabic>single</syllabic><text>' + esc(svLyr(n)) + '</text></lyric>';
+        if (!n.rest && firstP) s += '<lyric number="1"><syllabic>' + (n.syllabic === 'cont' ? 'single' : n.syllabic) + '</syllabic><text>' + esc(n.syllabic === 'cont' ? '-' : n.lyr) + '</text></lyric>';
         x.push(s + '</note>');
       });
     });
