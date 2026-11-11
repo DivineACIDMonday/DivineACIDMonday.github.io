@@ -52,7 +52,7 @@ footer b{color:var(--soft);font-weight:600}
 
 </style></head><body>
 <main>
-  <header><div class="by">Divine Monday</div><h1>Divine Name <span>Oracle</span></h1><p class="sub">Five wheels of hand picked words turn and stop on a name. Ask as often as you like; the oracle never gives you the same name twice.</p></header>
+  <header><a href="../" class="suiteback" style="display:inline-block;color:inherit;opacity:.75;text-decoration:none;font-size:14px;padding:8px 0;margin-bottom:4px">&larr; all machines</a><div class="by">Divine Monday</div><h1>Divine Name <span>Oracle</span></h1><p class="sub">Five wheels of hand picked words turn and stop on a name. Ask as often as you like; the oracle never gives you the same name twice.</p></header>
   <section class="wheels" aria-label="The five wheels">
     <div class="reel r1" style="--c:var(--w1)"><label>Mood</label><div class="win"><div class="strip" id="s1"></div></div></div>
     <div class="reel r2" style="--c:var(--w2)"><label>Energy</label><div class="win"><div class="strip" id="s2"></div></div></div>
@@ -62,10 +62,10 @@ footer b{color:var(--soft);font-weight:600}
   </section>
   <section class="answer" aria-live="polite">
     <p class="name" id="name">Ask the oracle</p>
-    <div class="acts"><button class="roll" id="roll" type="button">⚄ Ask the oracle</button><button class="ghost" id="copy" type="button" disabled>Copy</button><button class="ghost" id="snd" type="button" title="Sound on or off">🔊</button></div>
+    <div class="acts"><button class="roll" id="roll" type="button">⚄ Ask the oracle</button><button class="ghost" id="copy" type="button" disabled>Copy</button><button class="ghost" id="snd" type="button" title="Sound on or off"></button></div>
   </section>
   <section class="hist" aria-label="Your last names"><h2>Your last names</h2><div id="list"><p class="empty">Your names appear here.</p></div></section>
-  <footer><b>No AI inside.</b> Every name comes from five word lists and fixed rules, right in your browser.<br>No cookies, only an anonymous visit counter (GoatCounter, no personal data); the names you have seen stay on this device only, so they never come back.<br>Also by Divine Monday: <a href="../lyrics/" style="color:var(--soft)">Divine Lyric Oracle</a> · © 2026 Divine Monday</footer>
+  <footer><b>No AI inside.</b> Every name comes from five word lists and fixed rules, right in your browser.<br>No cookies, only an anonymous visit counter (GoatCounter, no personal data); the names you have seen stay on this device only, so they never come back.<br>Also by Divine Monday: <a href="../lyrics/" style="color:var(--soft)">Divine Lyric Oracle</a> · © 2026 Divine Monday<br><a href="../">The Divine Music Suite</a> · <a href="https://divineacidmonday.github.io/divine-music-machine-v7/legal/">Impressum · Datenschutz</a></footer>
 </main>
 <div class="toast" id="toast" role="status"></div>
 <script>
@@ -130,7 +130,7 @@ function choir() {
       v.connect(out); const st = t + k * 0.05; o.start(st); vib.start(st); o.stop(t + 3.6); vib.stop(t + 3.6); }); });
   } catch (e) { /* silent is fine */ }
 }
-function soundLabel() { const b = $('#snd'); b.textContent = soundOn ? '🔊' : '🔇'; b.setAttribute('aria-label', soundOn ? 'Sound on' : 'Sound off'); b.setAttribute('aria-pressed', soundOn ? 'true' : 'false'); }
+function soundLabel() { const b = $('#snd'); b.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/>' + (soundOn ? '<path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>' : '<path d="M17 9l5 6M22 9l-5 6"/>') + '</svg>'; b.setAttribute('aria-label', soundOn ? 'Sound on' : 'Sound off'); b.setAttribute('aria-pressed', soundOn ? 'true' : 'false'); }
 const hist = []; let busy = false, last = null;
 function wheelOf(word, i) { return [NW.W1, NW.W2, M, NW.W4, NW.W5][i].includes(word); }
 async function ask() {

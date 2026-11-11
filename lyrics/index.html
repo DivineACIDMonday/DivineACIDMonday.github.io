@@ -57,7 +57,7 @@ footer{text-align:center;color:var(--faint);font-size:13px;line-height:1.6}foote
 .plain{max-width:640px;width:100%;max-height:70vh;overflow:auto;white-space:pre-wrap;font:500 18px/1.6 var(--body);color:var(--ink);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:18px;padding:24px}
 </style></head><body>
 <main>
-  <header><div class="by">Divine Monday</div><h1>Divine Lyric <span>Oracle</span></h1><p class="tag">Hits nobody asked for.</p><p class="sub">Pick a genre and ask. The oracle writes you a whole song of glorious nonsense, and a robot sings it on the beat. Sing along in karaoke mode with a bouncing ball, bring your own MIDI melody if you like, and take the vocal home for your track.</p></header>
+  <header><a href="../" class="suiteback" style="display:inline-block;color:inherit;opacity:.75;text-decoration:none;font-size:14px;padding:8px 0;margin-bottom:4px">&larr; all machines</a><div class="by">Divine Monday</div><h1>Divine Lyric <span>Oracle</span></h1><p class="tag">Hits nobody asked for.</p><p class="sub">Pick a genre and ask. The oracle writes you a whole song of glorious nonsense, and a robot sings it on the beat. Sing along in karaoke mode with a bouncing ball, bring your own MIDI melody if you like, and take the vocal home for your track.</p></header>
   <div class="row" role="group" aria-label="Genre" id="genres"></div>
   <div class="row"><button class="ask" id="ask" type="button">⚄ Ask for a song</button></div>
   <div class="row">
@@ -68,17 +68,17 @@ footer{text-align:center;color:var(--faint);font-size:13px;line-height:1.6}foote
   <div class="row">
     <button class="btn sing" id="sing" type="button" disabled>▶ Sing it</button>
     <label class="tog"><input type="checkbox" id="beatOn" checked> Beat</label>
-    <button class="btn" id="kara" type="button" disabled>🎤 Karaoke</button>
+    <button class="btn" id="kara" type="button" disabled>Karaoke</button>
     <button class="btn" id="plain" type="button" disabled>Plain text</button>
     <button class="btn" id="copy" type="button" disabled>Copy</button>
-    <button class="btn" id="wav" type="button" disabled>⬇ WAV</button>
-    <button class="btn" id="mp3" type="button" disabled>⬇ MP3</button>
-    <button class="btn" id="snd" type="button" title="Choir on or off">🔊</button>
+    <button class="btn" id="wav" type="button" disabled>↓ WAV</button>
+    <button class="btn" id="mp3" type="button" disabled>↓ MP3</button>
+    <button class="btn" id="snd" type="button" title="Choir on or off" aria-label="Choir on or off"></button>
   </div>
   <div><p class="status" id="status">Ask for a song first.</p><div class="bar" id="bar" hidden><i></i></div></div>
   <article class="sheet" id="sheet" aria-live="polite"><p class="title">Your song appears here</p><p class="meta">Tap any line later to roll that line again.</p></article>
   <p class="hint">Tap a line to roll it again. A chorus changes everywhere it is sung. Downloads hold only the voice, starting on beat 1 of bar 1, ready to drop into your track.</p>
-  <footer><b>A parody.</b> Any resemblance to meaningful lyrics is purely coincidental. Any line that makes sense is a bug.<br><b>No AI inside.</b> Every line comes from word lists and fixed patterns; the robot voice is eSpeak (meSpeak, GPL), and MP3s are made with lamejs (LGPL), all right in your browser.<br>No cookies, only an anonymous visit counter (GoatCounter, no personal data); nothing you make leaves this device.<br>Also by Divine Monday: <a href="../oracle/">Divine Name Oracle</a> · © 2026 Divine Monday</footer>
+  <footer><b>A parody.</b> Any resemblance to meaningful lyrics is purely coincidental. Any line that makes sense is a bug.<br><b>No AI inside.</b> Every line comes from word lists and fixed patterns; the robot voice is eSpeak (meSpeak, GPL), and MP3s are made with lamejs (LGPL), all right in your browser.<br>No cookies, only an anonymous visit counter (GoatCounter, no personal data); nothing you make leaves this device.<br>Also by Divine Monday: <a href="../oracle/">Divine Name Oracle</a> · © 2026 Divine Monday<br><a href="../">The Divine Music Suite</a> · <a href="https://divineacidmonday.github.io/divine-music-machine-v7/legal/">Impressum · Datenschutz</a></footer>
 </main>
 <div class="over" id="karaOver" hidden><button class="btn x" id="karaClose" type="button">Close</button><div class="k-title" id="kTitle"></div><div class="k-sec" id="kSec"></div><div class="k-prev" id="kPrev"></div><div class="k-line" id="kLine"><div class="ball" id="ball" hidden></div></div><div class="k-next" id="kNext"></div></div>
 <div class="over" id="plainOver" hidden><button class="btn x" id="plainClose" type="button">Close</button><div class="plain" id="plainText"></div></div>
@@ -324,7 +324,7 @@ function choir() {
       v.connect(out); const st = t + k * 0.05; o.start(st); vib.start(st); o.stop(t + 3.6); vib.stop(t + 3.6); }); });
   } catch (e) { /* silent is fine */ }
 }
-function soundLabel() { const b = $('#snd'); b.textContent = soundOn ? '🔊' : '🔇'; b.setAttribute('aria-label', soundOn ? 'Choir on' : 'Choir off'); b.setAttribute('aria-pressed', soundOn ? 'true' : 'false'); }
+function soundLabel() { const b = $('#snd'); b.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/>' + (soundOn ? '<path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>' : '<path d="M17 9l5 6M22 9l-5 6"/>') + '</svg>'; b.setAttribute('aria-label', soundOn ? 'Choir on' : 'Choir off'); b.setAttribute('aria-pressed', soundOn ? 'true' : 'false'); }
 function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 1800); }
 async function copy() { try { await navigator.clipboard.writeText(asText()); toast('Lyrics copied'); } catch (e) { toast('Copy did not work here; use Plain text and select it.'); } }
 Object.entries(GENRES).forEach(([k, g]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'g'; b.textContent = g.name; b.setAttribute('aria-pressed', k === genre ? 'true' : 'false'); b.onclick = () => { genre = k; document.querySelectorAll('.g').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); if (!midi) $('#bpm').value = g.bpm; }; $('#genres').append(b); });
