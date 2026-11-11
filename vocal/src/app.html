@@ -90,7 +90,7 @@ footer{color:var(--mu);font-size:13px;text-align:center;padding:10px 0 30px}
     <div class="row"><span class="lbl">Tempo</span><input class="pk num4" id="bpm" type="number" min="50" max="200" aria-label="Tempo in bpm"><span class="muted small">bpm</span>
       <span class="match" id="match"></span></div>
     <div class="row"><span class="lbl">Key</span><select class="pk" id="key" aria-label="Key"></select>
-      <span class="lbl" style="min-width:0;margin-left:8px">Voice</span><div class="seg" id="voice"><button data-v="low">Low</button><button data-v="mid" aria-pressed="true">Middle</button><button data-v="high">High</button></div></div>
+      <span class="lbl" style="min-width:0;margin-left:8px">Voice</span><div class="seg" id="voice"><button data-v="nyl" aria-pressed="true">NYL II</button><button data-v="moxu">Mo Xu</button><button data-v="any">Other voice</button></div></div>
     <div class="row"><span class="lbl">Your song</span><label class="btn file">Load your song MIDI<input type="file" id="songFile" accept=".mid,.midi" hidden></label>
       <span class="muted small" id="songInfo">optional: the chords or the whole song, so the vocal follows its tempo, key and chords</span><button class="btn" id="songOff" hidden>Remove</button></div>
     <div class="row"><span class="lbl">Starts at bar</span><input class="pk num4" id="startBar" type="number" min="1" max="200" value="1" aria-label="Start bar">
@@ -100,7 +100,7 @@ footer{color:var(--mu);font-size:13px;text-align:center;padding:10px 0 30px}
   <div id="singBox" class="card" style="background:transparent;border:0;padding:0" hidden>
     <div class="row"><span class="lbl">Melody</span><label class="btn file">Load a MIDI melody<input type="file" id="melFile" accept=".mid,.midi" hidden></label>
       <select class="pk" id="melTrack" aria-label="Track with the melody" hidden></select><span class="muted small" id="melInfo">for example the Melody file from a Studio</span></div>
-    <div class="row"><span class="lbl">Voice</span><div class="seg" id="voice2"><button data-v="low">Low</button><button data-v="mid" aria-pressed="true">Middle</button><button data-v="high">High</button></div><span class="muted small">moves the melody by whole octaves only, it stays on your beat</span></div>
+    <div class="row"><span class="lbl">Voice</span><div class="seg" id="voice2"><button data-v="nyl" aria-pressed="true">NYL II</button><button data-v="moxu">Mo Xu</button><button data-v="any">Other voice</button></div><span class="muted small">the melody moves by whole octaves into the range of the voice, it stays on your beat</span></div>
   </div>
 </section>
 
@@ -121,7 +121,8 @@ footer{color:var(--mu);font-size:13px;text-align:center;padding:10px 0 30px}
   <li>Your tempo decides the beat. Under the tempo you see which genres fit it.</li>
   <li>Load your song MIDI, for example the Chords file from a Studio, and the vocal follows its tempo, its key and its chords bar by bar.</li>
   <li>Sing my melody: load a MIDI melody. Every syllable gets a note. Extra notes stretch a syllable, extra syllables split a note. The timing stays exactly on your beat.</li>
-  <li>Download the MusicXML, import it in Synthesizer V on bar 1, choose a voice. Vibrato, slides and tone you set in Synthesizer V itself.</li>
+  <li>Choose the voice you will sing with: the melody stays inside its range. NYL II sings English. Mo Xu sings English too when you set the language of the notes to English in Synthesizer V.</li>
+  <li>Download the MusicXML, import it in Synthesizer V on bar 1, choose that voice. Vibrato, slides and tone you set in Synthesizer V itself.</li>
 </ol></details>
 <footer>© 2026 Divine Monday · <a href="https://divineacidmonday.github.io/divine-music-machine-v7/legal/" style="color:inherit">Impressum · Datenschutz</a></footer>
 </div>
@@ -149,7 +150,7 @@ const GENRES = {
 };
 const MODES = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], dorian: [0, 2, 3, 5, 7, 9, 10], phrygian: [0, 1, 3, 5, 7, 8, 10], blues: [0, 3, 5, 6, 7, 10] };
 const NN = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
-const VOICES = { low: [45, 64], mid: [52, 71], high: [57, 76] };
+const VOICES = { nyl: [54, 66], moxu: [58, 68], any: [52, 71] }; // NYL II F#3 to F#4, Mo Xu A#3 to G#4
 const ROLE_COL = { verse: '#4FB3A9', pre: '#9B87E0', chorus: '#E7B65C', bridge: '#D9668A', outro: '#6FA8DC' };
 
 /* ---------- the oracle (from the Divine Lyric Oracle) ---------- */
@@ -289,8 +290,8 @@ function monoLine(tr, ppq) { // one note at a time, on the 16th or triplet grid
 const median = (a) => { const s = a.slice().sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
 
 /* ---------- state ---------- */
-const S = { mode: 'write', genre: 'triphop', voice: 'mid', key: 'auto', song: null, mel: null, result: null };
-try { const o = JSON.parse(localStorage.getItem('dvm-state') || '{}'); Object.assign(S, { genre: o.genre || S.genre, voice: o.voice || S.voice }); if (o.lyrics) $('#lyrics').value = o.lyrics; if (o.title) $('#title').value = o.title; } catch (e) { /* fresh start */ }
+const S = { mode: 'write', genre: 'triphop', voice: 'nyl', key: 'auto', song: null, mel: null, result: null };
+try { const o = JSON.parse(localStorage.getItem('dvm-state') || '{}'); Object.assign(S, { genre: o.genre || S.genre, voice: VOICES[o.voice] ? o.voice : S.voice }); if (o.lyrics) $('#lyrics').value = o.lyrics; if (o.title) $('#title').value = o.title; } catch (e) { /* fresh start */ }
 function keep() { try { localStorage.setItem('dvm-state', JSON.stringify({ genre: S.genre, voice: S.voice, lyrics: $('#lyrics').value, title: $('#title').value })); } catch (e) { /* no storage here */ } }
 
 /* ---------- write a melody ---------- */
@@ -351,7 +352,7 @@ function writeVocal(secs, opt) {
 /* ---------- sing my melody ---------- */
 function singVocal(secs, mel, voice) {
   const range = VOICES[voice], sh = Math.round(((range[0] + range[1]) / 2 - median(mel.map((n) => n.m))) / 12) * 12;
-  const m = mel.map((n) => ({ t: n.t, d: n.d, m: n.m + sh }));
+  const m = mel.map((n) => { let p = n.m + sh; while (p > range[1]) p -= 12; while (p < range[0]) p += 12; return { t: n.t, d: n.d, m: p }; });
   const phrases = []; m.forEach((n, i) => { const p = m[i - 1]; if (!p || n.t - (p.t + p.d) >= 12 || n.t - p.t >= 8 * BAR) phrases.push([]); phrases[phrases.length - 1].push(n); });
   const lines = []; secs.forEach((s, si) => s.lines.forEach((l) => lines.push({ l, role: s.role, si })));
   const melLen = Math.ceil((m[m.length - 1].t + m[m.length - 1].d) / BAR) * BAR, out = [], total = Math.max(phrases.length, lines.length);
