@@ -321,8 +321,10 @@ function writeVocal(secs, opt) {
     const need = opt.tight ? Math.max(...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18)) : Math.max(median(sec.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18));
     const slot = [2, 4, 8, 16].find((b) => b * BAR >= need) * BAR || 16 * BAR;
     if (parts.length) { // the next part of the song that fits this lyric part and still has room for it; never past the end of the song
+      // spread over the whole song: lyric part i aims at its share of the song, so the singer does not crowd the start and leave the end empty
+      const used = secs.reduce((a2, x) => a2 + x.lines.length, 0), before = secs.slice(0, si).reduce((a2, x) => a2 + x.lines.length, 0), from = opt.startBar0 * BAR, aim = end ? from + (end - from) * before / Math.max(1, used) : 0;
       const L = sec.lines.length * slot, room = (q) => q.z - Math.max(t0, q.a) >= L - 2 * TB && q.z > t0;
-      const ok = parts.filter((x) => room(x) && (!/intro|outro/i.test(x.text) || sec.role === 'outro')), fresh = ok.filter((x) => x.a >= t0), free = opt.packed || !fresh.length ? ok : fresh; // every lyric part opens a part of the song of its own while there are enough
+      const ok = parts.filter((x) => room(x) && (!/intro|outro/i.test(x.text) || sec.role === 'outro')), fresh = ok.filter((x) => x.a >= t0), spread = fresh.filter((x) => x.a >= aim - 4 * BAR), free = opt.packed || !fresh.length ? ok : opt.tight || !spread.length ? fresh : spread; // every lyric part opens a part of the song of its own while there are enough
       const q = opt.packed ? free[0] : free.slice(0, 2).find((x) => FIT[sec.role].test(x.text)) || free[0]; // the nearest part with room, the fitting one when it is right behind it
       if (q) t0 = Math.max(t0, q.a); else if (end && t0 + L > end && !opt.runOn) { opt.report.left += sec.lines.length; return; }
     }
