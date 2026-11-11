@@ -317,10 +317,23 @@ function writeVocal(secs, opt) {
   const marks = (opt.markers || []).filter((m) => m.bar >= opt.startBar0);
   const end = opt.songEnd || 0, parts = marks.map((m, k) => ({ a: m.bar * BAR, z: k < marks.length - 1 ? marks[k + 1].bar * BAR : end || m.bar * BAR + 64 * BAR, text: m.text }));
   opt.report = { left: 0 };
+  // the song's form first: lyric parts of the same kind in a row are one block (verse + verse is the song's verse part); every block
+  // takes the next part of the song that fits it, so the lyrics and the song share one form; a block that is too long sings tighter
+  const natural = (sec, tight) => { const nd = tight ? Math.max(...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18)) : Math.max(median(sec.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18)); return ([2, 4, 8, 16].find((b) => b * BAR >= nd) || 16) * BAR * sec.lines.length; };
+  const blockAt = {}, tightSec = {}, assign = parts.length && !opt.packed;
+  if (assign) { let j = 0, i = 0;
+    while (i < secs.length) { let k2 = i; while (k2 + 1 < secs.length && secs[k2 + 1].role === secs[i].role) k2++;
+      const role = secs[i].role, usable = (x) => !/intro/i.test(x.text) && (role === 'outro' || !/outro/i.test(x.text) || j >= parts.length - 1);
+      let k = -1; for (let q = j; q < Math.min(parts.length, j + 3); q++) if (usable(parts[q]) && FIT[role].test(parts[q].text)) { k = q; break; }
+      if (k < 0) for (let q = j; q < parts.length; q++) if (usable(parts[q])) { k = q; break; }
+      if (k >= 0) { const len = parts[k].z - parts[k].a, nat = secs.slice(i, k2 + 1).reduce((a2, x) => a2 + natural(x, opt.tight), 0); blockAt[i] = parts[k].a;
+        if (nat > len + 2 * TB) for (let x = i; x <= k2; x++) tightSec[x] = true; j = k + 1; }
+      i = k2 + 1; } }
   secs.forEach((sec, si) => {
-    const need = opt.tight ? Math.max(...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18)) : Math.max(median(sec.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18));
+    const need = opt.tight || tightSec[si] ? Math.max(...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18)) : Math.max(median(sec.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18));
     const slot = [2, 4, 8, 16].find((b) => b * BAR >= need) * BAR || 16 * BAR;
-    if (parts.length) { // the next part of the song that fits this lyric part and still has room for it; never past the end of the song
+    if (assign) { if (blockAt[si] != null) t0 = Math.max(t0, blockAt[si]); if (end && t0 + sec.lines.length * slot > end + 2 * TB && !opt.runOn) { opt.report.left += sec.lines.length; return; } }
+    else if (parts.length) { // the next part of the song that fits this lyric part and still has room for it; never past the end of the song
       // spread over the whole song: lyric part i aims at its share of the song, so the singer does not crowd the start and leave the end empty
       const used = secs.reduce((a2, x) => a2 + x.lines.length, 0), before = secs.slice(0, si).reduce((a2, x) => a2 + x.lines.length, 0), from = opt.startBar0 * BAR, aim = end ? from + (end - from) * before / Math.max(1, used) : 0;
       const L = sec.lines.length * slot, room = (q) => q.z - Math.max(t0, q.a) >= L - 2 * TB && q.z > t0;
