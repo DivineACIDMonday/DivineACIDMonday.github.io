@@ -280,14 +280,17 @@ function readMidi(buf) {
 }
 const q = (x) => { const a = Math.round(x / 3) * 3, b = Math.round(x / 4) * 4; return Math.abs(b - x) < Math.abs(a - x) - 0.3 ? b : a; };
 function monoLine(tr, ppq) { // one note at a time, on the 16th or triplet grid
-  const out = [];
+  const out = [], x12 = tr.notes.map((n) => n.tick / ppq * TB), err = (g) => x12.reduce((a, x) => a + Math.abs(x - Math.round(x / g) * g), 0);
+  const g = err(4) < err(3) * 0.6 ? 4 : 3; // one grid for the whole melody: sixteenths, or triplets when it clearly swings
   tr.notes.forEach((n) => {
-    const t = q(n.tick / ppq * TB), e = Math.max(t + 3, q((n.tick + n.len) / ppq * TB)), last = out[out.length - 1];
+    const t = Math.round(n.tick / ppq * TB / g) * g, e = Math.max(t + g, Math.round((n.tick + n.len) / ppq * TB / g) * g), last = out[out.length - 1];
     if (last && t === last.t) { if (n.p > last.m) { last.m = n.p; } return; }
     if (last && last.t + last.d > t) last.d = t - last.t;
     out.push({ t, d: e - t, m: n.p });
   });
-  return out.filter((n) => n.d >= 3);
+  const sing = []; // a voice cannot sing a flick: very short notes melt into the note before them
+  out.forEach((n) => { const l = sing[sing.length - 1]; if (n.d < 5 && l && l.t + l.d >= n.t - 1) { l.d = n.t + n.d - l.t; return; } if (n.d >= 3) sing.push(n); });
+  return sing;
 }
 const median = (a) => { const s = a.slice().sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
 
@@ -360,14 +363,18 @@ function writeVocal(secs, opt) {
 function singVocal(secs, mel, voice) {
   const range = VOICES[voice], sh = Math.round(((range[0] + range[1]) / 2 - median(mel.map((n) => n.m))) / 12) * 12;
   const m = mel.map((n) => { let p = n.m + sh; while (p > range[1]) p -= 12; while (p < range[0]) p += 12; return { t: n.t, d: n.d, m: p }; });
+  m.forEach((n, i) => { const nx = m[i + 1]; if (nx && nx.t - (n.t + n.d) < 12) n.d = nx.t - n.t; }); // sung legato: a note lasts until the next one
   const phrases = []; m.forEach((n, i) => { const p = m[i - 1]; if (!p || n.t - (p.t + p.d) >= 12 || n.t - p.t >= 8 * BAR) phrases.push([]); phrases[phrases.length - 1].push(n); });
   const lines = []; secs.forEach((s, si) => s.lines.forEach((l) => lines.push({ l, role: s.role, si })));
   const melLen = Math.ceil((m[m.length - 1].t + m[m.length - 1].d) / BAR) * BAR, out = [], total = Math.max(phrases.length, lines.length);
   for (let p = 0; p < total; p++) {
     const ph = phrases[p % phrases.length].map((n) => ({ t: n.t + Math.floor(p / phrases.length) * melLen, d: n.d, m: n.m })), L = lines[p % lines.length], syl = L.l.syl;
     while (ph.length < syl.length) { // more syllables than notes: split the longest note
-      let bi = 0; ph.forEach((n, i) => { if (n.d > ph[bi].d) bi = i; }); const n = ph[bi]; if (n.d < 6) break;
-      const h = Math.floor(n.d / 2 / 3) * 3 || 3; ph.splice(bi + 1, 0, { t: n.t + h, d: n.d - h, m: n.m }); n.d = h;
+      let bi = 0; ph.forEach((n, i) => { if (n.d > ph[bi].d) bi = i; }); const n = ph[bi];
+      if (n.d < 12) { // no note left to split into eighths: sing on into the rest after the phrase, an eighth at a time
+        const last = ph[ph.length - 1], nextT = (phrases[(p + 1) % phrases.length] || [])[0], room = nextT && p + 1 < phrases.length * Math.ceil(total / phrases.length) ? nextT.t + Math.floor((p + 1) / phrases.length) * melLen - 6 : last.t + last.d + 2 * BAR;
+        if (last.t + last.d + 6 > room) break; ph.push({ t: last.t + last.d, d: 6, m: last.m }); continue; }
+      const h = Math.max(6, Math.floor(n.d / 2 / 6) * 6); ph.splice(bi + 1, 0, { t: n.t + h, d: n.d - h, m: n.m }); n.d = h;
     }
     const k = ph.length, s = syl.length;
     ph.forEach((n, j) => {
@@ -556,7 +563,7 @@ $('#melFile').onchange = async () => {
   const f = $('#melFile').files[0]; if (!f) return;
   try {
     const M = readMidi(await f.arrayBuffer()), tr = M.tracks.filter((t) => !t.drum); if (!tr.length) throw new Error('no notes'); M.tracks = tr;
-    let bi = 0; tr.forEach((t, i) => { if (t.notes.length >= 4 && median(t.notes.map((n) => n.p)) > median(tr[bi].notes.map((n) => n.p))) bi = i; });
+    let bi = tr.findIndex((t) => /melody|lead|vocal|voice|sing/i.test(t.name) && t.notes.length >= 8); if (bi < 0) { bi = 0; tr.forEach((t, i) => { if (t.notes.length >= 16 && median(t.notes.map((n) => n.p)) > median(tr[bi].notes.map((n) => n.p))) bi = i; }); }
     S.mel = M; const sel = $('#melTrack'); sel.innerHTML = tr.map((t, i) => '<option value="' + i + '">' + esc(t.name) + ' · ' + t.notes.length + ' notes</option>').join(''); sel.value = String(bi); sel.hidden = tr.length < 2;
     $('#melInfo').textContent = f.name + ' · ' + Math.round(M.bpm * 100) / 100 + ' bpm. The vocal keeps its timing exactly.';
   } catch (e) { $('#melInfo').textContent = 'That file has no melody the machine can read.'; }
