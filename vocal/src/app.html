@@ -108,6 +108,7 @@ footer{color:var(--mu);font-size:13px;text-align:center;padding:10px 0 30px}
   <div class="sh"><span class="num">3</span><span class="st serif">The vocal</span><span class="muted" id="facts"></span></div>
   <div class="row" style="justify-content:center"><button class="btn big" id="make">Sing it</button></div>
   <div class="warn" id="warn" hidden></div>
+  <div class="row" id="longer" hidden style="justify-content:center"><button class="btn" id="extend">Make the song longer</button><button class="btn" id="dlSong" hidden>Download the longer song (Full MIDI)</button><span class="muted small" id="longerInfo"></span></div>
   <div id="rollWrap" hidden><div id="roll"></div></div>
   <div class="empty" id="empty">Your vocal line appears here: every note with its syllable.</div>
   <div class="player" id="player" hidden><button class="btn" id="play">Listen</button><button class="chip" id="beatOn" aria-pressed="true">with a click</button><span class="muted small">A quick sketch in the browser. Synthesizer V does the singing.</span></div>
@@ -279,8 +280,9 @@ function readMidi(buf) {
     i = end;
     if (notes.length) tracks.push({ name: name.trim() || 'Track ' + (tracks.length + 1), notes: notes.sort((x, y) => x.tick - y.tick || y.p - x.p), drum: (!!chs[9] && Object.keys(chs).length === 1) || /beat|drum|perc|kit|\bxo\b/i.test(name) });
   }
+  let endTick = 0; tracks.forEach((t) => t.notes.forEach((n) => { endTick = Math.max(endTick, n.tick + n.len); }));
   const markers = marks.sort((a, b) => a.tick - b.tick).map((m) => ({ bar: Math.floor(m.tick / ppq / 4), text: m.text })).filter((m, k, a) => m.text && (!k || a[k - 1].bar !== m.bar || a[k - 1].text !== m.text));
-  return { ppq, bpm: tempo ? Math.round(60e6 / tempo * 100) / 100 : 120, tracks, markers };
+  return { ppq, bpm: tempo ? Math.round(60e6 / tempo * 100) / 100 : 120, tracks, markers, endBar: Math.ceil(endTick / ppq / 4) };
 }
 const q = (x) => { const a = Math.round(x / 3) * 3, b = Math.round(x / 4) * 4; return Math.abs(b - x) < Math.abs(a - x) - 0.3 ? b : a; };
 function monoLine(tr, ppq) { // one note at a time, on the 16th or triplet grid
@@ -485,7 +487,7 @@ function countWords() { const secs = parseLyrics($('#lyrics').value), n = secs.r
   $('#count').textContent = n ? secs.length + ' parts · ' + ln + ' lines · ' + n + ' syllables. Type beau-ti-ful to choose the syllables yourself.' : 'Put [Verse], [Chorus] or [Bridge] on a line of its own. Type beau-ti-ful to choose the syllables yourself.'; }
 
 function make() {
-  stop(); const secs = parseLyrics($('#lyrics').value), warn = $('#warn'); warn.hidden = true;
+  stop(); if (!S.extending) $('#longer').hidden = true; const secs = parseLyrics($('#lyrics').value), warn = $('#warn'); warn.hidden = true;
   if (!secs.length) { warn.textContent = 'First the words: type them, paste them, or press Oracle.'; warn.hidden = false; return; }
   rng = seeded((Math.random() * 2 ** 32) >>> 0);
   let notes, bpm, key;
@@ -498,13 +500,14 @@ function make() {
     const g = GENRES[S.genre]; bpm = Math.max(50, Math.min(200, +$('#bpm').value || g.bpm));
     key = S.song && S.song.key && $('#key').value === 'auto' ? S.song.key : { root: $('#key').value === 'auto' ? R([9, 4, 2, 7, 0, 5, 11]) : +$('#key').value, mode: g.mode };
     if (S.song && S.song.key && $('#key').value === 'auto') key = { root: S.song.key.root, mode: S.song.key.mode === 'major' ? 'major' : g.mode === 'blues' ? 'blues' : g.mode };
-    const wopt = { genre: S.genre, voice: S.voice, key, chords: S.song && S.song.chords, startBar0: Math.max(0, (+$('#startBar').value || 1) - 1), pause: +$('#pause').value, markers: S.song && S.song.markers, songEnd: S.song && S.song.bars ? S.song.bars * BAR : 0, report: null };
+    const wopt = { genre: S.genre, voice: S.voice, key, chords: S.song && S.song.chords, startBar0: Math.max(0, (+$('#startBar').value || 1) - 1), pause: +$('#pause').value, markers: S.song && S.song.markers, songEnd: S.song && (S.song.end || S.song.bars) ? (S.song.end || S.song.bars) * BAR : 0, report: null };
     // every line is sung: first the roomy way, then tighter (shorter phrases, every free part of the song), and only when the song is
     // really too short the last lines run on past its end, with the number of bars the song needs
     notes = writeVocal(secs, wopt);
     if (wopt.report && wopt.report.left) { wopt.tight = true; notes = writeVocal(secs, wopt); }
     if (wopt.report && wopt.report.left) { wopt.packed = true; notes = writeVocal(secs, wopt); }
     if (wopt.report && wopt.report.left) { wopt.runOn = true; notes = writeVocal(secs, wopt); const last = Math.ceil(Math.max(...notes.map((n) => n.t + n.d)) / BAR);
+      if (wopt.songEnd && last * BAR > wopt.songEnd && S.song && S.song.raw) { S.need = last - wopt.songEnd / BAR; $('#longer').hidden = false; $('#extend').hidden = false; $('#extend').textContent = 'Make the song ' + Math.ceil(S.need / 4) * 4 + ' bars longer'; }
       if (wopt.songEnd && last * BAR > wopt.songEnd) { warn.textContent = 'All lines are sung. The song is ' + (last - wopt.songEnd / BAR) + ' bars too short: the last lines run on to bar ' + last + '. Make the song ' + last + ' bars long in the Studio, or it ends while she still sings.'; warn.hidden = false; } }
   }
   if (!notes.length) { warn.textContent = 'Nothing fits: the song has no room for these lyrics.'; warn.hidden = false; return; }
@@ -581,24 +584,76 @@ $('#play').onclick = play;
 $('#beatOn').onclick = () => { const b = $('#beatOn'); b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true')); };
 $('#dlXml').onclick = () => { const r = S.result; save(new Blob([toXml(r.notes, r.bpm, r.key, r.title)], { type: 'application/vnd.recordare.musicxml+xml' }), base() + '.musicxml'); };
 $('#dlMid').onclick = () => { const r = S.result; save(new Blob([toMidi(r.notes, r.bpm, r.title)], { type: 'audio/midi' }), base() + '.mid'); };
-$('#songFile').onchange = async () => {
-  const f = $('#songFile').files[0]; if (!f) return;
+$('#songFile').onchange = async () => { const f = $('#songFile').files[0]; if (!f) return; loadSong(await f.arrayBuffer(), f.name); $('#songFile').value = ''; };
+function loadSong(buf, fname) {
+  const f = { name: fname };
   try {
-    const M = readMidi(await f.arrayBuffer()), h = new Array(12).fill(0), bars = [];
+    const M = readMidi(buf), h = new Array(12).fill(0), bars = [];
     M.tracks.filter((t) => !t.drum).forEach((t) => t.notes.forEach((n) => { if (n.ch === 9) return; const w = n.len / M.ppq; h[n.p % 12] += w; const b0 = Math.floor(n.tick / M.ppq / 4), b1 = Math.floor((n.tick + Math.max(1, n.len) - 1) / M.ppq / 4);
       for (let b = b0; b <= b1 && b < b0 + 8; b++) { (bars[b] = bars[b] || new Array(12).fill(0))[n.p % 12] += w; } }));
     if (!h.some((x) => x)) { if (!M.markers.length) throw new Error('no notes'); // a Structure file: only the parts of the song and its tempo
       S.song = Object.assign(S.song || {}, { markers: M.markers, bpm: M.bpm }); if (!S.song.key) S.song.key = null; $('#bpm').value = Math.round(M.bpm); renderMatch();
       const first = M.markers.find((m) => /verse|couplet|strophe/i.test(m.text)) || M.markers.find((m) => !/intro/i.test(m.text) && m.bar > 0); if (first) $('#startBar').value = first.bar + 1;
-      $('#songInfo').textContent = f.name + ' · ' + Math.round(M.bpm) + ' bpm. The vocal sings its parts on the parts of the song: ' + M.markers.map((m) => m.text + ' ' + (m.bar + 1)).join(', ') + '. Load the Chords or Pad too, for the chords.'; $('#songOff').hidden = false; $('#songFile').value = ''; return; }
+      $('#songInfo').textContent = f.name + ' · ' + Math.round(M.bpm) + ' bpm. The vocal sings its parts on the parts of the song: ' + M.markers.map((m) => m.text + ' ' + (m.bar + 1)).join(', ') + '. Load the Chords or Pad too, for the chords.'; $('#songOff').hidden = false; S.song.raw = buf; S.song.fname = fname; S.song.end = M.endBar || 0; return; }
     const key = detectKey(h), chords = bars.map((v) => v && v.map((x, pc) => [x, pc]).sort((a, b) => b[0] - a[0]).slice(0, 3).filter((x) => x[0] > 0).map((x) => x[1]));
     S.song = { key, chords, bpm: M.bpm, bars: bars.length, markers: M.markers.length ? M.markers : (S.song && S.song.markers) || [] }; $('#bpm').value = Math.round(M.bpm); renderMatch();
     const first = M.markers.find((m) => /verse|couplet|strophe/i.test(m.text)) || M.markers.find((m) => !/intro/i.test(m.text) && m.bar > 0);
     if (first) $('#startBar').value = first.bar + 1;
     $('#songInfo').textContent = f.name + ' · ' + Math.round(M.bpm) + ' bpm · ' + keyName(key) + ' · ' + bars.length + ' bars. The vocal follows its chords' + (M.markers.length ? ' and sings its parts on the parts of the song: ' + M.markers.map((m) => m.text + ' ' + (m.bar + 1)).join(', ') + '.' : '.'); $('#songOff').hidden = false;
-  } catch (e) { $('#songInfo').textContent = 'That file has no notes the machine can read.'; }
-  $('#songFile').value = '';
+  } catch (e) { $('#songInfo').textContent = 'That file has no notes the machine can read.'; return; }
+  S.song.raw = buf; S.song.fname = fname; S.song.end = Math.max(S.song.bars || 0, readMidi(buf).endBar || 0);
+}
+
+/* ---------- make the song longer: the last chorus (or drop) plays once more before the outro ----------
+   every track of the song MIDI moves on after the insert point and the copied bars come in between, markers included */
+function parseSmf(buf) {
+  const d = new Uint8Array(buf); let i = 0; const u32 = () => (d[i++] << 24 | d[i++] << 16 | d[i++] << 8 | d[i++]) >>> 0, u16 = () => d[i++] << 8 | d[i++];
+  const vlq = () => { let v = 0, b; do { b = d[i++]; v = (v << 7) | (b & 0x7f); } while (b & 0x80); return v; };
+  i = 8; const fmt = u16(), ntr = u16(), ppq = u16(), tracks = [];
+  for (let tr = 0; tr < ntr && i < d.length; tr++) {
+    while (i < d.length && String.fromCharCode(d[i], d[i + 1], d[i + 2], d[i + 3]) !== 'MTrk') i += 8 + ((d[i + 4] << 24 | d[i + 5] << 16 | d[i + 6] << 8 | d[i + 7]) >>> 0);
+    if (i >= d.length) break; i += 4; const end = u32() + i; let tick = 0, run = 0; const ev = [];
+    while (i < end) { tick += vlq(); const b = d[i];
+      if (b === 0xFF) { const typ = d[i + 1]; i += 2; const st = i, ln = vlq(), data = Array.from(d.slice(i, i + ln)); i += ln; if (typ !== 0x2F) ev.push({ tick, meta: typ, data }); continue; }
+      if (b === 0xF0 || b === 0xF7) { i++; const ln = vlq(); i += ln; continue; }
+      if (b & 0x80) { run = b; i++; } const n = ((run & 0xF0) === 0xC0 || (run & 0xF0) === 0xD0) ? 1 : 2; ev.push({ tick, st: run, data: Array.from(d.slice(i, i + n)) }); i += n; }
+    i = end; tracks.push(ev); }
+  return { fmt, ppq, tracks };
+}
+function writeSmf(m) {
+  const vlq = (v) => { const b = [v & 0x7f]; while ((v >>= 7)) b.unshift((v & 0x7f) | 0x80); return b; }, out = [0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 1, m.tracks.length >> 8, m.tracks.length & 255, m.ppq >> 8, m.ppq & 255];
+  m.tracks.forEach((ev) => { const body = []; let last = 0;
+    ev.slice().sort((a, b) => a.tick - b.tick || (a.meta != null ? -1 : b.meta != null ? 1 : 0) || ((a.st & 0xF0) === 0x80 || (a.st & 0xF0) === 0x90 && a.data[1] === 0 ? -1 : 1))
+      .forEach((e) => { body.push(...vlq(Math.max(0, e.tick - last))); last = e.tick; if (e.meta != null) body.push(0xFF, e.meta, ...vlq(e.data.length), ...e.data); else body.push(e.st, ...e.data); });
+    body.push(0, 0xFF, 0x2F, 0); const L = body.length; out.push(0x4D, 0x54, 0x72, 0x6B, L >>> 24, L >> 16 & 255, L >> 8 & 255, L & 255, ...body); });
+  return new Uint8Array(out);
+}
+function lengthen(buf, markers, endBar, extra) {
+  const m = parseSmf(buf), BT = m.ppq * 4, out = markers.find((x) => /outro|end/i.test(x.text) && x.bar > 0), at = out ? out.bar : endBar;
+  const src = markers.filter((x) => x.bar < at && /chorus|drop|peak|refrain|hook/i.test(x.text)).pop() || markers.filter((x) => x.bar < at && !/intro/i.test(x.text)).pop();
+  const sa = src ? src.bar : Math.max(0, at - 8), nx = markers.find((x) => x.bar > sa), sl = Math.max(1, Math.min((nx ? nx.bar : at) - sa, at - sa) || 8);
+  const isOn = (e) => (e.st & 0xF0) === 0x90 && e.data[1] > 0, isOff = (e) => (e.st & 0xF0) === 0x80 || ((e.st & 0xF0) === 0x90 && e.data[1] === 0);
+  m.tracks = m.tracks.map((ev) => { const moved = ev.map((e) => (e.tick >= at * BT ? Object.assign({}, e, { tick: e.tick + extra * BT }) : e)), add = [];
+    for (let k = 0; k < extra; k++) { const sb = sa + (k % sl), w0 = sb * BT, w1 = w0 + BT, shift = (at + k - sb) * BT;
+      ev.forEach((e, idx) => { if (e.tick < w0 || e.tick >= w1) return;
+        if (e.meta != null) { if (e.meta === 0x06 && k % sl === 0) add.push(Object.assign({}, e, { tick: e.tick + shift })); return; }
+        if (isOff(e)) return;
+        if (isOn(e)) { const off = ev.slice(idx + 1).find((x) => isOff(x) && (x.st & 15) === (e.st & 15) && x.data[0] === e.data[0]); const ot = Math.min(off ? off.tick : w1, w1 + BT * 4);
+          add.push(Object.assign({}, e, { tick: e.tick + shift }), { tick: ot + shift, st: 0x80 | (e.st & 15), data: [e.data[0], 0] }); return; }
+        add.push(Object.assign({}, e, { tick: e.tick + shift })); }); }
+    return moved.concat(add); });
+  return { data: writeSmf(m), at, sa, sl };
+}
+$('#extend').onclick = () => {
+  if (!S.song || !S.song.raw) return; let tries = 0;
+  S.extending = true;
+  while (tries++ < 3) { const extra = Math.ceil((S.need || 4) / 4) * 4, r = lengthen(S.song.raw, S.song.markers || [], S.song.end || S.song.bars || 0, extra), name = (S.song.fname || 'Song').replace(/(_longer)?\.midi?$/i, '') + '_longer.mid';
+    loadSong(r.data.buffer, name); S.longer = { data: r.data, name }; S.need = 0; $('#warn').hidden = true; make();
+    $('#longerInfo').textContent = 'Bars ' + (r.sa + 1) + ' to ' + (r.sa + Math.min(r.sl, extra)) + ' play once more from bar ' + (r.at + 1) + ', the rest moves ' + extra + ' bars on.';
+    if (!S.need) break; }
+  S.extending = false; $('#longer').hidden = false; $('#extend').hidden = !S.need; $('#dlSong').hidden = false;
 };
+$('#dlSong').onclick = () => { if (S.longer) save(new Blob([S.longer.data], { type: 'audio/midi' }), S.longer.name); };
 $('#songOff').onclick = () => { S.song = null; $('#songOff').hidden = true; $('#songInfo').textContent = 'optional: the chords or the whole song, so the vocal follows its tempo, key and chords'; $('#bpm').value = GENRES[S.genre].bpm; renderMatch(); };
 $('#melFile').onchange = async () => {
   const f = $('#melFile').files[0]; if (!f) return;
