@@ -226,6 +226,17 @@ function splitWord(raw) {
 function roleOf(label) { const l = label.toLowerCase(); return /chorus|hook|refrain/.test(l) && !/pre/.test(l) ? 'chorus' : /pre/.test(l) ? 'pre' : /bridge|middle|break/.test(l) ? 'bridge' : /outro|end/.test(l) ? 'outro' : 'verse'; }
 // lyrics -> sections of lines of syllables {text, syllabic}
 function parseLyrics(txt) {
+  // no [Verse] or [Chorus] in the text: the empty lines make the parts, a part that comes back (nearly) word for word is the chorus,
+  // the part right before the last chorus that is not a verse twin becomes the bridge, a short last part the outro
+  const heads = /^\[(.+?)\]$|^\(?\s*(intro|verse|pre[\s-]?chorus|chorus|hook|refrain|bridge|outro|break|breakdown|part|interlude|middle\s*8|drop)\b[^():]*?\s*\)?\s*:?$/im;
+  if (!heads.test(txt) && /\n\s*\n/.test(txt)) {
+    const st = txt.split(/\n\s*\n/).map((x) => x.trim()).filter(Boolean), key = (x) => x.toLowerCase().replace(/[^a-z\s]/g, '').replace(/\s+/g, ' ').trim();
+    const firstLine = (x) => key(x.split('\n')[0]), cnt = {}; st.forEach((x) => { cnt[firstLine(x)] = (cnt[firstLine(x)] || 0) + 1; });
+    let v = 0; const lab = st.map((x) => (cnt[firstLine(x)] > 1 ? 'Chorus' : 'Verse ' + (++v)));
+    const lastC = lab.lastIndexOf('Chorus'); if (lastC > 1 && lab[lastC - 1].startsWith('Verse') && lab.slice(0, lastC - 1).includes('Chorus') && lab.filter((l) => l.startsWith('Verse')).length > 2) lab[lastC - 1] = 'Bridge';
+    if (lab.length > 2 && lab[lab.length - 1].startsWith('Verse') && st[st.length - 1].split('\n').length <= 3 && lab.includes('Chorus')) lab[lab.length - 1] = 'Outro';
+    txt = st.map((x, i) => '[' + lab[i] + ']\n' + x).join('\n\n');
+  }
   const secs = []; let cur = null;
   txt.split('\n').forEach((line) => {
     const s = line.trim(); if (!s) return;
