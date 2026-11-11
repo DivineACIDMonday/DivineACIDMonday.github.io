@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Divine Vocal Machine</title>
+<meta name="description" content="Words in, a sung vocal line out. Type or roll your lyrics, choose a genre or load your own melody, and get a clean MusicXML and MIDI for Synthesizer V that fits your beat. By Divine Monday.">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Divine Monday">
+<meta property="og:title" content="Divine Vocal Machine">
+<meta property="og:description" content="Words in, a sung vocal line out: clean MusicXML and MIDI for Synthesizer V that fits your beat. By Divine Monday.">
+<meta property="og:url" content="https://divineacidmonday.github.io/vocal/">
+<meta name="theme-color" content="#0B0E14">
+<link rel="icon" href="/favicon.svg">
+<style>
+:root{color-scheme:dark;--bg:#0B0E14;--card:#131824;--card2:#1A2030;--line:#263044;--tx:#EDE6D8;--mu:#9AA3B2;--gold:#E7B65C}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:radial-gradient(1100px 520px at 50% -180px,#1C2338 0,var(--bg) 62%) fixed,var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#app{max-width:1080px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:16px}
+.serif{font-family:"Bodoni 72",Didot,"Bodoni MT","Playfair Display",Georgia,serif}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:6px 0}
+.logo{font-size:28px;font-weight:700;letter-spacing:.3px;line-height:1.1}
+.logo i{color:var(--gold)}
+.tag{font:12px/1.2 ui-monospace,Menlo,Consolas,monospace;color:var(--mu);border:1px solid var(--line);border-radius:6px;padding:4px 7px}
+.grow{flex:1 1 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.sh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.st{font-size:21px;font-style:italic}
+.num{font:12px ui-monospace,Menlo,monospace;color:var(--gold);border:1px solid #5C4A22;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;flex:none;align-self:center}
+.muted{color:var(--mu);font-size:14px}.small{font-size:13px}
+button{font:inherit;color:inherit}
+.btn{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:9px 14px;cursor:pointer;min-height:42px}
+.btn:hover{border-color:#3C4A66}
+.btn.big{background:linear-gradient(180deg,#2A2416,#1E1A10);border-color:#5C4A22;color:var(--gold);font-weight:600;padding:11px 22px;font-size:16px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.card > .seg{align-self:flex-start}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{background:transparent;border:0;color:var(--mu);padding:9px 16px;cursor:pointer;min-height:42px}
+.seg button[aria-pressed=true]{background:#2A2416;color:var(--gold)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:#0F131C;border:1px solid var(--line);border-radius:999px;padding:6px 13px;cursor:pointer;font-size:14px;color:var(--mu);min-height:36px}
+.chip[aria-pressed=true]{border-color:var(--gold);color:var(--tx);background:#221D12}
+.chip small{color:var(--mu);font-size:11.5px;margin-left:4px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.lbl{color:var(--mu);font-size:14px;min-width:92px}
+.pk,input.pk{background:#0F131C;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px 9px;font:inherit;font-size:14px;min-height:38px}
+input.num4{width:84px}
+.ttl{flex:1 1 260px;font-size:17px}
+textarea{width:100%;min-height:260px;resize:vertical;background:#0F131C;color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font:15px/1.65 ui-monospace,Menlo,Consolas,monospace}
+textarea:focus,.pk:focus{outline:none;border-color:#5C4A22}
+.dz{color:var(--gold);background:transparent;border:1px solid #5C4A22;border-radius:10px;cursor:pointer;min-height:42px;padding:0 14px;display:inline-flex;align-items:center;gap:8px}
+.dz:hover{background:#1E1A10}
+.dz svg{width:18px;height:18px}
+.file{cursor:pointer}
+.match{font-size:13.5px;color:var(--mu)}
+.match button{background:transparent;border:0;border-bottom:1px dotted var(--mu);color:var(--tx);cursor:pointer;padding:0;margin:0 3px;font-size:13.5px}
+[hidden]{display:none!important}
+.facts{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:var(--mu)}.facts b{color:var(--tx);font-weight:600}
+#rollWrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px;background:#0F131C}
+#roll svg{display:block}
+.player{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.out{display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-top:1px dashed var(--line);padding-top:12px}
+.empty{color:var(--mu);font-size:14px;text-align:center;padding:26px 10px}
+details.how summary{cursor:pointer;list-style:none}details.how summary::-webkit-details-marker{display:none}
+.how ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14.5px}
+.warn{color:#E7A07A;font-size:13.5px}
+footer{color:var(--mu);font-size:13px;text-align:center;padding:10px 0 30px}
+@media (max-width:640px){.lbl{min-width:0;flex-basis:100%}textarea{min-height:200px}}
+</style></head><body>
+<div id="app">
+<header>
+  <div class="logo serif">Divine <i>Vocal</i> Machine</div>
+  <span class="tag">for Synthesizer V</span>
+  <div class="grow"></div>
+  <a class="back" href="/" style="color:var(--mu);text-decoration:none;font-size:14px">← all machines</a>
+</header>
+
+<section class="card">
+  <div class="sh"><span class="num">1</span><span class="st serif">The words</span><span class="muted">Type, paste, or let the oracle write them.</span></div>
+  <div class="row"><input class="pk ttl" id="title" placeholder="Title of the song" maxlength="60" aria-label="Title">
+    <button class="dz" id="oracle" title="Let the oracle write lyrics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg>Oracle</button></div>
+  <textarea id="lyrics" spellcheck="false" placeholder="[Verse]&#10;neon rain on empty streets&#10;I hold the light you left behind&#10;&#10;[Chorus]&#10;..."></textarea>
+  <div class="muted small" id="count">Put [Verse], [Chorus] or [Bridge] on a line of its own. Type beau-ti-ful to choose the syllables yourself.</div>
+</section>
+
+<section class="card">
+  <div class="sh"><span class="num">2</span><span class="st serif">The melody</span></div>
+  <div class="seg" id="mode"><button data-m="write" aria-pressed="true">Write a melody</button><button data-m="sing" aria-pressed="false">Sing my melody</button></div>
+
+  <div id="writeBox" class="card" style="background:transparent;border:0;padding:0">
+    <div class="row"><span class="lbl">Genre</span><div class="chips" id="genres"></div></div>
+    <div class="row"><span class="lbl">Tempo</span><input class="pk num4" id="bpm" type="number" min="50" max="200" aria-label="Tempo in bpm"><span class="muted small">bpm</span>
+      <span class="match" id="match"></span></div>
+    <div class="row"><span class="lbl">Key</span><select class="pk" id="key" aria-label="Key"></select>
+      <span class="lbl" style="min-width:0;margin-left:8px">Voice</span><div class="seg" id="voice"><button data-v="low">Low</button><button data-v="mid" aria-pressed="true">Middle</button><button data-v="high">High</button></div></div>
+    <div class="row"><span class="lbl">Your song</span><label class="btn file">Load your song MIDI<input type="file" id="songFile" accept=".mid,.midi" hidden></label>
+      <span class="muted small" id="songInfo">optional: the chords or the whole song, so the vocal follows its tempo, key and chords</span><button class="btn" id="songOff" hidden>Remove</button></div>
+    <div class="row"><span class="lbl">Starts at bar</span><input class="pk num4" id="startBar" type="number" min="1" max="200" value="1" aria-label="Start bar">
+      <span class="lbl" style="min-width:0;margin-left:8px">Pause between parts</span><select class="pk" id="pause" aria-label="Pause between parts"><option value="0">none</option><option value="4" selected>4 bars</option><option value="8">8 bars</option></select></div>
+  </div>
+
+  <div id="singBox" class="card" style="background:transparent;border:0;padding:0" hidden>
+    <div class="row"><span class="lbl">Melody</span><label class="btn file">Load a MIDI melody<input type="file" id="melFile" accept=".mid,.midi" hidden></label>
+      <select class="pk" id="melTrack" aria-label="Track with the melody" hidden></select><span class="muted small" id="melInfo">for example the Melody file from a Studio</span></div>
+    <div class="row"><span class="lbl">Voice</span><div class="seg" id="voice2"><button data-v="low">Low</button><button data-v="mid" aria-pressed="true">Middle</button><button data-v="high">High</button></div><span class="muted small">moves the melody by whole octaves only, it stays on your beat</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="sh"><span class="num">3</span><span class="st serif">The vocal</span><span class="muted" id="facts"></span></div>
+  <div class="row" style="justify-content:center"><button class="btn big" id="make">Sing it</button></div>
+  <div class="warn" id="warn" hidden></div>
+  <div id="rollWrap" hidden><div id="roll"></div></div>
+  <div class="empty" id="empty">Your vocal line appears here: every note with its syllable.</div>
+  <div class="player" id="player" hidden><button class="btn" id="play">Listen</button><button class="chip" id="beatOn" aria-pressed="true">with a click</button><span class="muted small">A quick sketch in the browser. Synthesizer V does the singing.</span></div>
+  <div class="out" id="out" hidden><button class="btn big" id="dlXml">MusicXML for Synthesizer V</button><button class="btn" id="dlMid">MIDI with lyrics</button>
+    <span class="muted small">In Synthesizer V: File, Import, choose the file, drop it on bar 1.</span></div>
+</section>
+
+<details class="card how"><summary><span class="st serif">How it works</span></summary><ol>
+  <li>Write your lyrics, paste them, or press Oracle for a new song with verses and a chorus.</li>
+  <li>Write a melody: choose a genre and press Sing it. Every press gives a new melody. The chorus always comes back the same.</li>
+  <li>Your tempo decides the beat. Under the tempo you see which genres fit it.</li>
+  <li>Load your song MIDI, for example the Chords file from a Studio, and the vocal follows its tempo, its key and its chords bar by bar.</li>
+  <li>Sing my melody: load a MIDI melody. Every syllable gets a note. Extra notes stretch a syllable, extra syllables split a note. The timing stays exactly on your beat.</li>
+  <li>Download the MusicXML, import it in Synthesizer V on bar 1, choose a voice. Vibrato, slides and tone you set in Synthesizer V itself.</li>
+</ol></details>
+<footer>© 2026 Divine Monday · <a href="https://divineacidmonday.github.io/divine-music-machine-v7/legal/" style="color:inherit">Impressum · Datenschutz</a></footer>
+</div>
+
+<script>
+const W = {"W1":["Silent","Velvet","Cosmic","Hollow","Distant","Quiet","Secret","Hidden","Gentle","Tender","Dusty","Misty","Foggy","Hazy","Smoky","Dreamy","Sleepy","Lonely","Ancient","Faded","Fragile","Frozen","Silky","Satin","Woolen","Feathered","Mossy","Sandy","Salty","Sunken","Drowned","Buried","Forgotten","Haunted","Sacred","Holy","Divine","Pagan","Mystic","Mythic","Lunar","Solar","Stellar","Astral","Celestial","Orbital","Nocturnal","Twilight","Moonlit","Starlit","Candlelit","Lamplit","Shadowed","Veiled","Masked","Muted","Whispered","Soft","Warm","Cold","Cool","Icy","Frosty","Humid","Tropical","Arctic","Polar","Desert","Coastal","Oceanic","Tidal","Rainy","Stormy","Windy","Cloudy","Sunny","Shady","Dim","Pale","Hazed","Ghostly","Spectral","Phantom","Elusive","Endless","Infinite","Eternal","Timeless","Ageless","Vintage","Antique","Rustic","Wooden","Paper","Canvas","Leather","Linen","Cotton","Porcelain","Marble","Granite","Stone","Concrete","Rusted","Tarnished","Weathered","Worn","Broken","Cracked","Shattered","Scattered","Tangled","Woven","Knotted","Folded","Crumpled","Polished","Lacquered","Gilded","Plated","Enameled","Frosted","Clouded","Blurred","Grainy","Noisy","Static","Analog","Vinyl","Tape","Hollowed","Echoing","Resonant","Sonic","Tonal","Modal","Harmonic","Melodic","Lyrical","Poetic","Romantic","Wistful","Nostalgic","Melancholy","Somber","Solemn","Serene","Tranquil","Placid","Calm","Still","Peaceful","Mellow","Lazy","Idle","Hypnotic","Floating","Weightless","Airy","Ethereal","Bodiless","Formless","Shapeless","Nameless","Faceless","Wordless","Soundless","Restless","Sleepless","Homeless","Careless","Fearless","Reckless","Lawless","Boundless","Bottomless","Starless","Sunless","Moonless","Tideless","Windless","Painless","Gracious","Graceful","Elegant","Noble","Royal","Regal","Imperial","Majestic","Grand","Humble","Modest","Simple","Pure","Clean","Clear","Bright","Luminous","Radiant","Glowing","Shining","Gleaming","Glimmering","Shimmering","Sparkling","Twinkling","Flickering","Fading","Waning","Waxing","Rising","Setting","Falling","Drifting","Wandering","Lost","Found","Chosen","Blessed","Cursed","Wicked","Gothic","Baroque","Rococo","Victorian","Futurist","Retro","Modern","Atomic","Quantum","Digital","Virtual","Synthetic","Plastic","Chrome","Mirrored","Liquid","Molten","Smoldering","Ashen","Charred","Gossamer","Lucid","Sunlit","Ornate","Velveteen","Opaline","Wintry","Dreamlike"],"W2":["Kinetic","Fluid","Linear","Rapid","Swift","Quick","Fast","Slow","Steady","Stable","Shaky","Wobbly","Jittery","Nervous","Frantic","Manic","Hyper","Electric","Magnetic","Dynamic","Pulsing","Throbbing","Thumping","Pounding","Rolling","Spinning","Turning","Twisting","Swirling","Whirling","Looping","Cycling","Rotating","Orbiting","Bouncing","Jumping","Leaping","Skipping","Hopping","Dancing","Swinging","Swaying","Rocking","Shaking","Rattling","Stomping","Marching","Running","Racing","Rushing","Chasing","Hunting","Climbing","Soaring","Flying","Gliding","Sliding","Slipping","Rippling","Flowing","Streaming","Pouring","Flooding","Surging","Crashing","Breaking","Bursting","Exploding","Erupting","Igniting","Burning","Blazing","Flaming","Firing","Charging","Driving","Pushing","Pulling","Lifting","Dropping","Sinking","Diving","Plunging","Tumbling","Spiraling","Ascending","Descending","Accelerating","Bending","Stretching","Expanding","Shrinking","Unfolding","Opening","Closing","Breathing","Beating","Ticking","Clicking","Snapping","Popping","Cracking","Buzzing","Humming","Droning","Ringing","Chiming","Clanging","Booming","Roaring","Howling","Screaming","Shouting","Calling","Singing","Chanting","Grooving","Funky","Jazzy","Bluesy","Soulful","Punchy","Snappy","Crisp","Tight","Loose","Sloppy","Lean","Heavy","Light","Dense","Sparse","Thick","Thin","Wide","Narrow","Deep","Shallow","High","Low","Loud","Raw","Rough","Smooth","Sharp","Blunt","Hard","Tough","Solid","Brittle","Elastic","Rubber","Bouncy","Agile","Nimble","Lithe","Fleet","Brisk","Lively","Vivid","Vibrant","Wild","Feral","Savage","Fierce","Bold","Brave","Daring","Furious","Angry","Hungry","Thirsty","Greedy","Eager","Hasty","Urgent","Pressing","Relentless","Tireless","Unstoppable","Overdriven","Distorted","Saturated","Compressed","Amplified","Boosted","Pumped","Juiced","Wired","Charged","Loaded","Primed","Locked","Synced","Phased","Shifted","Displaced","Detuned","Pitched","Bent","Warped","Skewed","Tilted","Angled","Crooked","Zigzag","Jagged","Staggered","Stuttered","Stammered","Glitched","Fractured","Splintered","Shredded","Chopped","Sliced","Diced","Cut","Spliced","Mixed","Blended","Fused","Merged","Bonded","Linked","Chained","Coupled","Paired","Doubled","Tripled","Layered","Stacked","Piled","Packed","Crowded","Swarming","Teeming","Bustling","Hustling","Busy","Awake","Alert","Alive","Living","Pulsating","Radiating","Vibrating","Oscillating","Resonating","Modulating","Alternating","Repeating","Recurring","Returning","Reversing","Inverted","Flipped","Rotated","Translated","Scaled","Stretched","Quantized","Shuffled","Syncopated","Offbeat","Upbeat","Downbeat","Backbeat","Polyrhythmic","Strutting","Swaggering","Prowling","Stalking","Creeping","Crawling","Lurking","Sneaking","Rambling","Roaming","Roving","Travelling","Journeying","Voyaging","Sailing","Cruising","Coasting","Freewheeling","Barreling","Hurtling","Careening","Rocketing","Launching","Blasting","Thundering","Rumbling","Grinding","Churning","Pumping","Hammering","Drilling"],"W3":["Crimson","Scarlet","Ruby","Cherry","Rose","Coral","Salmon","Peach","Apricot","Amber","Honey","Golden","Gold","Saffron","Mustard","Lemon","Lime","Olive","Moss","Jade","Emerald","Mint","Sage","Forest","Pine","Teal","Cyan","Aqua","Turquoise","Azure","Cobalt","Sapphire","Navy","Indigo","Ultramarine","Violet","Purple","Lilac","Lavender","Mauve","Plum","Orchid","Magenta","Fuchsia","Pink","Blush","Ivory","Cream","Pearl","Silver","Platinum","Steel","Iron","Copper","Bronze","Brass","Rust","Ochre","Umber","Sienna","Sepia","Tan","Beige","Khaki","Taupe","Ash","Smoke","Charcoal","Graphite","Onyx","Obsidian","Ebony","Jet","Ink","Black","White","Grey","Gray","Snow","Chalk","Bone","Milk","Neon","Ultraviolet","Infrared","Fluorescent","Pastel","Matte","Glossy","Metallic","Iridescent","Opal","Prism","Spectrum","Rainbow","Holographic","Sunset","Sunrise","Dusk","Dawn","Midnight","Noon","Evening","Morning","Autumn","Winter","Summer","Spring","Harvest","Ember","Flame","Fire","Ice","Frost","Storm","Thunder","Lightning","Rain","Cloud","Mist","Fog","Haze","Shadow","Dark","Hot","Burnt","Smoked","Toasted","Roasted","Baked","Sunburnt","Rosewood","Mahogany","Walnut","Cedar","Oak","Birch","Bamboo","Coffee","Cocoa","Chocolate","Caramel","Vanilla","Cinnamon","Ginger","Pepper","Paprika","Tangerine","Orange","Citrus","Grape","Berry","Wine","Burgundy","Claret","Maroon","Garnet","Topaz","Citrine","Quartz","Diamond","Crystal","Glass","Amethyst","Tourmaline","Malachite","Lapis","Celadon","Vermilion","Carmine","Cadmium","Cinnabar","Woad","Henna","Kohl","Tar","Oil","Petrol","Velour","Suede","Denim","Tweed","Silk","Lace","Gauze","Acid","Toxic","Radioactive","Nuclear","Plasma","Laser","Tropic","Jungle","Savanna","Tundra","Ocean","Sea","River","Lake","Harbor","Island","Coastline","Canyon","Valley","Mountain","Alpine","Glacier","Volcanic","Lava","Magma","Sulfur","Mercury","Nickel","Zinc","Tin","Lead","Titanium","Uranium","Moonstone","Sunstone","Bloodstone","Firestone","Starstone","Skyline","Highland","Lowland","Northern","Southern","Eastern","Western","Inner","Outer","Upper","Lower","First","Last","Second","Third","Final","Early","Late","Lucky","Dear","Sweet","Bitter","Sour","Spicy","Free","Lone","Twin","Double","Single","Half","Full","Empty","Open","Closed"],"W4":["Echo","Grid","Mirror","Window","Door","Gate","Bridge","Tower","Wall","Arch","Dome","Pillar","Column","Stair","Ladder","Corridor","Hallway","Tunnel","Cave","Chamber","Vault","Cellar","Attic","Balcony","Terrace","Garden","Courtyard","Plaza","Square","Circle","Spiral","Helix","Cube","Sphere","Cone","Pyramid","Lens","Frame","Panel","Tile","Brick","Block","Beam","Wire","Cable","Chain","Rope","Thread","Ribbon","Strip","Band","Ring","Loop","Knot","Web","Net","Mesh","Lattice","Matrix","Array","Pattern","Mosaic","Collage","Fresco","Portrait","Sketch","Outline","Silhouette","Contour","Profile","Shape","Figure","Form","Body","Shell","Husk","Seed","Root","Branch","Leaf","Petal","Stem","Thorn","Vine","Tree","Field","Meadow","Hill","Peak","Ridge","Cliff","Shore","Beach","Dune","Reef","Wave","Tide","Current","Stream","Creek","Brook","Pond","Lagoon","Bay","Gulf","Strait","Channel","Canal","Harbour","Pier","Dock","Lighthouse","Beacon","Lantern","Candle","Torch","Flare","Spark","Star","Comet","Meteor","Planet","Moon","Sun","Galaxy","Nebula","Orbit","Satellite","Rocket","Station","Engine","Motor","Turbine","Piston","Gear","Wheel","Lever","Pulley","Hinge","Valve","Pipe","Tube","Hose","Pump","Tank","Barrel","Drum","Bell","Gong","Cymbal","Horn","Flute","Harp","Lyre","Organ","Piano","Violin","Cello","Guitar","Banjo","Bass","Synth","Sampler","Sequencer","Oscillator","Filter","Mixer","Speaker","Amplifier","Radio","Antenna","Receiver","Transmitter","Dial","Switch","Button","Knob","Fader","Slider","Meter","Gauge","Clock","Watch","Compass","Map","Atlas","Globe","Chart","Diagram","Blueprint","Model","Sculpture","Statue","Monument","Temple","Shrine","Altar","Chapel","Cathedral","Palace","Castle","Fortress","Citadel","Market","Bazaar","Arcade","Gallery","Museum","Library","Archive","Theater","Cinema","Studio","Stage","Arena","Stadium","Circus","Carnival","Parade","Motel","Hotel","Diner","Cafe","Bar","Club","Lounge","Ballroom","Disco","Garage","Warehouse","Factory","Foundry","Workshop","Mill","Farm","Ranch","Prairie","Oasis","Mirage","Horizon","Highway","Avenue","Boulevard","Street","Alley","Lane","Road","Path","Trail","Track","Rail","Railway","Platform","Terminal","Airport","Runway","Hangar","Cockpit","Cabin","Capsule","Pod","Module","Unit","Cell","Atom","Molecule","Fossil","Relic","Totem","Mask","Crown","Throne","Sword","Shield","Arrow","Anchor","Sail","Mast","Hull","Raft","Canoe","Ship","Boat","Ferry","Submarine","Train","Tram","Bus","Taxi","Bicycle","Skateboard","Kite","Balloon","Feather","Wing","Claw","Fang","Tail","Eye","Hand","Heart","Vein"],"W5":["Drift","Phase","Flux","Pulse","Signal","Frequency","Wavelength","Amplitude","Resonance","Harmony","Melody","Rhythm","Tempo","Groove","Swing","Shuffle","Cadence","Chord","Scale","Mode","Key","Tone","Timbre","Noise","Silence","Feedback","Delay","Reverb","Chorus","Flanger","Tremolo","Vibrato","Sustain","Decay","Release","Attack","Envelope","Gain","Drive","Fuzz","Overtone","Undertone","Fundamental","Interval","Octave","Unison","Dissonance","Tension","Balance","Symmetry","Gravity","Momentum","Inertia","Velocity","Motion","Friction","Pressure","Density","Entropy","Energy","Power","Force","Charge","Voltage","Circuit","Logic","Code","Algorithm","Protocol","Sequence","Series","Cycle","Iteration","Recursion","Fractal","Chaos","Order","System","Network","Structure","Process","Function","Variable","Constant","Equation","Formula","Theorem","Paradox","Theory","Hypothesis","Dimension","Plane","Vector","Axis","Angle","Curve","Arc","Line","Point","Vertex","Node","Edge","Border","Boundary","Limit","Threshold","Margin","Distance","Depth","Height","Width","Length","Volume","Mass","Weight","Measure","Ratio","Proportion","Fraction","Digit","Number","Zero","Infinity","Origin","Genesis","Exodus","Omen","Oracle","Prophecy","Destiny","Fate","Fortune","Chance","Luck","Hazard","Risk","Promise","Oath","Vow","Pact","Treaty","Accord","Truce","Rebellion","Revolution","Evolution","Mutation","Transition","Transformation","Metamorphosis","Rebirth","Renaissance","Revival","Awakening","Dream","Vision","Illusion","Memory","Reverie","Nostalgia","Longing","Desire","Passion","Devotion","Rapture","Bliss","Euphoria","Ecstasy","Trance","Hypnosis","Meditation","Prayer","Ritual","Ceremony","Mystery","Riddle","Enigma","Cipher","Glyph","Rune","Symbol","Sign","Token","Whisper","Rumor","Story","Legend","Myth","Fable","Saga","Chronicle","Anthem","Hymn","Ballad","Lullaby","Serenade","Requiem","Elegy","Ode","Sonnet","Verse","Refrain","Motif","Theme","Variation","Fugue","Canon","Prelude","Interlude","Overture","Finale","Encore","Coda","Epilogue","Prologue","Chapter","Episode","Moment","Instant","Season","Era","Epoch","Age","Century","Decade","Hour","Minute","Daybreak","Nightfall","Eclipse","Solstice","Equinox","Zenith","Apex","Summit","Abyss","Void","Vacuum","Ether","Aura","Halo","Spirit","Soul","Ghost","Shade","Specter","Presence","Absence","Departure","Arrival","Return","Escape","Exile","Journey","Voyage","Odyssey","Quest","Mission","Expedition","Pilgrimage","Passage","Crossing","Migration","Flight","Fall","Rise","Ascent","Descent","Collapse","Surrender","Victory","Glory","Honor","Grace","Mercy","Freedom","Liberty","Justice","Wisdom","Truth","Faith","Hope","Love","Joy","Fear","Rage","Grief","Sorrow","Comfort","Shelter","Refuge","Haven","Sanctuary","Paradise","Utopia","Nowhere","Elsewhere","Somewhere","Anywhere"],"PREP":["Through","Under","Beyond","Into","On","Across","Inside","Above","Below","Behind","Over","Beneath","Within","After","Before","Past","Toward","Around","Along","Against","Among","Beside","Upon","Amid"],"VERBS":["burn","fall","call","break","dance","run","hold","feel","dream","drive","fly","hide","shine","fade","cry","sing","breathe","wait","stay","leave","chase","follow","lose","find","need","want","touch","kiss","miss","pray","shout","whisper","scream","bleed","drown","float","sink","rise","turn","spin","shake","move","lie","steal","give","take","make","wake","sleep","crash","bend","melt","freeze","glow","light","ride","swim","climb","jump","roll","slide","drift","wander","return","remember","forget","believe","deny","surrender","explode","collapse","ignite","unfold","unravel","echo","hum","ring","knock","open","close","carry","drag","push","pull","paint","draw","write","erase","build","bloom","wither","grow","howl","roar","crawl","walk","talk","laugh","smile","weep","sigh","fight","win","shatter","heal","hurt","save","waste","spend","count","sell","buy","hunt","feed","cook","bake","microwave","vacuum","iron","fold","text","email","google","reboot","download","upload","stream","swipe","scroll","refresh"],"DOUBLE":["begin","cut","drop","forget","grab","hit","plan","run","shop","skip","slip","spin","stop","swim","trip","win"],"LN":["heart","night","baby","love","eyes","city","car","phone","kitchen","toaster","umbrella","spaghetti","fire","rain","dancefloor","telephone","midnight","sunrise","highway","mirror","ocean","starlight","heartbeat","lighter","jacket","sneakers","taxi","elevator","vending machine","supermarket","parking lot","karaoke bar","disco ball","microwave","fridge","sofa","bathtub","shower curtain","lampshade","cactus","goldfish","pigeon","seagull","hamster","unicorn","dolphin","tiger","butterfly","cucumber","banana","pineapple","croissant","sandwich","pancake","meatball","noodle","cereal","teacup","spoon","fork","blender","washing machine","laundry","pillow","blanket","mattress","alarm clock","calendar","postcard","envelope","suitcase","passport","ticket","train station","airport","bus stop","roundabout","traffic light","cathedral","castle","volcano","glacier","island","desert","jungle","meadow","river","lighthouse","rocket","satellite","planet","comet","galaxy","moonlight","thunder","lightning","hurricane","snowflake","raindrop","shadow","silence","feeling","memory","promise","secret","dream","heartbreak","goodbye","hello","tomorrow","yesterday","forever","weekend","Monday","Tuesday","Friday","Sunday","summer","winter","autumn","spring","paradise","heaven","gravity","destiny","wifi","password","battery","charger","keyboard","printer","spreadsheet","inbox"],"FEEL":["lonely","broken","golden","electric","beautiful","dangerous","restless","reckless","crazy","wild","fragile","tender","endless","burning","frozen","shining","fading","falling","flying","sleepless","hopeless","helpless","shameless","fearless","breathless","timeless","heartless","careless","perfect","holy","silent","violent","velvet","neon","cosmic","tropical","radioactive","slightly damp","extremely beige"]};
+</script>
+<script>
+'use strict';
+const $ = (s) => document.querySelector(s), $$ = (s) => [...document.querySelectorAll(s)];
+let rng = Math.random;
+const R = (a) => a[Math.floor(rng() * a.length)], chance = (p) => rng() < p;
+function seeded(seed) { let a = seed >>> 0 || 1; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+/* ---------- genres ---------- */
+const TB = 12, BAR = 48; // ticks per beat, per bar
+const GENRES = {
+  triphop:   { name: 'Trip hop',  bpm: 88,  lo: 70,  hi: 96,  mode: 'minor',    pool: [6, 6, 12, 12, 18, 24], starts: [6, 12, 0], arc: 'sigh',  leap: 3, stay: .2,  mel: .2,  prog: [0, 0, 5, 3] },
+  synthwave: { name: 'Synthwave', bpm: 104, lo: 85,  hi: 118, mode: 'minor',    pool: [6, 6, 12, 12, 24],     starts: [0, 6],     arc: 'arch',  leap: 4, stay: .15, mel: .15, prog: [0, 5, 2, 6] },
+  newwave:   { name: 'New wave',  bpm: 132, lo: 115, hi: 155, mode: 'minor',    pool: [6, 6, 6, 12, 12],      starts: [0],        arc: 'chant', leap: 4, stay: .35, mel: .05, prog: [0, 6, 5, 6] },
+  acid:      { name: 'Acid',      bpm: 126, lo: 118, hi: 136, mode: 'phrygian', pool: [6, 12, 12, 24],        starts: [0, 12],    arc: 'chant', leap: 3, stay: .45, mel: .05, prog: [0, 0, 0, 1] },
+  techno:    { name: 'Techno',    bpm: 132, lo: 124, hi: 150, mode: 'minor',    pool: [12, 12, 24, 6],        starts: [0, 12],    arc: 'chant', leap: 3, stay: .5,  mel: .05, prog: [0, 0, 6, 6] },
+  house:     { name: 'House',     bpm: 124, lo: 116, hi: 130, mode: 'dorian',   pool: [6, 6, 3, 12, 18],      starts: [6, 3, 0],  arc: 'arch',  leap: 4, stay: .15, mel: .35, prog: [0, 3, 0, 4] },
+  blues:     { name: 'Blues',     bpm: 78,  lo: 58,  hi: 100, mode: 'blues',    pool: [8, 4, 12, 8, 16],      starts: [0, 8],     arc: 'sigh',  leap: 4, stay: .2,  mel: .3,  prog: 'blues' }
+};
+const MODES = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], dorian: [0, 2, 3, 5, 7, 9, 10], phrygian: [0, 1, 3, 5, 7, 8, 10], blues: [0, 3, 5, 6, 7, 10] };
+const NN = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+const VOICES = { low: [45, 64], mid: [52, 71], high: [57, 76] };
+const ROLE_COL = { verse: '#4FB3A9', pre: '#9B87E0', chorus: '#E7B65C', bridge: '#D9668A', outro: '#6FA8DC' };
+
+/* ---------- the oracle (from the Divine Lyric Oracle) ---------- */
+const low = (w) => /^[A-Z][a-z]/.test(w) && !/^(Monday|Tuesday|Friday|Sunday)$/.test(w) ? w.toLowerCase() : w;
+const ADJ = W.W1.concat(W.W2).map(low).concat(W.FEEL), MID = W.W3.map(low), NOUN = W.W4.concat(W.W5).map(low), PREP = W.PREP.map(low);
+const noun = () => chance(0.55) ? R(W.LN) : R(NOUN), adj = () => R(ADJ), mid = () => R(MID), verb = () => R(W.VERBS), DOUBLE = new Set(W.DOUBLE);
+function ing(v) { if (DOUBLE.has(v)) return v + v.slice(-1) + 'ing'; if (/ie$/.test(v)) return v.slice(0, -2) + 'ying'; if (/[^e]e$/.test(v)) return v.slice(0, -1) + 'ing'; return v + 'ing'; }
+function s3(v) { if (/(s|sh|ch|x|z)$/.test(v)) return v + 'es'; if (/[^aeiou]y$/.test(v)) return v.slice(0, -1) + 'ies'; return v + 's'; }
+const an = (w) => (/^[aeiou]/i.test(w) ? 'an ' : 'a ') + w, cap = (x) => x.charAt(0).toUpperCase() + x.slice(1);
+function fill(t) { return t.replace(/\{(\w)\}/g, (_, k) => ({ A: adj(), M: mid(), N: noun(), V: verb(), G: ing(verb()), S: s3(verb()), P: R(PREP), a: an(adj()), n: an(noun()) })[k]); }
+const VERSE = ['{G} through the {A} {N}', 'I {V} your {M} {N}', 'we were {G} {P} the {N}', 'you {V} like {a} {N}', 'every {N} is {a} {N}', 'take me to the {M} {N}', "don't {V} the {N} tonight", '{A} {N}, {A} {N}', 'I saw you {G} in the {N}', "there's {n} in my {N}", 'the {N} keeps {G}', '{P} the {A} {N} we {V}', 'my {N} is {A} again', 'call me when the {N} is {A}', 'nobody {S} like {n}', 'oh {A} {N}, why do you {V}', 'I left my {N} at the {N}', "you're the {N} of my {N}", 'tonight the {N} is {G}', 'under {M} skies I {V}', 'with {n} in my hand', 'I never {V} the {N} before', 'somewhere {n} is {G} for you', 'we are {A}, we are {A}', 'your {N} tastes like {N}'];
+const PRE = ['and I {V}, and I {V}', '{G} higher, {G} higher', "can't you feel the {N}", 'here it comes, the {A} {N}', 'one more {N}, one more time', 'hold on to the {N}'];
+const SHORT = ['{V} me, {V} me', '{A} {N} tonight', 'all night, all {N}', 'never {V} again', 'oh oh, the {N}', '{M}, {M}, {M}', '{V} the {N}', '{A} {N}'];
+const AD = { house: ['(oh)', '(yeah)', '(come on)'], blues: ['(oh lord)', '(yeah)'], synthwave: ['(oh oh)'], triphop: ['(ooh)'] };
+const FORMS = {
+  triphop: ['Verse 1', 'Chorus', 'Verse 2', 'Chorus', 'Bridge', 'Chorus'],
+  synthwave: ['Verse 1', 'Pre chorus', 'Chorus', 'Verse 2', 'Pre chorus', 'Chorus', 'Bridge', 'Chorus'],
+  newwave: ['Verse 1', 'Chorus', 'Verse 2', 'Chorus', 'Bridge', 'Chorus'],
+  acid: ['Part 1', 'Hook', 'Part 2', 'Hook', 'Hook'], techno: ['Part 1', 'Hook', 'Part 2', 'Hook', 'Hook'],
+  house: ['Verse 1', 'Pre chorus', 'Chorus', 'Verse 2', 'Pre chorus', 'Chorus', 'Chorus'],
+  blues: ['Verse 1', 'Verse 2', 'Chorus', 'Verse 3', 'Chorus']
+};
+function oTitle() { const A0 = W.W1.concat(W.W2), N0 = W.W4.concat(W.W5), r = rng(); let t = r < 0.4 ? R(A0) + ' ' + R(N0) : r < 0.55 ? R(W.W3) + ' ' + R(N0) : R(A0) + ' ' + R(W.W3) + ' ' + R(N0); const q = rng(); if (q < 0.16) t = R(W.PREP) + ' the ' + t; else if (q < 0.3) t = 'The ' + t; return t; }
+function oracle(g) {
+  const T = oTitle(), t = T.toLowerCase(), ad = () => (AD[g] && chance(0.25) ? ' ' + R(AD[g]) : ''), sparse = g === 'acid' || g === 'techno';
+  const L = (k) => cap((k === 'verse' ? fill(R(VERSE)) + ad() : k === 'pre' ? fill(R(PRE)) : k === 'short' ? fill(R(SHORT)) : k === 'title' ? t : k === 'titlead' ? t + (AD[g] ? ' ' + R(AD[g]) : '') : R(['oh ', 'and ', 'take me ', '']) + t).trim());
+  let chorus = null, pre = null; const out = [];
+  FORMS[g].forEach((lab) => {
+    let lines;
+    if (/Chorus|Hook/.test(lab)) { if (!chorus) chorus = sparse ? [L('title'), L('short'), L('title'), L('short')] : [L('title'), L('verse'), L('titlead'), L(chance(0.5) ? 'short' : 'oh')]; lines = chorus; }
+    else if (/Pre/.test(lab)) { if (!pre) pre = [L('pre'), L('pre')]; lines = pre; }
+    else if (/Bridge/.test(lab)) lines = [L('verse'), L('verse'), L('short')];
+    else if (sparse) lines = [L('short'), L('short'), L('verse'), L('short')];
+    else if (g === 'blues') { const a = L('verse'); lines = [a, a, L('verse')]; }
+    else lines = [L('verse'), L('verse'), L('verse'), L('verse')];
+    out.push('[' + lab + ']\n' + lines.join('\n'));
+  });
+  return { title: T, text: out.join('\n\n') };
+}
+
+/* ---------- syllables ---------- */
+function sylCount(word) {
+  let w = word.toLowerCase().replace(/[^a-z]/g, ''); if (!w) return 0; if (w.length <= 3) return 1;
+  w = w.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '').replace(/^y/, ''); const m = w.match(/[aeiouy]{1,2}/g); return Math.max(1, m ? m.length : 1);
+}
+const DIGRAPH = /^(th|sh|ch|ph|wh|ck|ng|gh|qu)$/;
+function splitWord(raw) {
+  if (/[a-z]-[a-z]/i.test(raw)) return raw.split('-').filter(Boolean); // the user chose the split
+  const n = sylCount(raw); if (n <= 1) return [raw];
+  const lw = raw.toLowerCase(), groups = []; let m; const re = /[aeiouy]+/g;
+  while ((m = re.exec(lw))) { if (m.index === 0 && m[0] === 'y' && lw.length > 1) continue; groups.push([m.index, m.index + m[0].length]); }
+  while (groups.length > n) { // silent endings and diphthongs: merge from the back
+    const last = groups[groups.length - 1];
+    if (last[1] === lw.length && /e$|es$|ed$/.test(lw.slice(last[0]))) { groups.pop(); continue; }
+    const a = groups.splice(groups.length - 2, 2); groups.push([a[0][0], a[1][1]]);
+  }
+  if (groups.length < 2) return [raw];
+  const cuts = [];
+  for (let k = 0; k < groups.length - 1; k++) {
+    const e = groups[k][1], s = groups[k + 1][0], c = lw.slice(e, s);
+    if (c.length <= 1) cuts.push(e); else if (c.length === 2) cuts.push(DIGRAPH.test(c) ? (/^(ck|ng|gh)$/.test(c) ? s : e) : e + 1);
+    else cuts.push(DIGRAPH.test(c.slice(0, 2)) ? e + 2 : e + 1);
+  }
+  const parts = []; let p = 0; cuts.forEach((c) => { parts.push(raw.slice(p, c)); p = c; }); parts.push(raw.slice(p));
+  return parts.filter(Boolean);
+}
+function roleOf(label) { const l = label.toLowerCase(); return /chorus|hook|refrain/.test(l) && !/pre/.test(l) ? 'chorus' : /pre/.test(l) ? 'pre' : /bridge|middle|break/.test(l) ? 'bridge' : /outro|end/.test(l) ? 'outro' : 'verse'; }
+// lyrics -> sections of lines of syllables {text, syllabic}
+function parseLyrics(txt) {
+  const secs = []; let cur = null;
+  txt.split('\n').forEach((line) => {
+    const s = line.trim(); if (!s) return;
+    const h = s.match(/^\[(.+?)\]$/); if (h) { if (/^br$/i.test(h[1])) return; cur = { label: h[1], role: roleOf(h[1]), lines: [] }; secs.push(cur); return; }
+    if (!cur) { cur = { label: 'Verse', role: 'verse', lines: [] }; secs.push(cur); }
+    const syl = [];
+    s.replace(/\[.*?\]/g, ' ').split(/\s+/).forEach((tok) => {
+      const w = tok.replace(/[^A-Za-z'\-]/g, '').replace(/^[-']+|[-']+$/g, ''); if (!/[a-z]/i.test(w)) return;
+      const parts = splitWord(w);
+      parts.forEach((p, i) => syl.push({ text: p, syllabic: parts.length === 1 ? 'single' : i === 0 ? 'begin' : i === parts.length - 1 ? 'end' : 'middle' }));
+    });
+    if (syl.length) cur.lines.push({ text: s, syl });
+  });
+  return secs.filter((x) => x.lines.length);
+}
+
+/* ---------- keys and chords ---------- */
+function scaleOf(key) { return MODES[key.mode].map((x) => (x + key.root) % 12); }
+function allowed(key, range) { const pcs = new Set(scaleOf(key)); const a = []; for (let m = range[0]; m <= range[1]; m++) if (pcs.has(m % 12)) a.push(m); return a; }
+function impliedChord(g, key, bar) {
+  const G = GENRES[g];
+  if (G.prog === 'blues') { const r = [0, 0, 0, 0, 5, 5, 0, 0, 7, 5, 0, 7][bar % 12]; return [0, 4, 7, 10].map((x) => (key.root + r + x) % 12); }
+  const sc = MODES[key.mode].length === 7 ? MODES[key.mode] : MODES.minor, d = G.prog[bar % G.prog.length];
+  return [0, 2, 4].map((k) => (sc[(d + k) % 7] + key.root) % 12);
+}
+const KMAJ = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88], KMIN = [6.33, 2.68, 3.52, 5.38, 2.6, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17];
+function detectKey(h) {
+  let best = null; const corr = (p, r) => { let s = 0; for (let i = 0; i < 12; i++) s += p[i] * h[(i + r) % 12]; return s; };
+  for (let r = 0; r < 12; r++) for (const [p, mode] of [[KMAJ, 'major'], [KMIN, 'minor']]) { const c = corr(p, r); if (!best || c > best.c) best = { c, root: r, mode }; }
+  return { root: best.root, mode: best.mode };
+}
+
+/* ---------- MIDI in ---------- */
+function readMidi(buf) {
+  const d = new Uint8Array(buf); let i = 0; const u32 = () => (d[i++] << 24 | d[i++] << 16 | d[i++] << 8 | d[i++]) >>> 0, u16 = () => d[i++] << 8 | d[i++];
+  const vlq = () => { let v = 0, b; do { b = d[i++]; v = (v << 7) | (b & 0x7f); } while (b & 0x80); return v; };
+  if (String.fromCharCode(d[0], d[1], d[2], d[3]) !== 'MThd') throw new Error('not a MIDI file');
+  i = 8; u16(); const ntr = u16(), ppq = u16() || 480; let tempo = 0; const tracks = [];
+  for (let tr = 0; tr < ntr && i < d.length; tr++) {
+    while (i < d.length && String.fromCharCode(d[i], d[i + 1], d[i + 2], d[i + 3]) !== 'MTrk') i += 8 + ((d[i + 4] << 24 | d[i + 5] << 16 | d[i + 6] << 8 | d[i + 7]) >>> 0);
+    if (i >= d.length) break;
+    i += 4; const len = u32(), end = i + len; let tick = 0, run = 0, name = ''; const on = {}, notes = [], chs = {};
+    while (i < end) {
+      tick += vlq(); const b = d[i];
+      if (b === 0xFF) { const typ = d[i + 1]; i += 2; const ln = vlq(); if (typ === 0x51 && ln === 3 && !tempo) tempo = d[i] << 16 | d[i + 1] << 8 | d[i + 2]; if (typ === 0x03) name = String.fromCharCode(...d.slice(i, i + ln)); i += ln; continue; }
+      if (b === 0xF0 || b === 0xF7) { i++; i += vlq(); continue; }
+      if (b & 0x80) { run = b; i++; } const st = run & 0xF0, ch = run & 15, n = (st === 0xC0 || st === 0xD0) ? 1 : 2, a = d[i], v = d[i + 1]; i += n;
+      const k = ch * 128 + a;
+      if (st === 0x90 && v > 0) { if (on[k] != null) notes.push({ tick: on[k], len: tick - on[k], p: a, ch }); on[k] = tick; chs[ch] = 1; }
+      else if ((st === 0x80 || st === 0x90) && on[k] != null) { notes.push({ tick: on[k], len: tick - on[k], p: a, ch }); delete on[k]; }
+    }
+    i = end;
+    if (notes.length) tracks.push({ name: name.trim() || 'Track ' + (tracks.length + 1), notes: notes.sort((x, y) => x.tick - y.tick || y.p - x.p), drum: !!chs[9] && Object.keys(chs).length === 1 });
+  }
+  return { ppq, bpm: tempo ? Math.round(60e6 / tempo * 100) / 100 : 120, tracks };
+}
+const q = (x) => { const a = Math.round(x / 3) * 3, b = Math.round(x / 4) * 4; return Math.abs(b - x) < Math.abs(a - x) - 0.3 ? b : a; };
+function monoLine(tr, ppq) { // one note at a time, on the 16th or triplet grid
+  const out = [];
+  tr.notes.forEach((n) => {
+    const t = q(n.tick / ppq * TB), e = Math.max(t + 3, q((n.tick + n.len) / ppq * TB)), last = out[out.length - 1];
+    if (last && t === last.t) { if (n.p > last.m) { last.m = n.p; } return; }
+    if (last && last.t + last.d > t) last.d = t - last.t;
+    out.push({ t, d: e - t, m: n.p });
+  });
+  return out.filter((n) => n.d >= 3);
+}
+const median = (a) => { const s = a.slice().sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
+
+/* ---------- state ---------- */
+const S = { mode: 'write', genre: 'triphop', voice: 'mid', key: 'auto', song: null, mel: null, result: null };
+try { const o = JSON.parse(localStorage.getItem('dvm-state') || '{}'); Object.assign(S, { genre: o.genre || S.genre, voice: o.voice || S.voice }); if (o.lyrics) $('#lyrics').value = o.lyrics; if (o.title) $('#title').value = o.title; } catch (e) { /* fresh start */ }
+function keep() { try { localStorage.setItem('dvm-state', JSON.stringify({ genre: S.genre, voice: S.voice, lyrics: $('#lyrics').value, title: $('#title').value })); } catch (e) { /* no storage here */ } }
+
+/* ---------- write a melody ---------- */
+function writeVocal(secs, opt) {
+  const G = GENRES[opt.genre], range = VOICES[opt.voice], A = allowed(opt.key, range), mid = Math.floor(A.length / 2);
+  const chordAt = (abs) => { const bar = Math.floor(abs / BAR); if (opt.chords) { for (let b = bar; b >= 0; b--) if (opt.chords[b]) return opt.chords[b]; } return impliedChord(opt.genre, opt.key, bar - opt.startBar0); };
+  const nearestIdx = (m) => { let bi = 0; A.forEach((x, i) => { if (Math.abs(x - m) < Math.abs(A[bi] - m)) bi = i; }); return bi; };
+  const avg = G.pool.reduce((a, b) => a + b, 0) / G.pool.length;
+  const notes = [], rhythms = {}, melodies = {}; let t0 = opt.startBar0 * BAR, prevIdx = mid;
+  secs.forEach((sec, si) => {
+    const need = Math.max(median(sec.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...sec.lines.map((l) => l.syl.length * 4 + 12));
+    const slot = [2, 4, 8, 16].find((b) => b * BAR >= need) * BAR || 16 * BAR;
+    const centre = { verse: -2, pre: 0, chorus: 2, bridge: 0, outro: -2 }[sec.role];
+    const arc = sec.role === 'pre' ? 'rise' : sec.role === 'chorus' && G.arc === 'chant' ? 'hook' : sec.role === 'chorus' ? 'arch' : sec.role === 'bridge' ? 'sigh' : G.arc;
+    sec.lines.forEach((ln, li) => {
+      const start = t0 + li * slot, n = ln.syl.length, mkey = sec.role + '|' + ln.text.toLowerCase();
+      let line = melodies[mkey];
+      if (!line) {
+        // rhythm: the same section and syllable count share a rhythm
+        const rk = sec.label + '|' + n; let rh = rhythms[rk];
+        if (!rh) {
+          let st = R(G.starts); const ds = Array.from({ length: n }, () => R(G.pool)), maxEnd = slot - 6, minD = opt.genre === 'blues' ? 4 : 3;
+          const sum = () => st + ds.reduce((a, b) => a + b, 0);
+          while (sum() > maxEnd) { if (st) { st = 0; continue; } let bi = 0; ds.forEach((x, i) => { if (x > ds[bi]) bi = i; }); if (ds[bi] <= minD) break; ds[bi] = Math.max(minD, ds[bi] === 18 ? 12 : ds[bi] === 9 ? 6 : Math.floor(ds[bi] / 2 / 3) * 3 || minD); }
+          const lastT = sum() - ds[n - 1]; ds[n - 1] = Math.max(ds[n - 1], Math.min(24, maxEnd - lastT));
+          rh = rhythms[rk] = { st, ds };
+        }
+        // pitch
+        line = []; let t = rh.st, idx = prevIdx;
+        for (let i = 0; i < n; i++) {
+          const x = n > 1 ? i / (n - 1) : 0, amp = G.arc === 'chant' && sec.role !== 'chorus' ? 1 : 2.6;
+          const shape = { sigh: 2.5 * (1 - x) - 0.8, arch: 3 * Math.sin(Math.PI * x), chant: (i % 2) * 0.6, rise: 3.2 * x - 1, hook: i === 0 ? 3 : 2 * Math.cos(Math.PI * x) }[arc];
+          const target = Math.max(0, Math.min(A.length - 1, mid + centre + Math.round(shape * amp / 2.6)));
+          if (i === 0) idx = target;
+          else if (!chance(G.stay)) { const dir = Math.sign(target - idx) || (chance(0.5) ? 1 : -1), st2 = chance(0.6) ? 1 : chance(0.6) ? 2 : 0; idx = Math.max(0, Math.min(A.length - 1, idx + dir * Math.min(st2, G.leap))); }
+          const abs = start + t, strong = (abs % TB) === 0 || i === n - 1 || i === 0;
+          if (strong) { // land on a chord tone near where we are
+            const ct = new Set(chordAt(abs)), wantRoot = i === n - 1 && (sec.role === 'chorus' && li === sec.lines.length - 1 || sec.role === 'outro');
+            let best = -1; for (let k = 0; k < A.length; k++) { if (!ct.has(A[k] % 12)) continue; if (wantRoot && A[k] % 12 !== opt.key.root) continue; if (Math.abs(k - idx) > G.leap + 1) continue; if (best < 0 || Math.abs(k - idx) < Math.abs(best - idx) || (Math.abs(k - idx) === Math.abs(best - idx) && Math.abs(k - target) < Math.abs(best - target))) best = k; }
+            if (best >= 0) idx = best;
+          }
+          line.push({ t, d: rh.ds[i], m: A[idx], lyr: ln.syl[i].text, syllabic: ln.syl[i].syllabic });
+          t += rh.ds[i];
+        }
+        // a small run on the last syllable
+        const last = line[line.length - 1];
+        if (last.d >= 12 && chance(G.mel)) { const k = last.d >= 24 ? 3 : 2, d1 = Math.floor(last.d / k / 3) * 3 || 3; let li2 = A.indexOf(last.m); const tot = last.d; last.d = d1;
+          for (let j = 1; j < k; j++) { li2 = Math.max(0, li2 - 1); line.push({ t: last.t + d1 * j, d: j === k - 1 ? tot - d1 * j : d1, m: A[li2], lyr: '-', syllabic: 'cont' }); } }
+        melodies[mkey] = line; prevIdx = idx;
+      }
+      line.forEach((nt) => notes.push(Object.assign({}, nt, { t: start + nt.t, role: sec.role, sec: si })));
+    });
+    t0 = Math.ceil((t0 + sec.lines.length * slot) / (4 * BAR)) * 4 * BAR + (si < secs.length - 1 ? opt.pause * BAR : 0);
+  });
+  return notes;
+}
+
+/* ---------- sing my melody ---------- */
+function singVocal(secs, mel, voice) {
+  const range = VOICES[voice], sh = Math.round(((range[0] + range[1]) / 2 - median(mel.map((n) => n.m))) / 12) * 12;
+  const m = mel.map((n) => ({ t: n.t, d: n.d, m: n.m + sh }));
+  const phrases = []; m.forEach((n, i) => { const p = m[i - 1]; if (!p || n.t - (p.t + p.d) >= 12 || n.t - p.t >= 8 * BAR) phrases.push([]); phrases[phrases.length - 1].push(n); });
+  const lines = []; secs.forEach((s, si) => s.lines.forEach((l) => lines.push({ l, role: s.role, si })));
+  const melLen = Math.ceil((m[m.length - 1].t + m[m.length - 1].d) / BAR) * BAR, out = [], total = Math.max(phrases.length, lines.length);
+  for (let p = 0; p < total; p++) {
+    const ph = phrases[p % phrases.length].map((n) => ({ t: n.t + Math.floor(p / phrases.length) * melLen, d: n.d, m: n.m })), L = lines[p % lines.length], syl = L.l.syl;
+    while (ph.length < syl.length) { // more syllables than notes: split the longest note
+      let bi = 0; ph.forEach((n, i) => { if (n.d > ph[bi].d) bi = i; }); const n = ph[bi]; if (n.d < 6) break;
+      const h = Math.floor(n.d / 2 / 3) * 3 || 3; ph.splice(bi + 1, 0, { t: n.t + h, d: n.d - h, m: n.m }); n.d = h;
+    }
+    const k = ph.length, s = syl.length;
+    ph.forEach((n, j) => {
+      let si = Math.min(s - 1, Math.floor(j * s / k)); const first = j === 0 || Math.min(s - 1, Math.floor((j - 1) * s / k)) !== si;
+      const extra = j === k - 1 && s > k ? syl.slice(si).map((x) => x.text).join('') : null; // still more syllables than notes: join the rest
+      out.push({ t: n.t, d: n.d, m: n.m, lyr: first ? (extra || syl[si].text) : '-', syllabic: first ? (extra ? 'single' : syl[si].syllabic) : 'cont', role: L.role, sec: L.si });
+    });
+  }
+  return out;
+}
+
+/* ---------- MusicXML ---------- */
+const TYPES = [[48, 'whole', 0, 0], [36, 'half', 1, 0], [24, 'half', 0, 0], [18, 'quarter', 1, 0], [12, 'quarter', 0, 0], [9, 'eighth', 1, 0], [8, 'quarter', 0, 1], [6, 'eighth', 0, 0], [4, 'eighth', 0, 1], [3, '16th', 0, 0], [2, '16th', 0, 1], [1, '32nd', 0, 1]];
+function pieces(d) { const out = []; while (d > 0) { const t = TYPES.find((x) => x[0] <= d); out.push(t); d -= t[0]; } return out; }
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function fifths(key) { const maj = key.mode === 'major' ? key.root : key.mode === 'dorian' ? (key.root + 10) % 12 : key.mode === 'phrygian' ? (key.root + 8) % 12 : (key.root + 3) % 12; return { 0: 0, 7: 1, 2: 2, 9: 3, 4: 4, 11: 5, 6: 6, 5: -1, 10: -2, 3: -3, 8: -4, 1: -5 }[maj]; }
+function toXml(notes, bpm, key, title) {
+  const ST = ['C', 'C', 'D', 'D', 'E', 'F', 'F', 'G', 'G', 'A', 'A', 'B'], AL = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
+  const end = Math.ceil((notes[notes.length - 1].t + notes[notes.length - 1].d) / BAR) * BAR, bars = end / BAR, ev = [];
+  let t = 0; notes.forEach((n) => { if (n.t > t) ev.push({ t, d: n.t - t, rest: true }); ev.push(n); t = n.t + n.d; }); if (t < end) ev.push({ t, d: end - t, rest: true });
+  const meas = Array.from({ length: bars }, () => []);
+  ev.forEach((e) => { let a = e.t, first = true; while (a < e.t + e.d) { const b = Math.min(e.t + e.d, (Math.floor(a / BAR) + 1) * BAR); meas[Math.floor(a / BAR)].push({ e, d: b - a, first, last: b === e.t + e.d }); first = false; a = b; } });
+  const x = ['<?xml version="1.0" encoding="UTF-8" standalone="no"?>', '<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">',
+    '<score-partwise version="3.1">', '<work><work-title>' + esc(title) + '</work-title></work>', '<identification><encoding><software>Divine Vocal Machine</software></encoding></identification>',
+    '<part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>', '<part id="P1">'];
+  meas.forEach((ms, mi) => {
+    x.push('<measure number="' + (mi + 1) + '">');
+    if (!mi) x.push('<attributes><divisions>' + TB + '</divisions><key><fifths>' + fifths(key) + '</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>',
+      '<direction placement="above"><direction-type><metronome><beat-unit>quarter</beat-unit><per-minute>' + Math.round(bpm) + '</per-minute></metronome></direction-type><sound tempo="' + bpm + '"/></direction>');
+    ms.forEach((seg) => {
+      const ps = pieces(seg.d);
+      ps.forEach((p, pi) => {
+        const n = seg.e, firstP = seg.first && pi === 0, tieStop = !n.rest && !(seg.first && pi === 0), tieStart = !n.rest && !(seg.last && pi === ps.length - 1);
+        let s = '<note>' + (n.rest ? '<rest/>' : '<pitch><step>' + ST[n.m % 12] + '</step>' + (AL[n.m % 12] ? '<alter>1</alter>' : '') + '<octave>' + (Math.floor(n.m / 12) - 1) + '</octave></pitch>') + '<duration>' + p[0] + '</duration>';
+        if (tieStop) s += '<tie type="stop"/>'; if (tieStart) s += '<tie type="start"/>';
+        s += '<voice>1</voice><type>' + p[1] + '</type>' + (p[2] ? '<dot/>' : '') + (p[3] ? '<time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>' : '');
+        if (tieStop || tieStart) s += '<notations>' + (tieStop ? '<tied type="stop"/>' : '') + (tieStart ? '<tied type="start"/>' : '') + '</notations>';
+        if (!n.rest && firstP) s += '<lyric number="1"><syllabic>' + (n.syllabic === 'cont' ? 'single' : n.syllabic) + '</syllabic><text>' + esc(n.lyr) + '</text></lyric>';
+        x.push(s + '</note>');
+      });
+    });
+    x.push('</measure>');
+  });
+  x.push('</part>', '</score-partwise>');
+  return x.join('\n');
+}
+
+/* ---------- MIDI out, with lyrics ---------- */
+function toMidi(notes, bpm, title) {
+  const PPQ = 480, k = PPQ / TB, ev = [];
+  const vlq = (v) => { const b = [v & 0x7f]; while ((v >>= 7)) b.unshift((v & 0x7f) | 0x80); return b; };
+  const txt = (s) => Array.from(unescape(encodeURIComponent(s))).map((c) => c.charCodeAt(0));
+  const tp = Math.round(60e6 / bpm), name = txt(title || 'Vocal');
+  ev.push([0, 0, [0xFF, 0x03, ...vlq(name.length), ...name]], [0, 0, [0xFF, 0x51, 3, tp >> 16 & 255, tp >> 8 & 255, tp & 255]], [0, 0, [0xFF, 0x58, 4, 4, 2, 24, 8]]);
+  notes.forEach((n) => { const l = txt(n.lyr); ev.push([n.t * k, 1, [0xFF, 0x05, ...vlq(l.length), ...l]], [n.t * k, 2, [0x90, n.m, 96]], [(n.t + n.d) * k, 0, [0x80, n.m, 0]]); });
+  ev.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const body = []; let last = 0; ev.forEach(([t, , b]) => { body.push(...vlq(t - last), ...b); last = t; }); body.push(0, 0xFF, 0x2F, 0);
+  const L = body.length;
+  return new Uint8Array([0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 0, 0, 1, PPQ >> 8, PPQ & 255, 0x4D, 0x54, 0x72, 0x6B, L >>> 24, L >> 16 & 255, L >> 8 & 255, L & 255, ...body]);
+}
+
+/* ---------- the page ---------- */
+function keyName(k) { return NN[k.root] + (k.mode === 'major' ? '' : 'm'); }
+function fillKeys() {
+  const sel = $('#key'), g = GENRES[S.genre], mode = g.mode; sel.innerHTML = '<option value="auto">auto</option>' + NN.map((n, r) => '<option value="' + r + '">' + keyName({ root: r, mode }) + '</option>').join('');
+  sel.value = S.key === 'auto' ? 'auto' : String(S.key);
+}
+function renderGenres() {
+  $('#genres').innerHTML = Object.entries(GENRES).map(([k, g]) => '<button class="chip" data-g="' + k + '" aria-pressed="' + (k === S.genre) + '">' + g.name + '<small>' + g.bpm + '</small></button>').join('');
+}
+function renderMatch() {
+  const b = +$('#bpm').value, fit = Object.entries(GENRES).filter(([, g]) => b >= g.lo && b <= g.hi);
+  $('#match').innerHTML = !b ? '' : fit.length ? 'Fits at ' + b + ' bpm:' + fit.map(([k, g]) => '<button data-g="' + k + '">' + g.name + '</button>').join(',') : 'No genre sits at ' + b + ' bpm. It still works.';
+}
+function setGenre(k, keepBpm) { S.genre = k; renderGenres(); if (!keepBpm && !S.song) $('#bpm').value = GENRES[k].bpm; fillKeys(); renderMatch(); keep(); }
+function seg(id, attr, val) { $$(id + ' button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset[attr] === val))); }
+function setVoice(v) { S.voice = v; seg('#voice', 'v', v); seg('#voice2', 'v', v); keep(); }
+function setMode(m) { S.mode = m; seg('#mode', 'm', m); $('#writeBox').hidden = m !== 'write'; $('#singBox').hidden = m !== 'sing'; }
+function countWords() { const secs = parseLyrics($('#lyrics').value), n = secs.reduce((a, s) => a + s.lines.reduce((b, l) => b + l.syl.length, 0), 0), ln = secs.reduce((a, s) => a + s.lines.length, 0);
+  $('#count').textContent = n ? secs.length + ' parts · ' + ln + ' lines · ' + n + ' syllables. Type beau-ti-ful to choose the syllables yourself.' : 'Put [Verse], [Chorus] or [Bridge] on a line of its own. Type beau-ti-ful to choose the syllables yourself.'; }
+
+function make() {
+  stop(); const secs = parseLyrics($('#lyrics').value), warn = $('#warn'); warn.hidden = true;
+  if (!secs.length) { warn.textContent = 'First the words: type them, paste them, or press Oracle.'; warn.hidden = false; return; }
+  rng = seeded((Math.random() * 2 ** 32) >>> 0);
+  let notes, bpm, key;
+  if (S.mode === 'sing') {
+    if (!S.mel) { warn.textContent = 'Load a MIDI melody first, or choose Write a melody.'; warn.hidden = false; return; }
+    const tr = S.mel.tracks[+$('#melTrack').value || 0], mel = monoLine(tr, S.mel.ppq); if (!mel.length) { warn.textContent = 'That track has no notes to sing.'; warn.hidden = false; return; }
+    bpm = S.mel.bpm; const h = new Array(12).fill(0); mel.forEach((n) => { h[n.m % 12] += n.d; }); key = detectKey(h);
+    notes = singVocal(secs, mel, S.voice);
+  } else {
+    const g = GENRES[S.genre]; bpm = Math.max(50, Math.min(200, +$('#bpm').value || g.bpm));
+    key = S.song && $('#key').value === 'auto' ? S.song.key : { root: $('#key').value === 'auto' ? R([9, 4, 2, 7, 0, 5, 11]) : +$('#key').value, mode: g.mode };
+    if (S.song && $('#key').value === 'auto') key = { root: S.song.key.root, mode: S.song.key.mode === 'major' ? 'major' : g.mode === 'blues' ? 'blues' : g.mode };
+    notes = writeVocal(secs, { genre: S.genre, voice: S.voice, key, chords: S.song && S.song.chords, startBar0: Math.max(0, (+$('#startBar').value || 1) - 1), pause: +$('#pause').value });
+  }
+  notes.sort((a, b) => a.t - b.t); notes.forEach((n, i) => { const nx = notes[i + 1]; if (nx && n.t + n.d > nx.t) n.d = Math.max(1, nx.t - n.t); });
+  const title = $('#title').value.trim() || 'Untitled';
+  S.result = { notes, bpm, key, title };
+  const bars = Math.ceil((notes[notes.length - 1].t + notes[notes.length - 1].d) / BAR), syl = notes.filter((n) => n.lyr !== '-').length;
+  $('#facts').innerHTML = '<b>' + keyName(key) + '</b> · <b>' + Math.round(bpm * 100) / 100 + '</b> bpm · <b>' + bars + '</b> bars · <b>' + syl + '</b> syllables · starts bar <b>' + (Math.floor(notes[0].t / BAR) + 1) + '</b>';
+  drawRoll(); ['#rollWrap', '#player', '#out'].forEach((s) => { $(s).hidden = false; }); $('#empty').hidden = true; $('#make').textContent = 'Sing it again';
+}
+
+function drawRoll() {
+  const { notes } = S.result, end = Math.ceil((notes[notes.length - 1].t + notes[notes.length - 1].d) / BAR) * BAR;
+  const lo = Math.min(...notes.map((n) => n.m)) - 2, hi = Math.max(...notes.map((n) => n.m)) + 2, H = 250, top = 34, rh = (H - top - 10) / (hi - lo + 1), Wd = Math.max(600, end * PX + 20);
+  const y = (m) => top + (hi - m) * rh, s = [];
+  s.push('<svg xmlns="http://www.w3.org/2000/svg" width="' + Wd + '" height="' + H + '" viewBox="0 0 ' + Wd + ' ' + H + '">');
+  for (let b = 0; b <= end / BAR; b++) { const x = 10 + b * BAR * PX; s.push('<line x1="' + x + '" y1="18" x2="' + x + '" y2="' + H + '" stroke="#263044" stroke-width="' + (b % 4 ? 0.6 : 1.2) + '"/>'); if (b % 4 === 0 && b < end / BAR) s.push('<text x="' + (x + 3) + '" y="12" fill="#5E6878" font-size="10" font-family="ui-monospace,monospace">' + (b + 1) + '</text>'); }
+  let lastSec = -1, lastX = -1;
+  notes.forEach((n, i) => {
+    const x = 10 + n.t * PX, w = Math.max(2, n.d * PX - 1.5), c = ROLE_COL[n.role] || '#4FB3A9';
+    if (n.sec !== lastSec && n.lyr !== '-') { lastSec = n.sec; }
+    s.push('<rect data-i="' + i + '" x="' + x + '" y="' + y(n.m) + '" width="' + w + '" height="' + Math.max(4, rh - 1) + '" rx="2" fill="' + c + '" opacity="' + (n.lyr === '-' ? 0.55 : 0.9) + '"/>');
+    if (n.lyr !== '-') { const below = x < lastX; s.push('<text x="' + x + '" y="' + (below ? y(n.m) + rh + 10 : y(n.m) - 3) + '" fill="#D9D2C4" font-size="10.5" font-family="system-ui,sans-serif">' + esc(n.lyr) + '</text>'); if (!below) lastX = x + n.lyr.length * 6 + 3; }
+  });
+  const seen = {}; notes.forEach((n) => { if (seen[n.sec] == null) seen[n.sec] = n.t; });
+  const secs = parseLyrics($('#lyrics').value);
+  Object.entries(seen).forEach(([si, t]) => { const sec = secs[si]; if (S.mode === 'write' && sec) s.push('<text x="' + (10 + Math.floor(t / BAR) * BAR * PX + 3) + '" y="28" fill="' + ROLE_COL[sec.role] + '" font-size="11" font-style="italic" font-family="Georgia,serif">' + esc(sec.label) + '</text>'); });
+  s.push('<line id="ph" x1="10" y1="16" x2="10" y2="' + H + '" stroke="#EDE6D8" stroke-width="1.2" opacity="0"/></svg>');
+  $('#roll').innerHTML = s.join('');
+}
+
+/* ---------- listen ---------- */
+let ac = null, nodes = [], raf = 0, t0 = 0;
+const PX = 3;
+function stop() { nodes.forEach((n) => { try { n.stop(); } catch (e) { /* done */ } }); nodes = []; cancelAnimationFrame(raf); $('#play').textContent = 'Listen'; const ph = $('#ph'); if (ph) ph.setAttribute('opacity', 0); }
+function play() {
+  if (nodes.length) { stop(); return; }
+  ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume();
+  const { notes, bpm } = S.result, sec = 60 / bpm / TB, first = Math.floor(notes[0].t / BAR) * BAR, now = ac.currentTime + 0.12, out = ac.createGain(); out.gain.value = 0.5; out.connect(ac.destination);
+  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2200; lp.connect(out);
+  notes.forEach((n) => {
+    const st = now + (n.t - first) * sec, du = n.d * sec, o = ac.createOscillator(), g = ac.createGain(), v = ac.createOscillator(), vg = ac.createGain();
+    o.type = 'sawtooth'; o.frequency.value = 440 * Math.pow(2, (n.m - 69) / 12); v.frequency.value = 5.5; vg.gain.value = du > 0.35 ? 4 : 0; v.connect(vg); vg.connect(o.detune);
+    g.gain.setValueAtTime(0, st); g.gain.linearRampToValueAtTime(0.22, st + 0.03); g.gain.setValueAtTime(0.2, st + Math.max(0.04, du - 0.05)); g.gain.linearRampToValueAtTime(0, st + du);
+    o.connect(g); g.connect(lp); o.start(st); o.stop(st + du + 0.02); v.start(st); v.stop(st + du + 0.02); nodes.push(o, v);
+  });
+  const end = notes[notes.length - 1].t + notes[notes.length - 1].d;
+  if ($('#beatOn').getAttribute('aria-pressed') === 'true') for (let b = first; b < end; b += TB) {
+    const st = now + (b - first) * sec, o = ac.createOscillator(), g = ac.createGain(), down = b % BAR === 0;
+    o.frequency.setValueAtTime(down ? 1500 : 1000, st); g.gain.setValueAtTime(down ? 0.25 : 0.12, st); g.gain.exponentialRampToValueAtTime(0.001, st + 0.05); o.connect(g); g.connect(out); o.start(st); o.stop(st + 0.06); nodes.push(o);
+  }
+  $('#play').textContent = 'Stop'; t0 = now; const ph = $('#ph'), wrap = $('#rollWrap');
+  const tick = () => { const t = (ac.currentTime - t0) / sec + first; if (t > end + 6) { stop(); return; } if (t >= first) { const x = 10 + t * PX; ph.setAttribute('x1', x); ph.setAttribute('x2', x); ph.setAttribute('opacity', 0.8); if (x > wrap.scrollLeft + wrap.clientWidth - 60 || x < wrap.scrollLeft) wrap.scrollLeft = x - 60; } raf = requestAnimationFrame(tick); };
+  raf = requestAnimationFrame(tick);
+}
+
+/* ---------- files ---------- */
+function save(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); }
+function base() { const r = S.result, g = S.mode === 'sing' ? 'MyMelody' : GENRES[S.genre].name.replace(/\s/g, ''); return 'DM_' + (r.title.replace(/[^A-Za-z0-9]+/g, '') || 'Untitled') + '_' + g + '_Vocal_' + Math.round(r.bpm) + 'bpm_' + keyName(r.key).replace(/\s/g, ''); }
+
+/* ---------- wiring ---------- */
+renderGenres(); fillKeys(); setVoice(S.voice); $('#bpm').value = GENRES[S.genre].bpm; renderMatch(); countWords();
+$('#genres').onclick = (e) => { const b = e.target.closest('[data-g]'); if (b) setGenre(b.dataset.g); };
+$('#match').onclick = (e) => { const b = e.target.closest('[data-g]'); if (b) setGenre(b.dataset.g, true); };
+$('#bpm').oninput = renderMatch;
+$('#key').onchange = () => { S.key = $('#key').value; };
+$('#voice').onclick = $('#voice2').onclick = (e) => { const b = e.target.closest('[data-v]'); if (b) setVoice(b.dataset.v); };
+$('#mode').onclick = (e) => { const b = e.target.closest('[data-m]'); if (b) setMode(b.dataset.m); };
+$('#lyrics').oninput = () => { countWords(); keep(); };
+$('#title').oninput = keep;
+$('#oracle').onclick = () => { rng = Math.random; const o = oracle(S.mode === 'write' ? S.genre : 'triphop'); $('#title').value = o.title; $('#lyrics').value = o.text; countWords(); keep(); };
+$('#make').onclick = make;
+$('#play').onclick = play;
+$('#beatOn').onclick = () => { const b = $('#beatOn'); b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true')); };
+$('#dlXml').onclick = () => { const r = S.result; save(new Blob([toXml(r.notes, r.bpm, r.key, r.title)], { type: 'application/vnd.recordare.musicxml+xml' }), base() + '.musicxml'); };
+$('#dlMid').onclick = () => { const r = S.result; save(new Blob([toMidi(r.notes, r.bpm, r.title)], { type: 'audio/midi' }), base() + '.mid'); };
+$('#songFile').onchange = async () => {
+  const f = $('#songFile').files[0]; if (!f) return;
+  try {
+    const M = readMidi(await f.arrayBuffer()), h = new Array(12).fill(0), bars = [];
+    M.tracks.filter((t) => !t.drum).forEach((t) => t.notes.forEach((n) => { if (n.ch === 9) return; const w = n.len / M.ppq; h[n.p % 12] += w; const b0 = Math.floor(n.tick / M.ppq / 4), b1 = Math.floor((n.tick + Math.max(1, n.len) - 1) / M.ppq / 4);
+      for (let b = b0; b <= b1 && b < b0 + 8; b++) { (bars[b] = bars[b] || new Array(12).fill(0))[n.p % 12] += w; } }));
+    if (!h.some((x) => x)) throw new Error('no notes');
+    const key = detectKey(h), chords = bars.map((v) => v && v.map((x, pc) => [x, pc]).sort((a, b) => b[0] - a[0]).slice(0, 3).filter((x) => x[0] > 0).map((x) => x[1]));
+    S.song = { key, chords, bpm: M.bpm }; $('#bpm').value = Math.round(M.bpm); renderMatch();
+    $('#songInfo').textContent = f.name + ' · ' + Math.round(M.bpm) + ' bpm · ' + keyName(key) + ' · ' + bars.length + ' bars. The vocal follows its chords.'; $('#songOff').hidden = false;
+  } catch (e) { $('#songInfo').textContent = 'That file has no notes the machine can read.'; }
+  $('#songFile').value = '';
+};
+$('#songOff').onclick = () => { S.song = null; $('#songOff').hidden = true; $('#songInfo').textContent = 'optional: the chords or the whole song, so the vocal follows its tempo, key and chords'; $('#bpm').value = GENRES[S.genre].bpm; renderMatch(); };
+$('#melFile').onchange = async () => {
+  const f = $('#melFile').files[0]; if (!f) return;
+  try {
+    const M = readMidi(await f.arrayBuffer()), tr = M.tracks.filter((t) => !t.drum); if (!tr.length) throw new Error('no notes'); M.tracks = tr;
+    let bi = 0; tr.forEach((t, i) => { if (t.notes.length >= 4 && median(t.notes.map((n) => n.p)) > median(tr[bi].notes.map((n) => n.p))) bi = i; });
+    S.mel = M; const sel = $('#melTrack'); sel.innerHTML = tr.map((t, i) => '<option value="' + i + '">' + esc(t.name) + ' · ' + t.notes.length + ' notes</option>').join(''); sel.value = String(bi); sel.hidden = tr.length < 2;
+    $('#melInfo').textContent = f.name + ' · ' + Math.round(M.bpm * 100) / 100 + ' bpm. The vocal keeps its timing exactly.';
+  } catch (e) { $('#melInfo').textContent = 'That file has no melody the machine can read.'; }
+  $('#melFile').value = '';
+};
+setGenre(S.genre);
+</script>
+<script>(function(){try{if(!/\.github\.io$/.test(location.hostname))return;var q=new URLSearchParams({p:location.pathname,t:document.title,s:screen.width+','+screen.height,rnd:Math.random().toString(36).slice(2)});if(document.referrer&&document.referrer.indexOf(location.hostname)<0)q.set('r',document.referrer.split('?')[0]);var u='https://divine-monday.goatcounter.com/count?'+q;if(!(navigator.sendBeacon&&navigator.sendBeacon(u)))new Image().src=u;}catch(e){}})();</script>
+<!-- Divine Monday suite bar: the name of every machine leads home, and the same Suite button sits next to it in every app -->
+<style>.dm-suite{display:inline-flex;align-items:center;gap:6px;margin-left:12px;padding:6px 12px;min-height:34px;border:1px solid rgba(128,128,128,.45);border-radius:999px;color:inherit;text-decoration:none;font:600 13px/1 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;white-space:nowrap;vertical-align:middle;opacity:.85;flex:none}.dm-suite:hover,.dm-suite:focus-visible{opacity:1;border-color:currentColor}.dm-home{cursor:pointer}</style>
+<script>(function(){var LOGO=['.trow .brand','header.top .logo','.brand .logo','header .logo','.top h1','.col > h1','header h1','.dm-row > .dm-home'],HIDE='#suiteBtn, header a.back, .suiteback, .top a[data-tt=back]';
+var url=/\/ujam(\/|$)/.test(location.pathname)?'https://divineacidmonday.github.io/ujam/':'https://divineacidmonday.github.io/',go=function(){location.href=url;},busy=false;
+function fix(){busy=false;var l=null;for(var q=0;q<LOGO.length&&!l;q++)l=[].slice.call(document.querySelectorAll(LOGO[q])).filter(function(e){return e.offsetParent!==null;})[0]||null;if(!l)return; // the first kind of name that is on screen, in this order
+ if(!l.classList.contains('dm-home')){l.classList.add('dm-home');l.setAttribute('role','link');l.setAttribute('tabindex','0');l.title='Back to the Divine Music Suite';l.addEventListener('click',go);l.addEventListener('keydown',function(e){if(e.key==='Enter')go();});}
+ var n=l.nextElementSibling;if(!(n&&n.classList.contains('dm-suite'))){var a=document.createElement('a');a.className='dm-suite';a.href=url;a.title='All Divine Monday machines';a.textContent='← Suite';
+  var P=l.parentElement,ps=getComputedStyle(P),row=ps.display.indexOf('flex')>=0&&ps.flexDirection.indexOf('row')===0;
+  if(row||P.classList.contains('dm-row'))l.insertAdjacentElement('afterend',a);
+  else{var w=document.createElement('div');w.className='dm-row';w.style.cssText='display:flex;align-items:center;flex-wrap:wrap;gap:6px 0;justify-content:'+(ps.textAlign==='center'||ps.alignItems==='center'?'center':'flex-start');P.insertBefore(w,l);w.appendChild(l);w.appendChild(a);l.style.margin='0';}}
+ document.querySelectorAll(HIDE).forEach(function(e){if(!e.classList.contains('dm-suite'))e.style.display='none';});}
+new MutationObserver(function(){if(!busy){busy=true;requestAnimationFrame(fix);}}).observe(document.documentElement,{childList:true,subtree:true});fix();})();</script>
+</body></html>
