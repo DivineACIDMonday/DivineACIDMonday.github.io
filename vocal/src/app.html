@@ -274,7 +274,7 @@ function readMidi(buf) {
       else if ((st === 0x80 || st === 0x90) && on[k] != null) { notes.push({ tick: on[k], len: tick - on[k], p: a, ch }); delete on[k]; }
     }
     i = end;
-    if (notes.length) tracks.push({ name: name.trim() || 'Track ' + (tracks.length + 1), notes: notes.sort((x, y) => x.tick - y.tick || y.p - x.p), drum: !!chs[9] && Object.keys(chs).length === 1 });
+    if (notes.length) tracks.push({ name: name.trim() || 'Track ' + (tracks.length + 1), notes: notes.sort((x, y) => x.tick - y.tick || y.p - x.p), drum: (!!chs[9] && Object.keys(chs).length === 1) || /beat|drum|perc|kit|\bxo\b/i.test(name) });
   }
   return { ppq, bpm: tempo ? Math.round(60e6 / tempo * 100) / 100 : 120, tracks };
 }
