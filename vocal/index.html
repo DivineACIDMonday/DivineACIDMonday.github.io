@@ -145,7 +145,7 @@ const GENRES = {
   newwave:   { name: 'New wave',  bpm: 132, lo: 115, hi: 155, mode: 'minor',    pool: [6, 6, 6, 12, 12],      starts: [0],        arc: 'chant', leap: 4, stay: .35, mel: .05, prog: [0, 6, 5, 6] },
   acid:      { name: 'Acid',      bpm: 126, lo: 118, hi: 136, mode: 'phrygian', pool: [6, 12, 12, 24],        starts: [0, 12],    arc: 'chant', leap: 3, stay: .45, mel: .05, prog: [0, 0, 0, 1] },
   techno:    { name: 'Techno',    bpm: 132, lo: 124, hi: 150, mode: 'minor',    pool: [12, 12, 24, 6],        starts: [0, 12],    arc: 'chant', leap: 3, stay: .5,  mel: .05, prog: [0, 0, 6, 6] },
-  house:     { name: 'House',     bpm: 124, lo: 116, hi: 130, mode: 'dorian',   pool: [6, 6, 3, 12, 18],      starts: [6, 3, 0],  arc: 'arch',  leap: 4, stay: .15, mel: .35, prog: [0, 3, 0, 4] },
+  house:     { name: 'House',     bpm: 124, lo: 116, hi: 130, mode: 'dorian',   pool: [6, 6, 12, 12, 18],     starts: [6, 3, 0],  arc: 'arch',  leap: 4, stay: .15, mel: .35, prog: [0, 3, 0, 4] },
   blues:     { name: 'Blues',     bpm: 78,  lo: 58,  hi: 100, mode: 'blues',    pool: [8, 4, 12, 8, 16],      starts: [0, 8],     arc: 'sigh',  leap: 4, stay: .2,  mel: .3,  prog: 'blues' }
 };
 const MODES = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], dorian: [0, 2, 3, 5, 7, 9, 10], phrygian: [0, 1, 3, 5, 7, 8, 10], blues: [0, 3, 5, 6, 7, 10] };
@@ -304,7 +304,7 @@ function writeVocal(secs, opt) {
   const avg = G.pool.reduce((a, b) => a + b, 0) / G.pool.length;
   const notes = [], rhythms = {}, melodies = {}; let t0 = opt.startBar0 * BAR, prevIdx = mid;
   secs.forEach((sec, si) => {
-    const need = Math.max(median(sec.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...sec.lines.map((l) => l.syl.length * 4 + 12));
+    const need = Math.max(median(sec.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18));
     const slot = [2, 4, 8, 16].find((b) => b * BAR >= need) * BAR || 16 * BAR;
     const centre = { verse: -2, pre: 0, chorus: 2, bridge: 0, outro: -2 }[sec.role];
     const arc = sec.role === 'pre' ? 'rise' : sec.role === 'chorus' && G.arc === 'chant' ? 'hook' : sec.role === 'chorus' ? 'arch' : sec.role === 'bridge' ? 'sigh' : G.arc;
@@ -315,9 +315,14 @@ function writeVocal(secs, opt) {
         // rhythm: the same section and syllable count share a rhythm
         const rk = sec.label + '|' + n; let rh = rhythms[rk];
         if (!rh) {
-          let st = R(G.starts); const ds = Array.from({ length: n }, () => R(G.pool)), maxEnd = slot - 6, minD = opt.genre === 'blues' ? 4 : 3;
+          let st = R(G.starts); const ds = Array.from({ length: n }, () => R(G.pool)), maxEnd = slot - 6, minD = opt.genre === 'blues' ? 4 : 6;
           const sum = () => st + ds.reduce((a, b) => a + b, 0);
-          while (sum() > maxEnd) { if (st) { st = 0; continue; } let bi = 0; ds.forEach((x, i) => { if (x > ds[bi]) bi = i; }); if (ds[bi] <= minD) break; ds[bi] = Math.max(minD, ds[bi] === 18 ? 12 : ds[bi] === 9 ? 6 : Math.floor(ds[bi] / 2 / 3) * 3 || minD); }
+          if (sum() > maxEnd) { st = sum() - st <= maxEnd - 6 ? Math.min(st, maxEnd - (sum() - st)) : 0; } // first lose the late start
+          if (sum() > maxEnd) { // too many words for the pool: spread them evenly, never shorter than an eighth, and give the rest back to the long words
+            const grid = opt.genre === 'blues' ? 4 : 6, avail = maxEnd - st, g = Math.max(minD, Math.floor(avail / n / grid) * grid || minD); ds.fill(g); let left = avail - g * n;
+            const order = ln.syl.map((x, i) => [x.syllabic === 'single' || x.syllabic === 'end' ? 1 : 0, i]).sort((a, b2) => b2[0] - a[0] || b2[1] - a[1]).map((x) => x[1]);
+            for (let k = 0; left >= grid && k < order.length * 2; k++) { ds[order[k % order.length]] += grid; left -= grid; }
+          }
           const lastT = sum() - ds[n - 1]; ds[n - 1] = Math.max(ds[n - 1], Math.min(24, maxEnd - lastT));
           rh = rhythms[rk] = { st, ds };
         }
@@ -465,7 +470,7 @@ function make() {
   S.result = { notes, bpm, key, title };
   const bars = Math.ceil((notes[notes.length - 1].t + notes[notes.length - 1].d) / BAR), syl = notes.filter((n) => n.lyr !== '-').length;
   $('#facts').innerHTML = '<b>' + keyName(key) + '</b> · <b>' + Math.round(bpm * 100) / 100 + '</b> bpm · <b>' + bars + '</b> bars · <b>' + syl + '</b> syllables · starts bar <b>' + (Math.floor(notes[0].t / BAR) + 1) + '</b>';
-  drawRoll(); ['#rollWrap', '#player', '#out'].forEach((s) => { $(s).hidden = false; }); $('#empty').hidden = true; $('#make').textContent = 'Sing it again';
+  drawRoll(); ['#rollWrap', '#player', '#out'].forEach((s) => { $(s).hidden = false; }); $('#rollWrap').scrollLeft = Math.max(0, 10 + Math.floor(notes[0].t / BAR) * BAR * PX - 10); $('#empty').hidden = true; $('#make').textContent = 'Sing it again';
 }
 
 function drawRoll() {
