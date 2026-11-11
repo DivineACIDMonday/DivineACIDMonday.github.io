@@ -319,9 +319,11 @@ function writeVocal(secs, opt) {
       let line = melodies[mkey];
       if (!line) {
         // rhythm: the same section and syllable count share a rhythm
-        const rk = sec.label + '|' + n; let rh = rhythms[rk];
+        // a breath for the band: every 4 bars the line ends halfway the 4th bar, where the instruments answer (Room for a voice in the other apps)
+        const breath = slot === 2 * BAR ? (li % 2 ? BAR + 2 * TB : slot) : slot === 4 * BAR ? 3 * BAR + 2 * TB : slot - 2 * TB;
+        const rk = sec.label + '|' + n + '|' + breath; let rh = rhythms[rk];
         if (!rh) {
-          let st = R(G.starts); const ds = Array.from({ length: n }, () => R(G.pool)), maxEnd = slot - 6, minD = opt.genre === 'blues' ? 4 : 6;
+          let st = R(G.starts); const ds = Array.from({ length: n }, () => R(G.pool)), maxEnd = Math.max(n * (opt.genre === 'blues' ? 4 : 6) + 6, breath - 6), minD = opt.genre === 'blues' ? 4 : 6;
           const sum = () => st + ds.reduce((a, b) => a + b, 0);
           if (sum() > maxEnd) { st = sum() - st <= maxEnd - 6 ? Math.min(st, maxEnd - (sum() - st)) : 0; } // first lose the late start
           if (sum() > maxEnd) { // too many words for the pool: spread them evenly, never shorter than an eighth, and give the rest back to the long words
