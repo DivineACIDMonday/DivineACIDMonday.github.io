@@ -231,7 +231,7 @@ function parseLyrics(txt) {
     s.replace(/\[.*?\]/g, ' ').split(/\s+/).forEach((tok) => {
       const w = tok.replace(/[^A-Za-z'\-]/g, '').replace(/^[-']+|[-']+$/g, ''); if (!/[a-z]/i.test(w)) return;
       const parts = splitWord(w);
-      parts.forEach((p, i) => syl.push({ text: p, syllabic: parts.length === 1 ? 'single' : i === 0 ? 'begin' : i === parts.length - 1 ? 'end' : 'middle' }));
+      const word = parts.join(''); parts.forEach((p, i) => syl.push({ text: p, word, syllabic: parts.length === 1 ? 'single' : i === 0 ? 'begin' : i === parts.length - 1 ? 'end' : 'middle' }));
     });
     if (syl.length) cur.lines.push({ text: s, syl });
   });
@@ -343,7 +343,7 @@ function writeVocal(secs, opt) {
             let best = -1; for (let k = 0; k < A.length; k++) { if (!ct.has(A[k] % 12)) continue; if (wantRoot && A[k] % 12 !== opt.key.root) continue; if (Math.abs(k - idx) > G.leap + 1) continue; if (best < 0 || Math.abs(k - idx) < Math.abs(best - idx) || (Math.abs(k - idx) === Math.abs(best - idx) && Math.abs(k - target) < Math.abs(best - target))) best = k; }
             if (best >= 0) idx = best;
           }
-          line.push({ t, d: rh.ds[i], m: A[idx], lyr: ln.syl[i].text, syllabic: ln.syl[i].syllabic });
+          line.push({ t, d: rh.ds[i], m: A[idx], lyr: ln.syl[i].text, word: ln.syl[i].word, syllabic: ln.syl[i].syllabic });
           t += rh.ds[i];
         }
         // a small run on the last syllable
@@ -363,7 +363,9 @@ function writeVocal(secs, opt) {
 function singVocal(secs, mel, voice) {
   const range = VOICES[voice], sh = Math.round(((range[0] + range[1]) / 2 - median(mel.map((n) => n.m))) / 12) * 12;
   const m = mel.map((n) => { let p = n.m + sh; while (p > range[1]) p -= 12; while (p < range[0]) p += 12; return { t: n.t, d: n.d, m: p }; });
-  m.forEach((n, i) => { const nx = m[i + 1]; if (nx && nx.t - (n.t + n.d) < 12) n.d = nx.t - n.t; }); // sung legato: a note lasts until the next one
+  for (let i = 1; i < m.length; i++) { const a = m[i - 1].m; let p = m[i].m; while (p - a > 7 && p - 12 >= range[0]) p -= 12; while (a - p > 7 && p + 12 <= range[1]) p += 12; m[i].m = p; } // a singer leaps a fifth at most: bigger jumps fold by an octave
+  m.forEach((n, i) => { const nx = m[i + 1]; if (!nx) { n.d = Math.max(n.d, 18); return; } const gap = nx.t - (n.t + n.d);
+    if (gap < 12) n.d = nx.t - n.t; else n.d = Math.max(n.d, Math.min(nx.t - n.t - 6, 18)); }); // sung legato, and the last word of a phrase has time to finish
   const phrases = []; m.forEach((n, i) => { const p = m[i - 1]; if (!p || n.t - (p.t + p.d) >= 12 || n.t - p.t >= 8 * BAR) phrases.push([]); phrases[phrases.length - 1].push(n); });
   const lines = []; secs.forEach((s, si) => s.lines.forEach((l) => lines.push({ l, role: s.role, si })));
   const melLen = Math.ceil((m[m.length - 1].t + m[m.length - 1].d) / BAR) * BAR, out = [], total = Math.max(phrases.length, lines.length);
@@ -376,16 +378,20 @@ function singVocal(secs, mel, voice) {
         if (last.t + last.d + 6 > room) break; ph.push({ t: last.t + last.d, d: 6, m: last.m }); continue; }
       const h = Math.max(6, Math.floor(n.d / 2 / 6) * 6); ph.splice(bi + 1, 0, { t: n.t + h, d: n.d - h, m: n.m }); n.d = h;
     }
-    const k = ph.length, s = syl.length;
-    ph.forEach((n, j) => {
-      let si = Math.min(s - 1, Math.floor(j * s / k)); const first = j === 0 || Math.min(s - 1, Math.floor((j - 1) * s / k)) !== si;
-      const extra = j === k - 1 && s > k ? syl.slice(si).map((x) => x.text).join('') : null; // still more syllables than notes: join the rest
-      out.push({ t: n.t, d: n.d, m: n.m, lyr: first ? (extra || syl[si].text) : '-', syllabic: first ? (extra ? 'single' : syl[si].syllabic) : 'cont', role: L.role, sec: L.si });
-    });
+    const k = ph.length, s = syl.length, cnt = new Array(s).fill(1);
+    // more notes than syllables: the extra notes stretch the ends of words, from the end of the line backwards, never the middle of a word
+    const ends = []; for (let i = s - 1; i >= 0; i--) if (syl[i].syllabic === 'single' || syl[i].syllabic === 'end') ends.push(i);
+    for (let x = 0; x < k - s && ends.length; x++) cnt[ends[x % Math.min(ends.length, 3)]]++;
+    let j = 0;
+    syl.forEach((sy, i) => { for (let c = 0; c < cnt[i] && j < k; c++, j++) { const n = ph[j], last = j === k - 1 && i < s - 1;
+      const lyr = c ? '-' : last ? syl.slice(i).map((x) => x.text).join('') : sy.text; // still more syllables than notes: the rest joins the last note
+      out.push({ t: n.t, d: n.d, m: n.m, lyr, word: sy.word, syllabic: c ? 'cont' : last ? 'single' : sy.syllabic, role: L.role, sec: L.si }); } });
   }
   return out;
 }
 
+/* Synthesizer V reads a whole word best: the word on its first note, + for each next syllable (its own dictionary splits it), - to hold the vowel */
+const svLyr = (n) => (n.syllabic === 'cont' || n.lyr === '-' ? '-' : n.syllabic === 'single' || n.syllabic === 'begin' ? (n.syllabic === 'single' ? n.lyr : n.word || n.lyr) : '+');
 /* ---------- MusicXML ---------- */
 const TYPES = [[48, 'whole', 0, 0], [36, 'half', 1, 0], [24, 'half', 0, 0], [18, 'quarter', 1, 0], [12, 'quarter', 0, 0], [9, 'eighth', 1, 0], [8, 'quarter', 0, 1], [6, 'eighth', 0, 0], [4, 'eighth', 0, 1], [3, '16th', 0, 0], [2, '16th', 0, 1], [1, '32nd', 0, 1]];
 function pieces(d) { const out = []; while (d > 0) { const t = TYPES.find((x) => x[0] <= d); out.push(t); d -= t[0]; } return out; }
@@ -412,7 +418,7 @@ function toXml(notes, bpm, key, title) {
         if (tieStop) s += '<tie type="stop"/>'; if (tieStart) s += '<tie type="start"/>';
         s += '<voice>1</voice><type>' + p[1] + '</type>' + (p[2] ? '<dot/>' : '') + (p[3] ? '<time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>' : '');
         if (tieStop || tieStart) s += '<notations>' + (tieStop ? '<tied type="stop"/>' : '') + (tieStart ? '<tied type="start"/>' : '') + '</notations>';
-        if (!n.rest && firstP) s += '<lyric number="1"><syllabic>' + (n.syllabic === 'cont' ? 'single' : n.syllabic) + '</syllabic><text>' + esc(n.lyr) + '</text></lyric>';
+        if (!n.rest && firstP) s += '<lyric number="1"><syllabic>single</syllabic><text>' + esc(svLyr(n)) + '</text></lyric>';
         x.push(s + '</note>');
       });
     });
@@ -429,7 +435,7 @@ function toMidi(notes, bpm, title) {
   const txt = (s) => Array.from(unescape(encodeURIComponent(s))).map((c) => c.charCodeAt(0));
   const tp = Math.round(60e6 / bpm), name = txt(title || 'Vocal');
   ev.push([0, 0, [0xFF, 0x03, ...vlq(name.length), ...name]], [0, 0, [0xFF, 0x51, 3, tp >> 16 & 255, tp >> 8 & 255, tp & 255]], [0, 0, [0xFF, 0x58, 4, 4, 2, 24, 8]]);
-  notes.forEach((n) => { const l = txt(n.lyr); ev.push([n.t * k, 1, [0xFF, 0x05, ...vlq(l.length), ...l]], [n.t * k, 2, [0x90, n.m, 96]], [(n.t + n.d) * k, 0, [0x80, n.m, 0]]); });
+  notes.forEach((n) => { const l = txt(svLyr(n)); ev.push([n.t * k, 1, [0xFF, 0x05, ...vlq(l.length), ...l]], [n.t * k, 2, [0x90, n.m, 96]], [(n.t + n.d) * k, 0, [0x80, n.m, 0]]); });
   ev.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   const body = []; let last = 0; ev.forEach(([t, , b]) => { body.push(...vlq(t - last), ...b); last = t; }); body.push(0, 0xFF, 0x2F, 0);
   const L = body.length;
