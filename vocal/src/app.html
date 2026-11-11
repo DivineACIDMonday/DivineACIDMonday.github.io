@@ -194,14 +194,16 @@ function oracle(g) {
 /* ---------- syllables ---------- */
 function sylCount(word) {
   let w = word.toLowerCase().replace(/[^a-z]/g, ''); if (!w) return 0; if (w.length <= 3) return 1;
-  w = w.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '').replace(/^y/, ''); const m = w.match(/[aeiouy]{1,2}/g); return Math.max(1, m ? m.length : 1);
+  w = w.replace(/(?:[^laeiouyszxhcg]es|[^td]ed|[^laeiouy]e)$/, '').replace(/^y/, '').replace(/([tscx]|ll)io(ns?)$/, '$1o$2').replace(/(i)(a|o|u)|(y)(i|a|o)|(e)(o)|(u)(a|o)/g, '$1$3$5$7.$2$4$6$8');
+  const m = w.match(/[aeiouy]{1,2}/g); return Math.max(1, m ? m.length : 1);
 }
-const DIGRAPH = /^(th|sh|ch|ph|wh|ck|ng|gh|qu)$/;
+const DIGRAPH = /^(th|sh|ch|ph|wh|ck|ng|gh|qu)$/, ONSET = /^(wr|bl|br|cl|cr|dr|fl|fr|gl|gr|pl|pr|tr|tw|kn|sk|sl|sm|sn|sp|st|sw)$/;
 function splitWord(raw) {
   if (/[a-z]-[a-z]/i.test(raw)) return raw.split('-').filter(Boolean); // the user chose the split
   const n = sylCount(raw); if (n <= 1) return [raw];
   const lw = raw.toLowerCase(), groups = []; let m; const re = /[aeiouy]+/g;
   while ((m = re.exec(lw))) { if (m.index === 0 && m[0] === 'y' && lw.length > 1) continue; groups.push([m.index, m.index + m[0].length]); }
+  for (let k = 0; k < groups.length && groups.length < n; k++) { const g = lw.slice(groups[k][0], groups[k][1]), h = g.search(/ia|io|iu|eo|ua|uo|yi|ya|yo/); if (h >= 0) { groups.splice(k, 1, [groups[k][0], groups[k][0] + h + 1], [groups[k][0] + h + 1, groups[k][1]]); } }
   while (groups.length > n) { // silent endings and diphthongs: merge from the back
     const last = groups[groups.length - 1];
     if (last[1] === lw.length && /e$|es$|ed$/.test(lw.slice(last[0]))) { groups.pop(); continue; }
@@ -211,8 +213,8 @@ function splitWord(raw) {
   const cuts = [];
   for (let k = 0; k < groups.length - 1; k++) {
     const e = groups[k][1], s = groups[k + 1][0], c = lw.slice(e, s);
-    if (c.length <= 1) cuts.push(e); else if (c.length === 2) cuts.push(DIGRAPH.test(c) ? (/^(ck|ng|gh)$/.test(c) ? s : e) : e + 1);
-    else cuts.push(DIGRAPH.test(c.slice(0, 2)) ? e + 2 : e + 1);
+    if (c.length <= 1) cuts.push(e); else if (c.length === 2) cuts.push(DIGRAPH.test(c) ? (/^(ck|ng|gh)$/.test(c) ? s : e) : ONSET.test(c) ? e : e + 1);
+    else cuts.push(DIGRAPH.test(c.slice(0, 2)) ? e + 2 : ONSET.test(c.slice(-2)) || DIGRAPH.test(c.slice(-2)) ? s - 2 : s - 1);
   }
   const parts = []; let p = 0; cuts.forEach((c) => { parts.push(raw.slice(p, c)); p = c; }); parts.push(raw.slice(p));
   return parts.filter(Boolean);
@@ -223,7 +225,7 @@ function parseLyrics(txt) {
   const secs = []; let cur = null;
   txt.split('\n').forEach((line) => {
     const s = line.trim(); if (!s) return;
-    const h = s.match(/^\[(.+?)\]$/); if (h) { if (/^br$/i.test(h[1])) return; cur = { label: h[1], role: roleOf(h[1]), lines: [] }; secs.push(cur); return; }
+    const h = s.match(/^\[(.+?)\]$/) || (s.length < 40 && s.match(/^\(?\s*((?:intro|verse|pre[\s-]?chorus|chorus|hook|refrain|bridge|outro|break|breakdown|part|interlude|middle\s*8|drop)\b[^():]*?)\s*\)?\s*:?$/i)); if (h) { if (/^br$/i.test(h[1])) return; cur = { label: h[1], role: roleOf(h[1]), lines: [] }; secs.push(cur); return; }
     if (!cur) { cur = { label: 'Verse', role: 'verse', lines: [] }; secs.push(cur); }
     const syl = [];
     s.replace(/\[.*?\]/g, ' ').split(/\s+/).forEach((tok) => {
