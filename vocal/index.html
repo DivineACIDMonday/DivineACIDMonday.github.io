@@ -120,8 +120,10 @@ footer{color:var(--mu);font-size:13px;text-align:center;padding:10px 0 30px}
   <div id="rollWrap" hidden><div id="roll"></div></div>
   <div class="empty" id="empty">Your vocal line appears here: every note with its syllable.</div>
   <div class="player" id="player" hidden><button class="btn" id="play">Listen</button><button class="chip" id="beatOn" aria-pressed="true">with a click</button><span class="muted small">A quick sketch in the browser. Synthesizer V does the singing.</span></div>
-  <div class="out" id="out" hidden><button class="btn big" id="dlXml">MusicXML for Synthesizer V</button><button class="btn" id="dlMid">MIDI with lyrics</button>
-    <span class="muted small">In Synthesizer V: File, Import, choose the file, drop it on bar 1.</span></div>
+  <div class="out" id="out" hidden>
+    <div class="row"><span class="lbl">Character</span><div class="seg" id="charSeg"><button data-k="0.6" aria-pressed="false">Subtle</button><button data-k="1" aria-pressed="true">Expressive</button><button data-k="1.5" aria-pressed="false">Bold</button></div></div>
+    <div class="row"><button class="btn big" id="dlSvp">Synthesizer V project</button><button class="btn" id="dlXml">MusicXML</button><button class="btn" id="dlMid">MIDI with lyrics</button></div>
+    <span class="muted small">Synthesizer V project: File, Open. The feeling is already in it: slides into and out of the notes, vibrato on the long notes, soft verses and full choruses, a breath at the end of a line. Choose the voice and render, no tweaking needed. MusicXML: File, Import, drop it on bar 1.</span></div>
 </section>
 
 <details class="card how"><summary><span class="st serif">How it works</span></summary><ol>
@@ -668,6 +670,48 @@ $('#oracle').onclick = () => { rng = Math.random; const o = oracle(S.mode === 'w
 $('#make').onclick = make;
 $('#play').onclick = play;
 $('#beatOn').onclick = () => { const b = $('#beatOn'); b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true')); };
+/* ---------- a Synthesizer V 2 project with the feeling already in it ----------
+   only curves (loudness, tension, breathiness, vibrato, pitch), nothing that makes Synthesizer V think hard before the render;
+   built like a project Synthesizer V 2 saves itself (version 203), so it opens without a conversion */
+function toSvp(notes, bpm, title, voice, K) {
+  const BL = 705600000, PT = BL / TB, q = (t) => Math.round(t * PT), sec = (t) => t / TB * 60 / bpm, ms = (s) => Math.round(s * bpm / 60 * BL);
+  const uid = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3) | 8).toString(16); });
+  const ns = notes.slice().sort((a, b) => a.t - b.t), EN = { verse: 0.35, pre: 0.6, chorus: 1, bridge: 0.6, outro: 0.4 };
+  const ph = []; ns.forEach((n, i) => { const p = ns[i - 1]; if (!p || n.t - (p.t + p.d) >= TB / 2) ph.push([n]); else ph[ph.length - 1].push(n); });
+  const L = [], T = [], B = [], V = [], P = [], cv = (arr) => { const pr = []; for (let i = 0; i < arr.length; i += 2) pr.push([arr[i], arr[i + 1]]); pr.sort((a, b) => a[0] - b[0]); const out = []; let last = -1;
+    pr.forEach(([t, v]) => { if (t <= last) t = last + 1; out.push(t, Math.round(v * 1000) / 1000); last = t; }); return { mode: 'cubic', points: out }; };
+  ph.forEach((F) => { const a = q(F[0].t), z = q(F[F.length - 1].t + F[F.length - 1].d), e = EN[F[0].role] != null ? EN[F[0].role] : 0.5, top = Math.max(...F.map((n) => n.m)), base = (-3 + 4.5 * e) * Math.min(K, 1.2);
+    L.push(a - ms(0.15), base - 4 * K, a, base - 2.5 * K); T.push(a, (-0.2 + 0.45 * e) * K); B.push(a - ms(0.2), 0.35 * K, a, (0.25 - 0.25 * e) * K);
+    P.push(a - ms(0.12), 0, a, -70 * K, a + ms(0.12), 0);                                   // she slides up into the first note of a line
+    F.forEach((n, i) => { const t = q(n.t), d = q(n.d), s = sec(n.d), arc = Math.sin(Math.PI * (i + 0.5) / F.length);
+      L.push(t, base + 2.2 * K * arc + (n.m === top ? 1.2 * K : 0));
+      if (n.m >= top - 1 && e >= 0.6) T.push(t, (0.3 + 0.1 * e) * K, t + d, (-0.2 + 0.45 * e) * K);
+      if (s >= 1) V.push(t, 0.3, t + ms(0.35), 0.6, t + d, 1 + 0.6 * K); else if (s >= 0.5) V.push(t, 0.5, t + d, 0.8 + 0.3 * K); else V.push(t, 0.2, t + d, 0.25);
+      const p = F[i - 1]; if (i && Math.abs(n.m - p.m) >= 3 && s >= 0.3) P.push(t - 1, 0, t, (n.m > p.m ? -45 : 35) * K, t + ms(0.09), 0); });  // a leap is sung, not jumped
+    const l = F[F.length - 1], ld = sec(l.d); L.push(z, base - 3 * K); B.push(q(l.t), 0.05, z, (ld >= 0.5 ? 0.5 : 0.3) * K, z + ms(0.3), 0.05);
+    if (ld >= 0.4) P.push(z - ms(Math.min(0.25, ld / 2)), 0, z, -(ld >= 1 ? 160 : 90) * K); });     // and lets the end of a line fall away
+  const out = []; let word = '';
+  ns.forEach((n) => { let ly; if (n.lyr === '-' || n.syllabic === 'cont') ly = '-'; else if (n.syllabic === 'middle' || n.syllabic === 'end') ly = '+'; else ly = n.syllabic === 'begin' ? (n.word || n.lyr) : n.lyr;
+    out.push({ uuid: uid().replace(/-/g, '').slice(0, 16), musicalType: 'singing', lyrics: ly, phonemes: '', accent: '', onset: q(n.t), duration: q(n.d), pitch: n.m, detune: 0,
+      attributes: { muted: false, evenSyllableDuration: true }, takes: { activeTakeId: 0, takes: [{ id: 0, seedDuration: 0, seedPitch: 0, seedTimbre: 0, liked: false }] } }); });
+  const flat = () => ({ mode: 'cubic', points: [] }), takes = { activeTakeId: 0, takes: [{ id: 0, seedDuration: 0, seedPitch: 0, seedTimbre: 0, liked: false }] };
+  const params = (x) => Object.assign({ pitchDelta: flat(), vibratoEnv: flat(), loudness: flat(), tension: flat(), breathiness: flat(), voicing: flat(), gender: flat(), toneShift: flat(), mouthOpening: flat() }, x || {});
+  const voiceRef = { vocalModeInherited: true, vocalModePreset: '', vocalModeParams: {}, choirSeatingSeparation: 0.7 };
+  const db = voice === 'nyl' ? { name: 'NYL II', language: 'english', languageOverride: '', backendType: 'SVR3', version: '201' } : { name: '', language: 'english', languageOverride: '', backendType: '', version: '' };
+  const libId = uid(), mainId = uid(), first = out.length ? out[0].onset : 0, lastN = out[out.length - 1], scale = { type: 'Major', root: 'C' };
+  const proj = { version: 203, uuid: uid(), time: { meter: [{ index: 0, numerator: 4, denominator: 4 }], tempo: [{ position: 0, bpm }], startTimeSeconds: 0 },
+    library: [{ name: 'Voice 1', uuid: libId, parameters: params({ pitchDelta: cv(P), vibratoEnv: cv(V), loudness: cv(L), tension: cv(T), breathiness: cv(B) }), vocalModes: {}, pitchControls: [], notes: out, musicalScale: scale }],
+    tracks: [{ name: title || 'Voice', dispColor: 'ff7db235', dispOrder: 0, renderEnabled: false, mixer: { gainDecibel: -3, pan: 0, mute: false, solo: false, display: true, fxPresetName: '', fxParams: { room: { enabled: false, positionX: 0, positionY: 0, size: 15, reflectionGain: 0 }, postRoomEq: { enabled: false, filters: [{ freq: 117.7, gain: 0, q: 0.71 }, { freq: 692.8, gain: 0, q: 0.71 }], lowShelf: { freq: 25, gain: 0 } }, compressor: { enabled: false, attack: 0, ratio: 4, threshold: -10 }, reverb: { enabled: false, type: 'clean', preDelay: 0.05, decay: 1, dryWetRatio: 0.5 } } },
+      mainGroup: { name: 'main', uuid: mainId, parameters: params(), vocalModes: {}, pitchControls: [], notes: [], musicalScale: scale },
+      mainRef: { uuid: uid(), groupID: mainId, blickAbsoluteBegin: 0, blickAbsoluteEnd: -1, blickOffset: 0, pitchOffset: 0, mute: false, isInstrumental: false, database: db, dictionary: '', voice: voiceRef, voicePresetName: '', takes },
+      groups: [{ uuid: uid(), groupID: libId, blickAbsoluteBegin: first, blickAbsoluteEnd: lastN ? lastN.onset + lastN.duration : 0, blickOffset: 0, pitchOffset: 0, mute: false, isInstrumental: false,
+        database: { name: '', language: '', languageOverride: '', backendType: '', version: '-2' }, dictionary: '', voice: voiceRef, voicePresetName: '', takes }] }],
+    renderConfig: { destination: '', filename: (title || 'Vocal').replace(/[^A-Za-z0-9]+/g, ''), numChannels: 1, aspirationFormat: 'noAspiration', bitDepth: 24, sampleRate: 48000, exportMixDown: true, exportPitch: false, bypassPan: false, bypassGain: false, bypassEffects: false },
+    projectMixer: { linkRoomSettings: true }, loopBegin: 0, loopEnd: 0, loopEnabled: false };
+  return JSON.stringify(proj) + '\u0000';
+}
+S.char = 1; document.querySelectorAll('#charSeg button').forEach((b) => { b.onclick = () => { S.char = +b.dataset.k; document.querySelectorAll('#charSeg button').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); }; });
+$('#dlSvp').onclick = () => { const r = S.result; save(new Blob([toSvp(r.notes, r.bpm, r.title, S.voice, S.char)], { type: 'application/json' }), base() + '.svp'); };
 $('#dlXml').onclick = () => { const r = S.result; save(new Blob([toXml(r.notes, r.bpm, r.key, r.title)], { type: 'application/vnd.recordare.musicxml+xml' }), base() + '.musicxml'); };
 $('#dlMid').onclick = () => { const r = S.result; save(new Blob([toMidi(r.notes, r.bpm, r.title)], { type: 'audio/midi' }), base() + '.mid'); };
 $('#songFile').onchange = async () => { const f = $('#songFile').files[0]; if (!f) return; loadSong(await f.arrayBuffer(), f.name); $('#songFile').value = ''; };
