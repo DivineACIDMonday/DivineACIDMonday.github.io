@@ -680,15 +680,15 @@ function toSvp(notes, bpm, title, voice, K) {
   const ph = []; ns.forEach((n, i) => { const p = ns[i - 1]; if (!p || n.t - (p.t + p.d) >= TB / 2) ph.push([n]); else ph[ph.length - 1].push(n); });
   const L = [], T = [], B = [], V = [], P = [], cv = (arr) => { const pr = []; for (let i = 0; i < arr.length; i += 2) pr.push([arr[i], arr[i + 1]]); pr.sort((a, b) => a[0] - b[0]); const out = []; let last = -1;
     pr.forEach(([t, v]) => { if (t <= last) t = last + 1; out.push(t, Math.round(v * 1000) / 1000); last = t; }); return { mode: 'cubic', points: out }; };
-  ph.forEach((F) => { const a = q(F[0].t), z = q(F[F.length - 1].t + F[F.length - 1].d), e = EN[F[0].role] != null ? EN[F[0].role] : 0.5, top = Math.max(...F.map((n) => n.m)), base = (-3 + 4.5 * e) * Math.min(K, 1.2);
-    L.push(a - ms(0.15), base - 4 * K, a, base - 2.5 * K); T.push(a, (-0.2 + 0.45 * e) * K); B.push(a - ms(0.2), 0.35 * K, a, (0.25 - 0.25 * e) * K);
+  ph.forEach((F) => { const a = q(F[0].t), z = q(F[F.length - 1].t + F[F.length - 1].d), e = EN[F[0].role] != null ? EN[F[0].role] : 0.5, top = Math.max(...F.map((n) => n.m)), base = -1 + 1.6 * e, kL = Math.min(K, 1); // loudness stays close (easy to mix); the character lives in slides, vibrato and breath
+    L.push(a - ms(0.15), base - 2 * kL, a, base - 1.2 * kL); T.push(a, (-0.2 + 0.45 * e) * K); B.push(a - ms(0.2), 0.35 * K, a, (0.25 - 0.25 * e) * K);
     P.push(a - ms(0.12), 0, a, -70 * K, a + ms(0.12), 0);                                   // she slides up into the first note of a line
     F.forEach((n, i) => { const t = q(n.t), d = q(n.d), s = sec(n.d), arc = Math.sin(Math.PI * (i + 0.5) / F.length);
-      L.push(t, base + 2.2 * K * arc + (n.m === top ? 1.2 * K : 0));
+      L.push(t, base + 1.2 * kL * arc + (n.m === top ? 0.6 * kL : 0));
       if (n.m >= top - 1 && e >= 0.6) T.push(t, (0.3 + 0.1 * e) * K, t + d, (-0.2 + 0.45 * e) * K);
       if (s >= 1) V.push(t, 0.3, t + ms(0.35), 0.6, t + d, 1 + 0.6 * K); else if (s >= 0.5) V.push(t, 0.5, t + d, 0.8 + 0.3 * K); else V.push(t, 0.2, t + d, 0.25);
       const p = F[i - 1]; if (i && Math.abs(n.m - p.m) >= 3 && s >= 0.3) P.push(t - 1, 0, t, (n.m > p.m ? -45 : 35) * K, t + ms(0.09), 0); });  // a leap is sung, not jumped
-    const l = F[F.length - 1], ld = sec(l.d); L.push(z, base - 3 * K); B.push(q(l.t), 0.05, z, (ld >= 0.5 ? 0.5 : 0.3) * K, z + ms(0.3), 0.05);
+    const l = F[F.length - 1], ld = sec(l.d); L.push(z, base - 1.5 * kL); B.push(q(l.t), 0.05, z, (ld >= 0.5 ? 0.5 : 0.3) * K, z + ms(0.3), 0.05);
     if (ld >= 0.4) P.push(z - ms(Math.min(0.25, ld / 2)), 0, z, -(ld >= 1 ? 160 : 90) * K); });     // and lets the end of a line fall away
   const out = []; let word = '';
   ns.forEach((n) => { let ly; if (n.lyr === '-' || n.syllabic === 'cont') ly = '-'; else if (n.syllabic === 'middle' || n.syllabic === 'end') ly = '+'; else ly = n.syllabic === 'begin' ? (n.word || n.lyr) : n.lyr;
