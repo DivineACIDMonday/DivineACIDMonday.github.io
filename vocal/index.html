@@ -339,7 +339,7 @@ function writeVocal(secs, opt) {
   // the song's form first: lyric parts of the same kind in a row are one block (verse + verse is the song's verse part); every block
   // takes the next part of the song that fits it, so the lyrics and the song share one form; a block that is too long sings tighter
   const natural = (sec, tight) => { const nd = tight ? Math.max(...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18)) : Math.max(median(sec.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18)); return ([2, 4, 8, 16].find((b) => b * BAR >= nd) || 16) * BAR * sec.lines.length; };
-  const blockAt = {}, tightSec = {}, assign = parts.length && !opt.packed;
+  const blockAt = {}, tightSec = {}, assign = parts.length && !opt.packed && !opt.spread;
   if (assign) { let j = 0, i = 0;
     while (i < secs.length) { let k2 = i; while (k2 + 1 < secs.length && secs[k2 + 1].role === secs[i].role) k2++;
       const role = secs[i].role, usable = (x) => !/intro/i.test(x.text) && (role === 'outro' || !/outro/i.test(x.text) || j >= parts.length - 1);
@@ -349,10 +349,32 @@ function writeVocal(secs, opt) {
         const full = parts[k].z - parts[k].a, len = role === 'chorus' && full >= 12 * BAR && k < parts.length - 1 ? full - 4 * BAR : full, nat = secs.slice(i, k2 + 1).reduce((a2, x) => a2 + natural(x, opt.tight), 0); blockAt[i] = parts[k].a;
         if (nat > len + 2 * TB) for (let x = i; x <= k2; x++) tightSec[x] = true; j = k + 1; }
       i = k2 + 1; } }
+  // too much text for the roomy and the tight way: spread every lyric part over the whole song, each on the start of a part of the
+  // song near its share of the song (the fitting part when it is close), so she never crams the first half and leaves the rest empty
+  opt.report.roomy = secs.reduce((a2, x) => a2 + x.lines.length * ([2, 4, 8, 16].find((b) => b * BAR >= Math.max(median(x.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...x.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18))) || 16) * BAR, 0);
+  const spreadAt = {};
+  if (opt.spread && parts.length) { const slotOf = (x) => ([2, 4, 8, 16].find((b) => b * BAR >= Math.max(...x.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18))) || 16) * BAR;
+    const Ls = secs.map((x) => x.lines.length * slotOf(x)), from = opt.startBar0 * BAR, stop = end || parts[parts.length - 1].z, free = stop - from - Ls.reduce((a2, x) => a2 + x, 0);
+    if (free >= 0) { // the best order of places: every lyric part on a place of its own kind (a part start, or every 4 bars inside a long part),
+      // in the order of the lyrics, spread over the song; found by trying all of them (dynamic programming)
+      const C = []; parts.forEach((q) => { for (let a = q.a; a < q.z; a += 4 * BAR) C.push({ a, text: q.text, head: a === q.a, z: q.z }); });
+      const n = secs.length, m = C.length, NEG = -1e9, sc2 = (i, c) => { const x = secs[i], q = C[c]; let v = 0;
+        if (FIT[x.role].test(q.text)) v += 3; if (/intro/i.test(q.text)) v -= 6; if (/outro|end/i.test(q.text) && x.role !== 'outro') v -= 4;
+        if (q.head) v += 1.2; else if ((q.a - parts.find((p2) => p2.text === q.text && p2.a <= q.a && q.a < p2.z).a) % (8 * BAR) === 0) v += 0.4;
+        const aim = from + (stop - from) * i / n; return v - Math.abs(q.a - aim) / (24 * BAR); };
+      const best = Array.from({ length: n }, () => new Array(m).fill(NEG)), from_ = Array.from({ length: n }, () => new Array(m).fill(-1));
+      for (let c = 0; c < m; c++) if (C[c].a >= from && C[c].a + Ls.reduce((a2, y) => a2 + y, 0) <= stop) best[0][c] = sc2(0, c);
+      for (let i = 1; i < n; i++) for (let c = 0; c < m; c++) { const rest = Ls.slice(i).reduce((a2, y) => a2 + y, 0); if (C[c].a + rest > stop) continue;
+        for (let d = 0; d < m; d++) if (best[i - 1][d] > NEG && C[d].a + Ls[i - 1] <= C[c].a) { const v = best[i - 1][d] + sc2(i, c); if (v > best[i][c]) { best[i][c] = v; from_[i][c] = d; } } }
+      let c = -1; for (let q = 0; q < m; q++) if (best[n - 1][q] > NEG && (c < 0 || best[n - 1][q] > best[n - 1][c])) c = q;
+      if (c < 0) opt.report.left = 1; else for (let i = n - 1; i >= 0; i--) { spreadAt[i] = C[c].a; c = from_[i][c]; } }
+    else opt.report.left = 1; }
   secs.forEach((sec, si) => {
-    const need = opt.tight || tightSec[si] ? Math.max(...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18)) : Math.max(median(sec.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18));
+    if (opt.spread && spreadAt[si] == null) return;
+    const need = opt.tight || opt.spread || tightSec[si] ? Math.max(...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18)) : Math.max(median(sec.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18));
     const slot = [2, 4, 8, 16].find((b) => b * BAR >= need) * BAR || 16 * BAR;
-    if (assign) { if (blockAt[si] != null) t0 = Math.max(t0, blockAt[si]); if (end && t0 + sec.lines.length * slot > end + 2 * TB && !opt.runOn) { opt.report.left += sec.lines.length; return; } }
+    if (opt.spread) t0 = spreadAt[si];
+    else if (assign) { if (blockAt[si] != null) t0 = Math.max(t0, blockAt[si]); if (end && t0 + sec.lines.length * slot > end + 2 * TB && !opt.runOn) { opt.report.left += sec.lines.length; return; } }
     else if (parts.length) { // the next part of the song that fits this lyric part and still has room for it; never past the end of the song
       // spread over the whole song: lyric part i aims at its share of the song, so the singer does not crowd the start and leave the end empty
       const used = secs.reduce((a2, x) => a2 + x.lines.length, 0), before = secs.slice(0, si).reduce((a2, x) => a2 + x.lines.length, 0), from = opt.startBar0 * BAR, aim = end ? from + (end - from) * before / Math.max(1, used) : 0;
@@ -565,7 +587,11 @@ function make() {
     // really too short the last lines run on past its end, with the number of bars the song needs
     notes = writeVocal(secs, wopt);
     if (wopt.report && wopt.report.left) { wopt.tight = true; notes = writeVocal(secs, wopt); }
-    if (wopt.report && wopt.report.left) { wopt.packed = true; notes = writeVocal(secs, wopt); }
+    if (wopt.report && wopt.report.left) { wopt.spread = true; notes = writeVocal(secs, wopt); // over the whole song, each part on its own part of the song
+      if (!wopt.report.left && wopt.songEnd && S.song && S.song.raw) { const from = wopt.startBar0 * BAR, short = Math.ceil((wopt.report.roomy - (wopt.songEnd - from)) / BAR);
+        if (short > 0) { S.need = short; $('#longer').hidden = false; $('#extend').hidden = false; $('#extend').textContent = 'Make the song ' + Math.ceil(short / 4) * 4 + ' bars longer';
+          warn.textContent = 'A lot of text for this song: every line gets 2 bars now. Make the song ' + Math.ceil(short / 4) * 4 + ' bars longer and every line gets room to breathe.'; warn.hidden = false; } } }
+    if (wopt.report && wopt.report.left) { wopt.spread = false; wopt.packed = true; notes = writeVocal(secs, wopt); }
     if (wopt.report && wopt.report.left) { wopt.runOn = true; notes = writeVocal(secs, wopt); const last = Math.ceil(Math.max(...notes.map((n) => n.t + n.d)) / BAR);
       if (wopt.songEnd && last * BAR > wopt.songEnd && S.song && S.song.raw) { S.need = last - wopt.songEnd / BAR; $('#longer').hidden = false; $('#extend').hidden = false; $('#extend').textContent = 'Make the song ' + Math.ceil(S.need / 4) * 4 + ' bars longer'; }
       if (wopt.songEnd && last * BAR > wopt.songEnd) { warn.textContent = 'All lines are sung. The song is ' + (last - wopt.songEnd / BAR) + ' bars too short: the last lines run on to bar ' + last + '. Make the song ' + last + ' bars long in the Studio, or it ends while she still sings.'; warn.hidden = false; } }
