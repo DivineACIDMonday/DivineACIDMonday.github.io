@@ -1057,5 +1057,14 @@ function fix(){busy=false;var l=null;for(var q=0;q<LOGO.length&&!l;q++)l=[].slic
   else{var w=document.createElement('div');w.className='dm-row';w.style.cssText='display:flex;align-items:center;flex-wrap:wrap;gap:6px 0;justify-content:'+(ps.textAlign==='center'||ps.alignItems==='center'?'center':'flex-start');P.insertBefore(w,l);w.appendChild(l);w.appendChild(a);l.style.margin='0';}}
  document.querySelectorAll(HIDE).forEach(function(e){if(!e.classList.contains('dm-suite'))e.style.display='none';});}
 new MutationObserver(function(){if(!busy){busy=true;requestAnimationFrame(fix);}}).observe(document.documentElement,{childList:true,subtree:true});fix();})();</script>
+<!--BURPDOM--><script>/* Burp: other styles, a random wildness and swing, other players */
+(function () { const $q = (q) => document.querySelector(q), R = (n) => Math.floor(Math.random() * n);
+  function burp() { const chips = [...document.querySelectorAll('#styles button')]; if (chips.length) { chips.filter((c) => c.getAttribute('aria-pressed') === 'true' || c.classList.contains('on')).forEach((c) => { if (Math.random() < 0.6) c.click(); });
+      const n = 1 + R(3); for (let i = 0; i < n; i++) { const c = chips[R(chips.length)]; if (c.getAttribute('aria-pressed') !== 'true' && !c.classList.contains('on')) c.click(); } }
+    ['#wild', '#swing'].forEach((q) => { const el = $q(q); if (el) { el.value = R(101); el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); } });
+    const d = $q('#dice'); if (d) d.click(); }
+  const a = $q('#dice'); if (a && !$q('#burpBtn')) { const b = document.createElement('button'); b.id = 'burpBtn'; b.type = 'button'; b.className = 'btn'; b.textContent = 'Burp'; b.style.fontWeight = '700'; b.title = 'Burp: other styles, any wildness and swing, other players'; b.onclick = burp; a.after(b); }
+})();
+</script><!--/BURPDOM-->
 </body>
 </html>
