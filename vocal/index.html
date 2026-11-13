@@ -640,7 +640,7 @@ const DMS = (() => {
   const TN = { bass: [24, 30, 36, 42, 48], sub: [24, 30, 36, 42], keys: [36, 42, 48, 54, 60, 66, 72, 78], pad: [36, 42, 48, 54, 60, 66], lead: [48, 54, 60, 66, 72, 78], pluck: [60, 66, 72, 78, 84, 90] };
   const NN = ['C', 'Cs', 'D', 'Ds', 'E', 'F', 'Fs', 'G', 'Gs', 'A', 'As', 'B'];
   const buf = {}, busy = {};
-  let on = true; try { on = localStorage.getItem('dm-sounds') !== 'off'; } catch (e) { /* fine */ }
+  const on = true;   // always the Divine Monday pack; the sketch sounds only fill in while it loads
   const load = (ctx, name) => { if (buf[name] || busy[name]) return busy[name]; return busy[name] = fetch(BASE + name + '.mp3').then((r) => { if (!r.ok) throw 0; return r.arrayBuffer(); })
     .then((b) => new Promise((ok, no) => ctx.decodeAudioData(b, ok, no))).then((ab) => { buf[name] = ab; }).catch(() => { /* stays sketch */ }); };
   const toneName = (kind, p) => { const rs = TN[kind]; const r = rs.reduce((b, x) => Math.abs(x - p) < Math.abs(b - p) ? x : b, rs[0]); return [kind + '_' + NN[r % 12] + (Math.floor(r / 12) - 2), r]; };
@@ -666,12 +666,6 @@ const DMS = (() => {
   // a drum by its General MIDI note
   function gm(n) { return n === 35 || n === 36 ? 'kick_1' : n === 38 || n === 40 ? 'snare_1' : n === 37 ? 'perc' : n === 39 ? 'clap' : n === 42 || n === 44 || n === 54 || n === 70 || n === 69 ? 'hat_closed' : n === 46 ? 'hat_open'
     : [41, 43, 45, 47, 48, 50, 60, 61, 62, 63, 64].includes(n) ? 'tom' : [49, 51, 52, 53, 55, 57, 59].includes(n) ? 'crash' : 'perc'; }
-  function chip() { const hd = document.querySelector('header'); if (!hd || document.getElementById('dmsChip')) return;
-    const b = document.createElement('button'); b.id = 'dmsChip'; b.type = 'button'; b.className = 'tag';
-    b.style.cssText = 'cursor:pointer;background:transparent;font:12px/1.2 ui-monospace,Menlo,Consolas,monospace;color:inherit;border:1px solid currentColor;opacity:.75;border-radius:6px;padding:4px 7px';
-    const say = () => { b.textContent = on ? 'Sounds: Divine Monday' : 'Sounds: sketch'; b.title = on ? 'The preview plays the recorded Divine Monday sound pack. Click for the plain sketch sounds.' : 'The preview plays plain sketch sounds. Click for the Divine Monday sound pack.'; };
-    b.onclick = () => { on = !on; try { localStorage.setItem('dm-sounds', on ? 'on' : 'off'); } catch (e) { /* fine */ } say(); }; say(); hd.append(b); }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', chip); else chip();
   return { drum, tone, warm, ready, byName, gm, get on() { return on; } };
 })();
 /*/DMSOUND*/
