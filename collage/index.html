@@ -80,7 +80,7 @@ $('#artist').onchange = () => { S.artist = $('#artist').value; drawSide(); };
 function add(x, px, py) {
   if (x.cat === 'achtergronden') { S.bg = { item: x }; img(x.id, () => draw()); draw(); return; }
   const W = cv.width, H = cv.height, fit = Math.min(W * (x.cat === 'luchten' || x.cat === 'grond' ? 1 : 0.35) / x.w, H * (x.cat === 'luchten' || x.cat === 'grond' ? 1 : 0.55) / x.h);
-  const o = { item: x, x: px == null ? W / 2 : px, y: py == null ? H / 2 : py, s: fit, r: 0, f: 1, a: 1 };
+  const wide = x.cat === 'luchten' || x.cat === 'grond', o = { item: x, x: px == null ? W / 2 : px, y: py == null ? H / 2 : py, s: wide ? fit : Math.min(fit, 1), r: 0, f: 1, a: 1 };   // never blown up: a piece arrives sharp, at most its own size
   if (x.cat === 'luchten' && py == null) { o.s = W / x.w; o.y = x.h * o.s / 2; }
   if (x.cat === 'grond' && py == null) { o.s = W / x.w; o.y = H - x.h * o.s / 2; }
   img(x.id); const low = x.cat === 'luchten' || x.cat === 'grond'; if (low) S.objs.unshift(o); else S.objs.push(o); S.sel = o; draw(); }
