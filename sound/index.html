@@ -84,7 +84,7 @@ footer{color:var(--soft);font-size:13px;text-align:center;padding:24px 0 96px}
     <button class="btn big rec" id="bStop" type="button" data-t="stop" style="width:100%"></button>
   </div>
   <div id="srcDone" hidden>
-    <div class="row"><span id="srcInfo" class="muted"></span><span class="sp"></span><button class="btn small" id="bNewSrc" type="button" data-t="newSrc"></button></div>
+    <div class="row"><span id="srcInfo" class="muted"></span><span class="sp"></span><button class="btn small" id="bRecDl" type="button" data-t="recDl"></button><button class="btn small" id="bNewSrc" type="button" data-t="newSrc"></button></div>
     <p class="warn" id="srcWarn" hidden></p>
   </div>
 </section>
@@ -502,7 +502,7 @@ const TXT = {
     found: '{d} of sound, {n} hits found', few: 'Few clear hits found; the drums are shaped from the sound itself.', removed: 'Removed', undo: 'Undo',
     micErr: 'No access to the microphone.', fileErr: 'This file cannot be read.', noRec: 'Recording is not supported in this browser; import a file instead.',
     step: '{i} of 16', fromHit: 'From the moment at {t}', fromSel: 'From your selection at {t}', fromReg: 'From the stretch at {t}', fromLoop: 'Built from your drums',
-    done: 'Pack complete', burpH: 'Burp', burpHint: 'One tap makes a complete track with your pack. Every burp is different. Or load a MIDI from your machines.', burpGen: 'Genre for the burp', same: 'Same as pack', loadMidi: 'Load MIDI', play: 'Play', stopT: 'Stop', burping: 'Burping your track', midiErr: 'This MIDI cannot be read.', midiFirst: 'Make a pack first, then load your MIDI.', routedMidi: 'That was a MIDI file; it now plays with your pack.', routedAudio: 'That was a sound file; it is now your new recording.', mp3ing: 'Writing the MP3', secs: ['Intro', 'A', 'B', 'Break', 'A', 'Outro'], files: '{n} files, 24 bit WAV', choose: 'Select a piece first', assigned: 'Made it a {s}', selFirst: 'Tap a sound in the pack first'
+    done: 'Pack complete', recDl: 'Download recording', burpH: 'Burp', burpHint: 'One tap makes a complete track with your pack. Every burp is different. Or load a MIDI from your machines.', burpGen: 'Genre for the burp', same: 'Same as pack', loadMidi: 'Load MIDI', play: 'Play', stopT: 'Stop', burping: 'Burping your track', midiErr: 'This MIDI cannot be read.', midiFirst: 'Make a pack first, then load your MIDI.', routedMidi: 'That was a MIDI file; it now plays with your pack.', routedAudio: 'That was a sound file; it is now your new recording.', mp3ing: 'Writing the MP3', secs: ['Intro', 'A', 'B', 'Break', 'A', 'Outro'], files: '{n} files, 24 bit WAV', choose: 'Select a piece first', assigned: 'Made it a {s}', selFirst: 'Tap a sound in the pack first'
   },
   nl: {
     h1: '1. Geluidsbron', rec: 'Opnemen', imp: 'Audio of video importeren', srcHint: 'Neem zo lang op als je wilt: een bos, je keuken, een trein, je eigen stem. Alles blijft op je telefoon.',
@@ -518,7 +518,7 @@ const TXT = {
     found: '{d} geluid, {n} klappen gevonden', few: 'Weinig duidelijke klappen gevonden; de drums worden uit het geluid zelf gevormd.', removed: 'Weggehaald', undo: 'Terug',
     micErr: 'Geen toegang tot de microfoon.', fileErr: 'Dit bestand kan ik niet lezen.', noRec: 'Opnemen werkt niet in deze browser; importeer een bestand.',
     step: '{i} van 16', fromHit: 'Van het moment op {t}', fromSel: 'Van je selectie op {t}', fromReg: 'Van het stuk op {t}', fromLoop: 'Gebouwd uit je drums',
-    done: 'Pack compleet', burpH: 'Burp', burpHint: 'Eén tik maakt een complete track met jouw pack. Elke burp is anders. Of laad een MIDI uit je machines.', burpGen: 'Genre voor de burp', same: 'Zelfde als pack', loadMidi: 'MIDI laden', play: 'Speel', stopT: 'Stop', burping: 'Je track wordt geburpt', midiErr: 'Deze MIDI kan ik niet lezen.', midiFirst: 'Maak eerst een pack, laad dan je MIDI.', routedMidi: 'Dat was een MIDI bestand; hij speelt nu met je pack.', routedAudio: 'Dat was een geluidsbestand; het is nu je nieuwe opname.', mp3ing: 'MP3 wordt geschreven', files: '{n} bestanden, 24 bit WAV', choose: 'Kies eerst een stuk', assigned: 'Er is een {s} van gemaakt', selFirst: 'Tik eerst op een geluid in het pack'
+    done: 'Pack compleet', recDl: 'Opname downloaden', burpH: 'Burp', burpHint: 'Eén tik maakt een complete track met jouw pack. Elke burp is anders. Of laad een MIDI uit je machines.', burpGen: 'Genre voor de burp', same: 'Zelfde als pack', loadMidi: 'MIDI laden', play: 'Speel', stopT: 'Stop', burping: 'Je track wordt geburpt', midiErr: 'Deze MIDI kan ik niet lezen.', midiFirst: 'Maak eerst een pack, laad dan je MIDI.', routedMidi: 'Dat was een MIDI bestand; hij speelt nu met je pack.', routedAudio: 'Dat was een geluidsbestand; het is nu je nieuwe opname.', mp3ing: 'MP3 wordt geschreven', files: '{n} bestanden, 24 bit WAV', choose: 'Kies eerst een stuk', assigned: 'Er is een {s} van gemaakt', selFirst: 'Tik eerst op een geluid in het pack'
   }
 };
 let lang = 'en';
@@ -1180,6 +1180,7 @@ async function loadBlob(blob) {
   $('#cDir').hidden = false; renderDir(); renderGrid(); renderEd(); showPack(); renderAssign(); requestAnimationFrame(drawWave);
 }
 $('#bNewSrc').onclick = () => clearAll();
+$('#bRecDl').onclick = () => { if (S.x) dl(new Blob([wav24([S.x])], { type: 'audio/wav' }), safe(S.name || 'Divine Sound') + ' Original recording.wav'); };
 
 // ---------- make ----------
 $('#bAuto').onclick = async () => { if (!S.x) return; S.guided = false; S.seed = rnd32(); assignAuto(false); await rebuild(S.slots.map((s) => s.id), true); S.sel = -1; renderGrid(); renderEd(); $('#cPack').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
@@ -1203,11 +1204,11 @@ $('#clean').onchange = () => { S.clean = $('#clean').checked; dirChanged(); };
 
 // ---------- export ----------
 function wav24(ch) {
-  const n = ch[0].length, ba = 6, size = 44 + n * ba, ab = new ArrayBuffer(size), d = new DataView(ab), u = new Uint8Array(ab);
+  const nc = ch.length, n = ch[0].length, ba = 3 * nc, size = 44 + n * ba, ab = new ArrayBuffer(size), d = new DataView(ab), u = new Uint8Array(ab);
   const ws = (o, s) => { for (let i = 0; i < s.length; i++) u[o + i] = s.charCodeAt(i); };
-  ws(0, 'RIFF'); d.setUint32(4, size - 8, true); ws(8, 'WAVE'); ws(12, 'fmt '); d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 2, true);
+  ws(0, 'RIFF'); d.setUint32(4, size - 8, true); ws(8, 'WAVE'); ws(12, 'fmt '); d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, nc, true);
   d.setUint32(24, S.sr, true); d.setUint32(28, S.sr * ba, true); d.setUint16(32, ba, true); d.setUint16(34, 24, true); ws(36, 'data'); d.setUint32(40, n * ba, true);
-  let o = 44; for (let i = 0; i < n; i++) for (let c = 0; c < 2; c++) { const v = Math.round(clamp(ch[c][i], -1, 1) * 8388607); u[o++] = v & 255; u[o++] = (v >> 8) & 255; u[o++] = (v >> 16) & 255; }
+  let o = 44; for (let i = 0; i < n; i++) for (let c = 0; c < nc; c++) { const v = Math.round(clamp(ch[c][i], -1, 1) * 8388607); u[o++] = v & 255; u[o++] = (v >> 8) & 255; u[o++] = (v >> 16) & 255; }
   return u;
 }
 const CRC = (() => { const tb = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; tb[n] = c >>> 0; } return tb; })();
@@ -1245,6 +1246,7 @@ async function collect() {
       k++;
     }
   }
+  if (S.x) out.push({ name: N + '/Recording/' + N + ' Original recording.wav', ch: [S.x] });
   return out;
 }
 $('#bZip').onclick = async () => {
