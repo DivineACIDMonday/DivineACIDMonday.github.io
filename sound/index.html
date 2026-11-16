@@ -838,7 +838,7 @@ function recipe() {
 const kPc = () => (S.keyMode === 'auto' ? S.autoPc : S.keyPc);
 const kMin = () => (S.keyMode === 'auto' ? S.autoMinor : S.minor);
 const keyName = () => NOTE[kPc()] + (kMin() ? ' min' : ' maj');
-function notes() { const pc = kPc(), bass = 36 + pc, keys = pc >= 6 ? 48 + pc : 60 + pc; return { bass, sub: pc >= 4 ? bass - 12 : bass, keys, pad: keys - 12, third: kMin() ? 3 : 4 }; }
+function notes() { const pc = kPc(), bass = 36 + pc, keys = pc >= 6 ? 48 + pc : 60 + pc; return { bass, sub: pc >= 4 ? bass - 12 : bass, keys, pad: keys, third: kMin() ? 3 : 4 }; }
 function fitRatio(f0, target) { let r = target / f0; while (r > 2.05) r /= 2; while (r < 0.49) r *= 2; return r; }
 
 // ---------- builders: they shape your sound, then fx() colours it ----------
@@ -890,32 +890,51 @@ function voice(eng, src, f, L, R, r, p, T, v) {
   const a = ks(e, f, L, 2.2 * p.len * T.dec, b), c = ks(e, f * (1 + T.det), L, 2.0 * p.len * T.dec, b), o = ks(e, f * 2, L, 1.0 * p.len * T.dec, Math.min(0.95, b + 0.2));
   return [env(add(a, o, 0.22), 0.002, 0.05), env(add(c, o, 0.22), 0.002, 0.05)];
 }
+// ---------- wavetable: one tiny cycle whose harmonics follow a moment of your recording ----------
+function cycleFrom(x, ref, nh, tilt, seed, fund = 0.6) {
+  const N = 2048, sr = S.sr, re = new Float64Array(N), im = new Float64Array(N), r = rng32(seed >>> 0);
+  let best = 0, off = 0; for (let o = 0; o + N <= x.length; o += 1024) { let e = 0; for (let i = 0; i < N; i += 8) e += x[o + i] * x[o + i]; if (e > best) { best = e; off = o; } }
+  for (let i = 0; i < N; i++) re[i] = (x[off + i] || 0) * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1)));
+  fft(re, im); const mag = (k) => { k = Math.max(1, Math.min(N / 2 - 1, k)); return Math.sqrt(re[k] * re[k] + im[k] * im[k]); };
+  const a = []; const bw = Math.max(1, Math.round(ref * N / sr / 2));
+  for (let h = 1; h <= nh; h++) { const k = Math.round(h * ref * N / sr); let s = 0; for (let j = -bw; j <= bw; j++) s += mag(k + j); a.push(Math.pow(s / (2 * bw + 1) + 1e-9, 0.6) / Math.pow(h, tilt)); }
+  const mx = Math.max(...a) || 1; for (let h = 0; h < a.length; h++) a[h] /= mx; a[0] = Math.max(a[0], fund);
+  return { a, ph: a.map(() => r() * 2 * Math.PI) };
+}
+function table(c, fmax) { const L = 2048, T = new Float32Array(L + 1), nh = Math.min(c.a.length, Math.max(1, Math.floor(0.45 * S.sr / Math.max(20, fmax)))); for (let h = 0; h < nh; h++) { const am = c.a[h], ph = c.ph[h], w = 2 * Math.PI * (h + 1) / L; if (am < 1e-4) continue; for (let j = 0; j < L; j++) T[j] += am * Math.sin(w * j + ph); } let m = 0; for (let j = 0; j < L; j++) m = Math.max(m, Math.abs(T[j])); for (let j = 0; j < L; j++) T[j] /= m || 1; T[L] = T[0]; return T; }
+function osc(c, n, fAt, fmax) { const T = table(c, fmax), y = new Float32Array(n), sr = S.sr; let p = 0; for (let i = 0; i < n; i++) { const q = p * 2048, k = q | 0, f = q - k; y[i] = T[k] + (T[k + 1] - T[k]) * f; p += fAt(i) / sr; p -= Math.floor(p); } return y; }
+function svfLP(x, cut, q = 0.7) { const sr = S.sr, y = new Float32Array(x.length); let ic1 = 0, ic2 = 0; for (let i = 0; i < x.length; i++) { const g = Math.tan(Math.PI * Math.min(cut(i), sr * 0.45) / sr), k = 1 / q, a1 = 1 / (1 + g * (g + k)), a2 = g * a1, a3 = g * a2, v3 = x[i] - ic2, v1 = a1 * ic1 + a2 * v3, v2 = ic2 + a2 * ic1 + a3 * v3; ic1 = 2 * v1 - ic1; ic2 = 2 * v2 - ic2; y[i] = v2; } return y; }
+function adsr(n, a, d, s, rel) { const sr = S.sr, y = new Float32Array(n), na = Math.max(1, a * sr), nd = Math.max(1, d * sr), nr = Math.max(1, rel * sr); for (let i = 0; i < n; i++) { let v = i < na ? i / na : s + (1 - s) * Math.exp(-(i - na) / nd); const left = n - i; if (left < nr) v *= left / nr; y[i] = v; } return y; }
+const mul = (x, e) => { const y = new Float32Array(x.length); for (let i = 0; i < x.length; i++) y[i] = x[i] * (e[i] || 0); return y; };
+function cyc(id, src, ref0, ref1, nh, tilt, fund) { return cycleFrom(src.x, ppk(id + 'ref', ref0, ref1), nh, tilt * ppk(id + 'tilt', 0.8, 1.25), (S.seed ^ hashStr(id + 'cyc')) >>> 0, fund); }
 const B = {
-  kick(src, R, r, p, v) {
-    const sr = S.sr, T = toneStyle(), how = vpick('kick', world().kick), n = notes(); let x = cut(src.x, 0.6 * sr); x = resample(x, semi(R.drop + p.pitch + (r() - 0.5) * 2 + (how === 'drop' ? -7 - r() * 5 : 0))); x = biq(x, 'hp', 35);
-    if (how === 'bend') x = bend(x, 1.8, 0.7, 0.05);
-    let f0 = mf(n.sub); if (f0 < 42) f0 *= 2; f0 *= semi(p.pitch * 0.5);
-    const tight = how === 'tight' ? 0.5 : 1, len = sr * 0.45 * p.len * T.dd * tight, top = norm([decay(x, len, 0.11 * p.len * T.dd * tight)], 0.7)[0], rg = norm([ring(resample(src.x, semi(-12)), f0, len, 0.18 * p.len * T.dd * tight)], how === 'drop' ? 0.5 : 0.8)[0];
-    let own = add(top, rg, 0.9);
-    if (how === 'layer') { const l = S.rank.kick || [], c = l[(1 + (v || 0)) % Math.max(1, l.length)]; if (c) { const o = S.segs[c.i], y = decay(resample(slice(o.s, o.e), semi(-5)), len, 0.08 * p.len); own = add(own, norm([y], 0.6)[0], 1, Math.round(0.006 * sr)); } }
-    return { ch: capAdd(own, sine(f0, len, 0.14 * p.len * tight, 0.0015, f0 * 3.2, 0.03), 0.22), o: { hp: 28, lp: R.lp, drive: R.drive * 0.8, comp: true, sendHP: 350 } };
+  kick(src, R, r, p, v) { // a real kick: a deep body that drops in pitch, plus the click of your hit on top
+    const sr = S.sr, how = vpick('kick', world().kick), n = notes(); let f0 = mf(n.sub); if (f0 < 42) f0 *= 2; f0 *= semi(p.pitch * 0.5);
+    const tight = how === 'tight' ? 0.6 : how === 'drop' ? 1.3 : 1, len = Math.round(sr * 0.5 * p.len * tight), c = cyc('kick', src, 40, 90, 6, 2.2, 1);
+    const sweep = how === 'bend' ? 6 : 3.5, tau = how === 'bend' ? 0.06 : 0.035;
+    const body = mul(osc(c, len, (i) => f0 * (1 + sweep * Math.exp(-i / sr / tau)), f0 * (1 + sweep)), adsr(len, 0.001, 0.16 * p.len * tight, 0, 0.03));
+    let click = biq(biq(cut(src.x, 0.03 * sr), 'hp', 300), 'lp', 7000); click = decay(click, 0.03 * sr, 0.008);
+    let y = add(norm([body], 0.9)[0], norm([click], 0.35)[0], 1);
+    if (how === 'layer') { const l = S.rank.kick || [], q = l[(1 + (v || 0)) % Math.max(1, l.length)]; if (q) { const o = S.segs[q.i]; y = add(y, norm([decay(biq(slice(o.s, o.e), 'lp', 900), 0.12 * sr, 0.04)], 0.3)[0], 1, Math.round(0.004 * sr)); } }
+    return { ch: y, o: { hp: 28, lp: Math.min(R.lp, 9000), drive: R.drive * 0.6, comp: true, sendHP: 350 } };
   },
-  snare(src, R, r, p) {
-    const sr = S.sr, T = toneStyle(), how = vpick('snare', world().snare); let x = cut(src.x, 0.5 * sr); x = resample(x, semi(R.pitch + p.pitch + (r() - 0.5) * 2)); x = biq(x, 'hp', 120);
-    if (how === 'bend') x = bend(x, 1.5, 0.75, 0.04);
-    const len = sr * 0.4 * p.len, tau = 0.09 * p.len * T.dd, fb = (how === 'wood' ? 420 : 185) * semi(R.pitch + p.pitch);
-    let main = decay(x, len, how === 'gated' ? 1 : tau); if (how === 'gated') { const g = Math.round(0.12 * sr * p.len); main = fades(main.slice(0, g), 0, 0.012); }
-    let own = add(main, decay(biq(x, 'hp', 2500), len, 0.05 * p.len), how === 'wood' ? 0.15 : 0.45);
-    if (how === 'ringy') own = add(own, norm([combs(cut(x, 0.03 * sr), [fb * 2.3, fb * 3.7], 0.97, 0.3)], 0.35)[0], 1);
-    else own = add(own, norm([ring(x, fb, len, 0.07)], 0.3)[0], 1);
-    if (how === 'wood') own = biq(own, 'bp', 900, 0.8);
-    if (how === 'reverse') { const tail = fades(rev(decay(x, 0.12 * sr, 0.05)), 0.03, 0.002); own = add(tail, own, 1, tail.length); }
-    return { ch: capAdd(own, sine(fb, len, 0.05, 0.001, 60, 0.01), 0.08), o: { hp: 90, lp: R.lp, drive: R.drive * 0.7, comp: true } };
+  snare(src, R, r, p) { // a real snare: a short tuned body plus the rattle, taken from your noise
+    const sr = S.sr, how = vpick('snare', world().snare), len = Math.round(sr * 0.32 * p.len), fb = (how === 'wood' ? 330 : 190) * semi(R.pitch + p.pitch), c = cyc('snare', src, 120, 300, 8, 1.6, 1);
+    const body = mul(osc(c, len, (i) => fb * (1 + 0.6 * Math.exp(-i / sr / 0.02)), fb * 1.6), adsr(len, 0.001, 0.05 * p.len, 0, 0.02));
+    let nz = cut(src.x, 0.4 * sr); if (nz.length < len) nz = stretch(nz, len, r, 0.02, 0.005); nz = biq(biq(nz, 'hp', how === 'wood' ? 900 : 1800), 'lp', 9000);
+    let rattle = how === 'gated' ? fades(nz.slice(0, Math.round(0.11 * sr * p.len)), 0, 0.01) : decay(nz, len, (how === 'wood' ? 0.04 : 0.09) * p.len);
+    let y = add(norm([body], 0.8)[0], norm([rattle], how === 'wood' ? 0.35 : 0.7)[0], 1);
+    if (how === 'reverse') { const tail = fades(rev(decay(nz, 0.12 * sr, 0.05)), 0.03, 0.002); y = add(norm([tail], 0.4)[0], y, 1, tail.length); }
+    if (how === 'bend') y = bend(y, 1.3, 0.85, 0.05);
+    return { ch: y, o: { hp: 100, lp: Math.min(R.lp, 10000), drive: R.drive * 0.5, comp: true } };
   },
-  clap(src, R, r, p) {
-    const sr = S.sr; let x = cut(src.x, 0.14 * sr); x = resample(x, semi(R.pitch + p.pitch)); x = biq(biq(x, 'hp', 600), 'bp', ppk('clapf', 900, 2600), ppk('clapq', 0.5, 1.4));
-    let y = new Float32Array(0); (() => { const n = Math.round(ppk('clapn', 2, 5.9)), gap = ppk('clapg', 0.007, 0.016), l = []; for (let k = 0; k < n; k++) l.push([k * gap * (1 + 0.15 * Math.sin(k * 7)), 0.7 + 0.3 * (k / n), 0.012]); l.push([n * gap, 1, 0.12 * p.len]); return l; })().forEach(([o, g, tau]) => { y = add(y, decay(x, sr * Math.max(0.05, tau * 5), tau), g, Math.round(o * sr)); });
-    return { ch: y, o: { hp: 300, lp: R.lp, drive: R.drive * 0.6, comp: true } };
+  clap(src, R, r, p) { // a real clap: a few tight hands, band-limited, short and not too loud
+    const sr = S.sr; let x = cut(src.x, 0.12 * sr); if (x.length < 0.1 * sr) x = stretch(x, Math.round(0.12 * sr), r, 0.02, 0.004);
+    x = biq(biq(biq(x, 'hp', 800), 'bp', ppk('clapf', 1100, 2000), 0.9), 'lp', 7000);
+    const nh = Math.round(ppk('clapn', 2, 4.9)), gap = ppk('clapg', 0.006, 0.012); let y = new Float32Array(0);
+    for (let k = 0; k < nh; k++) y = add(y, decay(x, 0.02 * sr, 0.006), 0.5 + 0.3 * k / nh, Math.round(k * gap * sr));
+    y = add(y, decay(x, 0.25 * sr * p.len, 0.06 * p.len), 0.8, Math.round(nh * gap * sr));
+    return { ch: y, o: { hp: 400, lp: Math.min(R.lp, 8000), drive: R.drive * 0.3, comp: true } };
   },
   chat(src, R, r, p) {
     const sr = S.sr, how = world().hat, open = 'chat' === 'ohat'; let x = cut(src.x, (open ? 0.6 : 0.3) * sr); if (src.cen < 3500) x = resample(x, 1.6);
@@ -937,55 +956,67 @@ const B = {
     x = resample(x, semi(R.pitch + p.pitch)); const tau = (open ? 0.16 : R.hat * (how === 'short' ? 0.7 : how === 'airy' ? 1.6 : 1)) * p.len;
     return { ch: decay(x, sr * tau * (open ? 4 : 6), tau), o: { hp: 2500, lp: Math.min(R.lp * 1.2, 12500), drive: R.drive * 0.2 } };
   },
-  tom(src, R, r, p) {
-    const sr = S.sr, t0 = 48 + ((kPc() + 7) % 12), tm = t0 > 55 ? t0 - 12 : t0, f = mf(tm + p.pitch); let x = cut(src.x, 0.6 * sr);
-    x = src.clar > 0.6 && src.f0 > 40 ? resample(x, fitRatio(src.f0, f)) : resample(x, semi(-5 + R.pitch + p.pitch));
-    const len = sr * 0.6 * p.len; return { ch: capAdd(add(decay(x, len, 0.15 * p.len), norm([ring(x, f, len, 0.22 * p.len)], 0.6)[0], 1), sine(f, len, 0.2 * p.len, 0.002, f * 0.5, 0.05), 0.15), o: { hp: 50, lp: R.lp, drive: R.drive * 0.6, comp: true } };
+  tom(src, R, r, p) { // a real tom: a round tuned body that falls a little, with your hit as the stick
+    const sr = S.sr, t0 = 48 + ((kPc() + 7) % 12), tm = t0 > 55 ? t0 - 12 : t0, f = mf(tm + p.pitch), len = Math.round(sr * 0.5 * p.len), c = cyc('tom', src, 60, 160, 6, 1.8, 1);
+    const body = mul(osc(c, len, (i) => f * (1 + 0.5 * Math.exp(-i / sr / 0.04)), f * 1.5), adsr(len, 0.001, 0.2 * p.len, 0, 0.04));
+    const stick = decay(biq(cut(src.x, 0.03 * sr), 'hp', 500), 0.03 * sr, 0.01);
+    return { ch: add(norm([body], 0.85)[0], norm([stick], 0.3)[0], 1), o: { hp: 50, lp: Math.min(R.lp, 9000), drive: R.drive * 0.4, comp: true } };
   },
-  perc(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 0.3 * sr); x = resample(x, semi(R.pitch + p.pitch + (r() - 0.5) * 6)); const bp = biq(x, 'bp', clamp(src.cen, 400, 5000), 1.2); return { ch: decay(add(bp, x, 0.4), sr * 0.3 * p.len, 0.08 * p.len), o: { hp: 150, lp: R.lp, drive: R.drive * 0.5, comp: true } }; },
-  rim(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 0.07 * sr); x = resample(x, semi(7 + R.pitch + p.pitch)); x = biq(x, 'hp', 1200); x = add(x, biq(x, 'bp', 1800, 3), 0.8); return { ch: decay(x, sr * 0.12 * p.len, 0.022 * p.len), o: { hp: 800, lp: R.lp, drive: R.drive * 0.4 } }; },
+  perc(src, R, r, p) { // a real percussion hit: a short tuned knock on a note of the key, with your sound as the attack
+    const sr = S.sr, f = mf(degMidi(60 + kPc(), Math.floor(ppk('percd', 0, 7))) + p.pitch), len = Math.round(sr * 0.18 * p.len), c = cyc('perc', src, 200, 600, 10, 1.2, 0.8);
+    const tone = mul(osc(c, len, () => f, f), adsr(len, 0.001, 0.05 * p.len, 0, 0.02)), att = decay(biq(biq(cut(src.x, 0.04 * sr), 'hp', 600), 'lp', 8000), 0.04 * sr, 0.012);
+    return { ch: add(norm([tone], 0.75)[0], norm([att], 0.4)[0], 1), o: { hp: 150, lp: Math.min(R.lp, 10000), drive: R.drive * 0.4, comp: true } };
+  },
+  rim(src, R, r, p) { // a real rim: a very short wooden click on a high note
+    const sr = S.sr, f = mf(degMidi(72 + kPc(), Math.floor(ppk('rimd', 0, 5))) + p.pitch), len = Math.round(sr * 0.08 * p.len), c = cyc('rim', src, 300, 900, 8, 1.4, 1);
+    const tone = mul(osc(c, len, () => f, f), adsr(len, 0.0005, 0.018 * p.len, 0, 0.01)), att = decay(biq(cut(src.x, 0.015 * sr), 'hp', 1500), 0.015 * sr, 0.004);
+    return { ch: add(norm([tone], 0.7)[0], norm([att], 0.35)[0], 1), o: { hp: 400, lp: Math.min(R.lp, 9000), drive: 0 } };
+  },
   shaker(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 0.2 * sr); x = biq(biq(x, 'hp', 3200), 'lp', 11000); x = resample(x, semi(R.pitch + p.pitch)); const g = decay(x, sr * 0.2 * p.len, 0.06 * p.len, 0.022); return { ch: add(g, g, 0.55, Math.round((0.03 + r() * 0.04) * sr)), o: { hp: 2500, lp: Math.min(R.lp * 1.2, 12000), drive: R.drive * 0.2 } }; },
   fx(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 1.2 * sr * p.len); if (R.glitch || r() < 0.5) x = stutter(x, r); x = rev(x); x = resample(x, semi(-5 + R.pitch + p.pitch + (r() - 0.5) * 6)); x = crush(x, 8, 2); return { ch: env(x, 0.15, 0.03), o: { hp: 100, lp: R.lp, drive: R.drive } }; },
-  bass(src, R, r, p) {
-    const sr = S.sr, how = vpick('bass', ['pluck', 'round', 'glide', 'growl'].concat(src.clar > 0.7 && src.f0 > 40 ? ['sampled', 'sampled'] : [])), oct = vpick('bassoct', [0, 0, -12]);
-    const f = mf(notes().bass + oct + p.pitch), L = Math.round(sr * (how === 'round' ? 1.6 : 1.2) * p.len); let tone;
-    if (how === 'sampled') tone = decay(resample(src.x, f / src.f0), L, 0.5 * p.len, 0.004);
-    else if (how === 'round') tone = biq(env(ks(excite(src.x, 0.05), f, L, 1.6 * p.len, 0.05), 0.006, 0.12), 'lp', 500);
-    else if (how === 'glide') tone = bend(env(ks(excite(src.x, 0.03), f, L, 1.2 * p.len, R.bright * 0.4), 0.003, 0.08), semi(5), 1, 0.06);
-    else if (how === 'growl') tone = env(combs(stretch(src.x, L, r, 0.06, 0.02), [f, f * 2], 0.975, 0.2), 0.01, 0.1);
-    else tone = env(ks(excite(src.x, 0.03), f, L, 1.0 * p.len, R.bright * 0.4), 0.003, 0.08);
-    const rg = norm([ring(src.x, f, L, 0.5 * p.len, 0.99)], how === 'growl' ? 0.25 : 0.5)[0];
-    return { ch: capAdd(add(norm([tone], 0.7)[0], rg, 1), sine(f, L, 0.6 * p.len, 0.004), 0.2), o: { hp: 30, lp: Math.min(R.lp, how === 'growl' ? 3500 : 2200), drive: clamp(R.drive + (how === 'growl' ? 0.35 : 0.15), 0, 1), comp: true, sendHP: 400 } };
+  bass(src, R, r, p) { // a real bass: full low cycle, a filter that opens on each note, tight end
+    const sr = S.sr, how = vpick('bass', ['round', 'pluck', 'growl', 'glide', 'deep']), oct = vpick('bassoct', [0, 0, -12]), f = mf(notes().bass + oct + p.pitch), L = Math.round(sr * 1.1 * p.len);
+    const c = cyc('bass', src, 60, 160, 32, how === 'growl' ? 0.7 : how === 'deep' ? 1.6 : 1.1, 1);
+    const top = { round: 700, pluck: 2200, growl: 3200, glide: 1400, deep: 450 }[how] * (0.8 + R.bright * 0.5), base = how === 'deep' ? 140 : 220, ft = how === 'pluck' ? 0.07 : 0.18;
+    let y = osc(c, L, (i) => f * (how === 'glide' ? 1 + (semi(-5) - 1) * Math.exp(-i / sr / 0.05) : 1), f); if (vpick('bassdet', [0, 1])) y = add(y, osc(c, L, () => f * 1.004, f), 0.6);
+    y = svfLP(y, (i) => base + top * Math.exp(-i / sr / ft), how === 'growl' ? 1.6 : 0.9);
+    return { ch: mul(y, adsr(L, 0.004, 0.4, 0.75, 0.06)), o: { hp: 30, lp: 6000, drive: clamp(R.drive + (how === 'growl' ? 0.35 : 0.1), 0, 1), comp: true, sendHP: 400 } };
   },
-  sub(src, R, r, p) {
-    const sr = S.sr, how = vpick('sub', ['long', 'short', 'warm', 'click']), f = mf(notes().sub + p.pitch), dec = { long: 1.8, short: 0.6, warm: 1.2, click: 0.9 }[how] * p.len, L = Math.round(sr * dec * 1.2), e = biq(excite(src.x, 0.06), 'lp', how === 'warm' ? 600 : 300);
-    const body = norm([env(ks(e, f, L, dec, how === 'warm' ? 0.15 : 0.02), 0.004, 0.1)], 0.8)[0], click = decay(biq(cut(src.x, 0.02 * sr), 'hp', 2000), 0.02 * sr, 0.006);
-    return { ch: add(capAdd(body, sine(f, L, dec * 0.75, 0.005), 0.3), click, how === 'click' ? 0.35 : 0.12), o: { hp: 20, lp: how === 'warm' ? 1400 : 900, drive: R.drive * 0.5 + (how === 'warm' ? 0.25 : 0.1) } };
+  sub(src, R, r, p) { // a real sub: almost pure low tone, a tiny drop at the start, smooth tail
+    const sr = S.sr, how = vpick('sub', ['long', 'short', 'warm', 'click']), f = mf(notes().sub + p.pitch), dec = { long: 1.6, short: 0.5, warm: 1.1, click: 0.8 }[how] * p.len, L = Math.round(sr * dec * 1.3);
+    const c = cyc('sub', src, 50, 120, 4, how === 'warm' ? 1.5 : 3, 1);
+    let y = mul(osc(c, L, (i) => f * (1 + 0.25 * Math.exp(-i / sr / 0.03)), f * 1.25), adsr(L, 0.004, dec * 0.6, 0.3, 0.12));
+    if (how === 'click') y = add(norm([y], 0.85)[0], norm([decay(biq(cut(src.x, 0.01 * sr), 'hp', 1500), 0.01 * sr, 0.003)], 0.25)[0], 1);
+    return { ch: y, o: { hp: 20, lp: how === 'warm' ? 1500 : 700, drive: R.drive * 0.4 + (how === 'warm' ? 0.2 : 0.05) } };
   },
-  keys(src, R, r, p, v) {
-    const sr = S.sr, T = toneStyle(), f = mf(notes().keys + vpick('ko', [0, 0, 12, -12]) + p.pitch), L = Math.round(sr * 2.6 * p.len * T.dec); let y = voice(T.keys, src, f, L, R, r, p, T, v);
-    let Lc = Array.isArray(y) ? y[0] : y, Rc = Array.isArray(y) ? y[1] : resample(y, 1 + T.det); if (R.vinyl) { const vv = vinyl(L, r); Lc = add(Lc, vv, 0.6); Rc = add(Rc, vv, 0.6); }
-    return { ch: [Lc, Rc], o: { hp: 60, lp: R.lp * 0.7, drive: R.drive * 0.4 } };
+  keys(src, R, r, p, v) { // real keys: soft hammer, slow ring out, a gentle shimmer, like an electric piano
+    const sr = S.sr, T = toneStyle(), f = mf(notes().keys + vpick('ko', [0, 0, 12]) + p.pitch), L = Math.round(sr * 2.8 * p.len * T.dec), c = cyc('keys', src, 120, 400, 24, 1.5, 1);
+    const tine = cycleFrom(src.x, f * 2, 6, 0.5, (S.seed ^ 0x7e) >>> 0, 1), env1 = adsr(L, 0.003, 1.1 * p.len * T.dec, 0.05, 0.25), env2 = adsr(L, 0.001, 0.12, 0, 0.05);
+    const side = (det) => { let y = add(mul(osc(c, L, () => f * det, f), env1), mul(osc(tine, L, () => f * det * 2, f * 2), env2), 0.35); y = svfLP(y, (i) => 900 + 3500 * Math.exp(-i / sr / 0.4) * (0.6 + R.bright * 0.7), 0.7); for (let i = 0; i < L; i++) y[i] *= 1 + 0.12 * Math.sin(2 * Math.PI * 4.5 * i / sr); return y; };
+    let Lc = side(1 - T.det / 2), Rc = side(1 + T.det / 2); if (R.vinyl) { const vv = vinyl(L, r); Lc = add(Lc, vv, 0.5); Rc = add(Rc, vv, 0.5); }
+    return { ch: [Lc, Rc], o: { hp: 60, lp: 9000, drive: R.drive * 0.3 } };
   },
-  pluck(src, R, r, p, v) {
-    const sr = S.sr, T = toneStyle(), f = mf(notes().keys + vpick('po', [0, 12, 12, -12]) + p.pitch), L = Math.round(sr * 1.2 * p.len * T.dec), b = clamp(R.bright + T.bright, 0.05, 0.95);
-    if (T.pluck === 'bell') { const y = voice('bell', src, f, L, R, r, p, T, v); return { ch: [y, resample(y, 1 + T.det)], o: { hp: 80, lp: R.lp, drive: R.drive * 0.4 } }; }
-    const e = excite(src.x, 0.012); return { ch: [ks(e, f, L, 0.7 * p.len * T.dec, b), ks(e, f * (1 + T.det), L, 0.65 * p.len * T.dec, b)], o: { hp: 80, lp: R.lp, drive: R.drive * 0.5 } };
+  pluck(src, R, r, p, v) { // a real pluck: bright snap that closes fast, short ring
+    const sr = S.sr, T = toneStyle(), f = mf(notes().keys + vpick('po', [0, 12, 12]) + p.pitch), L = Math.round(sr * 0.9 * p.len * T.dec), c = cyc('pluck', src, 100, 350, 28, 0.9, 0.8);
+    const side = (det) => mul(svfLP(osc(c, L, () => f * det, f), (i) => 400 + 4500 * Math.exp(-i / sr / (0.06 * T.dec)) * (0.6 + R.bright * 0.6), 1.1), adsr(L, 0.002, 0.25 * p.len * T.dec, 0, 0.05));
+    return { ch: [side(1), side(1 + T.det)], o: { hp: 80, lp: 10000, drive: R.drive * 0.4 } };
   },
-  lead(src, R, r, p, v) {
-    const sr = S.sr, T = toneStyle(), f = mf(notes().keys + 12 + p.pitch), L = Math.round(sr * 1.8 * p.len); let y;
-    if (src.clar > 0.7 && src.f0 > 40) y = env(stretch(resample(src.x, f / src.f0), L, r, 0.06, 0.01), 0.015, 0.25);
-    else y = voice(T.lead, src, f, L, R, r, p, T, v); if (Array.isArray(y)) y = y[0];
-    return { ch: [y, resample(y, 1 + T.det * 0.5)], o: { hp: 120, lp: R.lp, drive: clamp(R.drive + 0.25, 0, 1) } };
+  lead(src, R, r, p, v) { // a real lead: sustained, a slide into the note, vibrato that comes in late
+    const sr = S.sr, T = toneStyle(), f = mf(notes().keys + 12 + p.pitch), L = Math.round(sr * 1.8 * p.len), c = cyc('lead', src, 150, 450, 30, 0.75, 0.9), vr = 5 + r(), vd = 0.006 + r() * 0.006;
+    const fq = (i) => { const t = i / sr; return f * (1 + (semi(-1) - 1) * Math.exp(-t / 0.04)) * (1 + vd * Math.min(1, Math.max(0, (t - 0.25) / 0.3)) * Math.sin(2 * Math.PI * vr * t)); };
+    const side = (det) => svfLP(mul(osc(c, L, (i) => fq(i) * det, f * 1.02), adsr(L, 0.02, 0.5, 0.8, 0.2)), () => 1800 + 2500 * R.bright, 0.8);
+    return { ch: [side(1), side(1 + T.det * 0.6)], o: { hp: 150, lp: 10000, drive: clamp(R.drive + 0.15, 0, 1) } };
   },
-  pad(src, R, r, p) {
-    const sr = S.sr, n = notes(), T = toneStyle(), L = Math.round(sr * R.padLen * p.len), ext = T.ext ? [T.ext === 10 ? (kMin() ? 10 : 11) : 14] : [], fr = [0, 7, 12, n.third].concat(ext).map((i) => mf(n.pad + i + p.pitch));
-    let x = src.x; if (src.clar > 0.6 && src.f0 > 40) x = resample(x, fitRatio(src.f0, fr[0]));
-    const r2 = rng32((r() * 4294967296) >>> 0), side = (rr) => { const s = stretch(x, L, rr, 0.12, 0.05); return add(norm([combs(s, fr, 0.985, T.damp + 0.1)], 0.8)[0], biq(s, 'lp', 3000), 0.35); };
-    let Lc = side(r), Rc = side(r2); if (R.vinyl) { const v = vinyl(L, r); Lc = add(Lc, v, 0.4); Rc = add(Rc, v, 0.4); }
-    return { ch: [env(Lc, 0.7 * p.len, 1.2), env(Rc, 0.7 * p.len, 1.2)], o: { hp: 80, lp: R.lp * 0.8, drive: R.drive * 0.3 } };
+  pad(src, R, r, p) { // a real pad: a soft chord of slow, detuned voices that breathe, with your stretched sound as air
+    const sr = S.sr, n = notes(), T = toneStyle(), L = Math.round(sr * R.padLen * p.len), ext = T.ext ? [T.ext === 10 ? (kMin() ? 10 : 11) : 14] : [], fr = [0, 7, 12, n.third].concat(ext).map((i) => mf(n.pad + i + p.pitch)), c = cyc('pad', src, 100, 300, 20, 1.4, 1);
+    const side = (sgn, rr) => { let y = new Float32Array(L); for (const f of fr) for (const d of [-1, 1]) y = add(y, osc(c, L, () => f * (1 + sgn * d * 0.003), f), 1 / fr.length); y = svfLP(y, (i) => 700 + 900 * (0.5 + 0.5 * Math.sin(2 * Math.PI * 0.08 * i / sr + sgn)), 0.7); const air = biq(biq(stretch(src.x, L, rr, 0.12, 0.05), 'hp', 300), 'lp', 4000); return add(norm([y], 0.8)[0], norm([air], 0.25)[0], 1); };
+    return { ch: [env(side(1, r), 0.8 * p.len, 1.4), env(side(-1, rng32((S.seed ^ 0x9d) >>> 0)), 0.8 * p.len, 1.4)], o: { hp: 80, lp: 8000, drive: R.drive * 0.2 } };
   },
-  drone(src, R, r, p) { const sr = S.sr, n = notes(), L = Math.round(sr * 8 * p.len), f = mf(n.bass + p.pitch), r2 = rng32((r() * 4294967296) >>> 0); const side = (rr) => biq(combs(stretch(src.x, L, rr, 0.15, 0.08), [f, f * 1.5, f * 2], 0.99, 0.45), 'lp', 1500); return { ch: [env(side(r), 1.5, 2), env(side(r2), 1.5, 2)], o: { hp: 30, lp: 2500, drive: 0.1 } }; },
+  drone(src, R, r, p) { // a real drone: a low root and fifth that slowly open and close
+    const sr = S.sr, n = notes(), L = Math.round(sr * 8 * p.len), f = mf(n.bass + p.pitch), c = cyc('drone', src, 60, 200, 24, 1.3, 1);
+    const side = (ph) => { let y = add(osc(c, L, () => f, f), osc(c, L, () => f * 1.5 * 1.002, f * 1.5), 0.6); return svfLP(y, (i) => 250 + 500 * (0.5 + 0.5 * Math.sin(2 * Math.PI * 0.06 * i / sr + ph)), 0.9); };
+    return { ch: [env(side(0), 1.5, 2), env(side(1.7), 1.5, 2)], o: { hp: 30, lp: 3000, drive: 0.1 } };
+  },
   texture(src, R, r, p) { const sr = S.sr, L = Math.round(sr * 6 * p.len), r2 = rng32((r() * 4294967296) >>> 0), side = (rr) => biq(biq(stretch(resample(src.x, semi(R.pitch + p.pitch + Math.round(ppk('texp', -7, 5)))), L, rr, ppk('texg', 0.03, 0.25), ppk('texj', 0.05, 0.4)), 'hp', ppk('texh', 120, 900)), 'lp', ppk('texl', 1800, 7000)); return { ch: [env(side(r), 0.5, 1), env(side(r2), 0.5, 1)], o: { hp: 100, lp: R.lp, drive: R.drive * 0.3 } }; },
   riser(src, R, r, p) {
     const sr = S.sr, L = Math.round(sr * 4 * p.len), base = stretch(src.x, L, r, 0.1, 0.05), y = new Float32Array(L); let pos = 0, hpY = 0, hpX = 0;
@@ -996,10 +1027,11 @@ const B = {
     return { ch: env(y, 0.05, 0.02), o: { hp: 60, lp: R.lp, drive: R.drive * 0.5 } };
   },
   down(src, R, r, p) { const b = B.riser(src, R, r, p); return { ch: env(rev(b.ch), 0.01, 0.4), o: b.o }; },
-  impact(src, R, r, p) {
-    const sr = S.sr, L = sr * 3 * p.len, x = decay(resample(cut(src.x, 0.5 * sr), semi(-12 + R.pitch + p.pitch)), L, 0.25 * p.len);
-    const rg = norm([ring(resample(src.x, semi(-12)), 45 * semi(p.pitch), L, 1.0 * p.len, 0.995)], 0.8)[0];
-    return { ch: capAdd(add(norm([x], 0.7)[0], rg, 1), sine(45 * semi(p.pitch), L, 0.7 * p.len, 0.002, 70, 0.08), 0.25), o: { hp: 25, lp: R.lp, drive: clamp(R.drive + 0.2, 0, 1), comp: true, sendHP: 250 } };
+  impact(src, R, r, p) { // a real impact: a huge low boom that falls, your hit as the crack, lots of room
+    const sr = S.sr, L = Math.round(sr * 3 * p.len), f = 42 * semi(p.pitch), c = cyc('impact', src, 40, 90, 6, 2, 1);
+    const boom = mul(osc(c, L, (i) => f * (1 + 1.5 * Math.exp(-i / sr / 0.1)), f * 2.5), adsr(L, 0.002, 0.9 * p.len, 0, 0.3));
+    const crack = decay(biq(resample(cut(src.x, 0.4 * sr), semi(-7)), 'lp', 6000), 0.6 * sr, 0.15);
+    return { ch: add(norm([boom], 0.85)[0], norm([crack], 0.45)[0], 1), o: { hp: 25, lp: Math.min(R.lp, 9000), drive: clamp(R.drive + 0.15, 0, 1), comp: true, sendHP: 250 } };
   }
 };
 
@@ -1064,6 +1096,7 @@ async function fx(ch, o) {
   return [res.getChannelData(0).slice(), res.getChannelData(1).slice()];
 }
 function verbFor(sl, R) { const base = VERB[S.verb][0] * R.verbMul * SEND[sl.id][0]; return sl.p.verb != null ? sl.p.verb : clamp(base, 0, 1); }
+const LVL = { kick: 0.89, snare: 0.8, clap: 0.5, chat: 0.45, ohat: 0.45, perc: 0.55, rim: 0.45, shaker: 0.4, tom: 0.75, fx: 0.6, bass: 0.85, sub: 0.85, keys: 0.7, pluck: 0.7, pad: 0.6, lead: 0.7, drone: 0.6, texture: 0.55, riser: 0.65, down: 0.65, impact: 0.85, loop: 0.89 };
 async function make(sl, v = 0) {
   const R = recipe(), r = rng32((S.seed ^ hashStr(sl.id)) + sl.seed * 31 + v * 7919);
   let b, src = null;
@@ -1081,10 +1114,10 @@ async function make(sl, v = 0) {
   const o = Object.assign({}, b.o); o.drive = clamp((o.drive || 0) + sl.p.drive * 0.5, 0, 1);
   if (!b.loop && world().wow && sl.grp !== 'd') ch = ch.map((c) => wow(c, rng32(S.seed ^ 0x3a)));
   let d0 = await fx(ch, o); const fsW = b.loop || sl.grp === 't' || sl.id === 'drone' ? [] : whistles(d0[0], 15); d0 = applyF(d0, fsW); const fsT0 = b.loop ? [] : tameFilters(d0, ['chat', 'ohat', 'shaker'].includes(sl.id) ? 0.33 : 0.28), fsT = fsW.concat(fsT0); d0 = applyF(d0, fsT0);
-  const dry = norm(b.loop ? d0 : trimTail(d0), 0.891);
+  const lv = LVL[sl.id] || 0.8, dry = norm(b.loop ? d0 : trimTail(d0), lv);
   const vA = verbFor(sl, R), dl = S.delay && SEND[sl.id][1] > 0 ? { t: (60 / R.bpm) * R.div, fb: R.fb, mix: 0.3 * SEND[sl.id][1] } : null;
   let wet = null;
-  if (vA > 0.005 || dl) { const w = await fx(ch, Object.assign({}, o, { verb: vA, delay: dl, tail: (vA > 0.005 ? Math.min(R.room * 1.1, 6) : 0) + (dl ? 1.6 : 0) })); wet = norm(b.loop ? w.map((c) => c.slice(0, ch[0].length)) : trimTail(applyF(w, fsT)), 0.891); }
+  if (vA > 0.005 || dl) { const w = await fx(ch, Object.assign({}, o, { verb: vA, delay: dl, tail: (vA > 0.005 ? Math.min(R.room * 1.1, 6) : 0) + (dl ? 1.6 : 0) })); wet = norm(b.loop ? w.map((c) => c.slice(0, ch[0].length)) : trimTail(applyF(w, fsT)), lv); }
   let raw = null;
   if (src && !b.loop) { const x = rawTrim(src.x.slice(0, Math.round(Math.min(src.x.length, 12 * S.sr)))); raw = norm([x, x], 0.891); }
   return { dry, wet, raw, src };
@@ -1411,7 +1444,7 @@ function renderBurp() {
 }
 const SC = { min: [0, 2, 3, 5, 7, 8, 10], maj: [0, 2, 4, 5, 7, 9, 11] };
 function degMidi(root, d) { const sc = kMin() ? SC.min : SC.maj, o = Math.floor(d / 7), k = ((d % 7) + 7) % 7; return root + sc[k] + 12 * o; }
-function rootOf(id) { const n = notes(); return { bass: n.bass + vpick('bassoct', [0, 0, -12]), sub: n.sub, keys: n.keys + vpick('ko', [0, 0, 12, -12]), pluck: n.keys + vpick('po', [0, 12, 12, -12]), lead: n.keys + 12, pad: n.pad, drone: n.bass }[id]; }
+function rootOf(id) { const n = notes(); return { bass: n.bass + vpick('bassoct', [0, 0, -12]), sub: n.sub, keys: n.keys + vpick('ko', [0, 0, 12]), pluck: n.keys + vpick('po', [0, 12, 12]), lead: n.keys + 12, pad: n.pad, drone: n.bass }[id]; }
 let pcache = new Map();
 function outOf(id, wet) { const s = slot(id); if (!s || !s.out) return null; return (wet && s.out.wet) || s.out.dry; }
 function pitched(id, wet, st) {
