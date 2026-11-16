@@ -614,12 +614,16 @@ function play(ch) {
 }
 
 // ---------- dsp ----------
-function biq(x, type, f, q = 0.707) {
+function biq(x, type, f, q = 0.707, db = 0) {
   const sr = S.sr; f = clamp(f, 10, sr * 0.45);
-  const w = 2 * Math.PI * f / sr, c = Math.cos(w), s = Math.sin(w), al = s / (2 * q);
-  let b0, b1, b2; const a0 = 1 + al, a1 = -2 * c / a0, a2 = (1 - al) / a0;
-  if (type === 'lp') { b0 = (1 - c) / 2; b1 = 1 - c; b2 = b0; } else if (type === 'hp') { b0 = (1 + c) / 2; b1 = -(1 + c); b2 = b0; } else { b0 = al; b1 = 0; b2 = -al; }
-  b0 /= a0; b1 /= a0; b2 /= a0;
+  const w = 2 * Math.PI * f / sr, c = Math.cos(w), s = Math.sin(w), al = s / (2 * q), A = Math.pow(10, db / 40);
+  let b0, b1, b2, a0, a1, a2;
+  if (type === 'lp') { b0 = (1 - c) / 2; b1 = 1 - c; b2 = b0; a0 = 1 + al; a1 = -2 * c; a2 = 1 - al; }
+  else if (type === 'hp') { b0 = (1 + c) / 2; b1 = -(1 + c); b2 = b0; a0 = 1 + al; a1 = -2 * c; a2 = 1 - al; }
+  else if (type === 'pk') { b0 = 1 + al * A; b1 = -2 * c; b2 = 1 - al * A; a0 = 1 + al / A; a1 = -2 * c; a2 = 1 - al / A; }
+  else if (type === 'hs') { const sq = 2 * Math.sqrt(A) * al; b0 = A * ((A + 1) + (A - 1) * c + sq); b1 = -2 * A * ((A - 1) + (A + 1) * c); b2 = A * ((A + 1) + (A - 1) * c - sq); a0 = (A + 1) - (A - 1) * c + sq; a1 = 2 * ((A - 1) - (A + 1) * c); a2 = (A + 1) - (A - 1) * c - sq; }
+  else { b0 = al; b1 = 0; b2 = -al; a0 = 1 + al; a1 = -2 * c; a2 = 1 - al; }
+  b0 /= a0; b1 /= a0; b2 /= a0; a1 /= a0; a2 /= a0;
   const y = new Float32Array(x.length); let x1 = 0, x2 = 0, y1 = 0, y2 = 0;
   for (let i = 0; i < x.length; i++) { const v = x[i], o = b0 * v + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2; x2 = x1; x1 = v; y2 = y1; y1 = o; y[i] = o; }
   return y;
@@ -821,10 +825,10 @@ function srcOf(sl, v = 0) {
 
 // ---------- recipe and key ----------
 function recipe() {
-  const g = GEN[S.genre], m = MOOD[S.mood] || {};
+  const g = GEN[S.genre], m = MOOD[S.mood] || {}, w = S.x ? world() : {}, cr = [g.crush, m.crush, w.crush].filter((v) => v);
   return {
-    bpm: S.bpm || g.bpm, drop: g.drop + (m.pitch || 0), pitch: m.pitch || 0, drive: clamp(g.drive + (m.drive || 0), 0, 1), crush: Math.max(g.crush || 0, m.crush || 0) ? Math.min(g.crush || 99, m.crush || 99) : 0,
-    lp: Math.min(19000, g.lp * (m.lp || 1)), hp: m.hp || 0, verbMul: g.verb * (m.verb || 1), room: g.room * (m.room || 1), div: g.div, fb: g.fb, hat: g.hat, padLen: g.pad,
+    bpm: S.bpm || g.bpm, drop: g.drop + (m.pitch || 0), pitch: m.pitch || 0, drive: clamp(g.drive + (m.drive || 0) + (w.drive || 0), 0, 1), crush: cr.length ? Math.min(...cr) : 0,
+    lp: Math.min(16000, g.lp * (m.lp || 1) * (w.lp || 1)), hp: m.hp || 0, verbMul: g.verb * (m.verb || 1) * (w.verb || 1), room: g.room * (m.room || 1) * (w.room || 1), div: g.div, fb: g.fb, hat: g.hat, padLen: g.pad,
     swing: g.swing, glitch: !!g.glitch, vinyl: !!g.vinyl, bright: clamp(0.5 + (m.bright || 0) + (g.bright || 0), 0.05, 0.95)
   };
 }
@@ -835,10 +839,30 @@ function notes() { const pc = kPc(), bass = 36 + pc, keys = pc >= 6 ? 48 + pc : 
 function fitRatio(f0, target) { let r = target / f0; while (r > 2.05) r /= 2; while (r < 0.49) r *= 2; return r; }
 
 // ---------- builders: they shape your sound, then fx() colours it ----------
+// every pack lives in its own world: the world changes how each sound is built, not only its colour
+const WORLDS = {
+  tape: { en: 'Tape', nl: 'Tape', de: 'Band', lp: 0.7, drive: 0.15, dec: 1.25, wow: 1, hat: 'warm', kick: ['drop', 'ring', 'layer'], snare: ['body', 'gated'], keys: ['sampled', 'pluck', 'bowed'] },
+  metal: { en: 'Metal', nl: 'Metaal', de: 'Metall', lp: 1, drive: 0.1, dec: 0.9, hat: 'metal', kick: ['ring', 'tight'], snare: ['ringy', 'body'], keys: ['bell', 'buzz', 'pluck'] },
+  wood: { en: 'Wood', nl: 'Hout', de: 'Holz', lp: 0.6, drive: 0, dec: 0.7, hat: 'short', kick: ['tight', 'drop'], snare: ['wood', 'body'], keys: ['pluck', 'pluck', 'sampled'] },
+  glass: { en: 'Glass', nl: 'Glas', de: 'Glas', lp: 0.95, drive: -0.1, dec: 1.15, hat: 'glass', kick: ['ring', 'tight'], snare: ['ringy', 'reverse'], keys: ['bell', 'bell', 'bowed'] },
+  dust: { en: 'Dust', nl: 'Stof', de: 'Staub', lp: 0.55, drive: 0.1, crush: 9, dec: 1, hat: 'dusty', kick: ['drop', 'layer'], snare: ['body', 'gated'], keys: ['sampled', 'pluck'] },
+  space: { en: 'Space', nl: 'Ruimte', de: 'Raum', lp: 0.85, drive: -0.05, dec: 1.5, verb: 1.5, room: 1.4, hat: 'airy', kick: ['ring', 'drop'], snare: ['reverse', 'body'], keys: ['bowed', 'bowed', 'bell'] },
+  rubber: { en: 'Rubber', nl: 'Rubber', de: 'Gummi', lp: 0.8, drive: 0.2, dec: 0.95, hat: 'short', kick: ['bend', 'layer'], snare: ['bend', 'body'], keys: ['pluck', 'sampled', 'buzz'] }
+};
+const worldKey = () => Object.keys(WORLDS)[rng32((S.seed ^ 0x77e1) >>> 0)() * 7 | 0];
+const world = () => WORLDS[worldKey()];
+const ppk = (id, a, b) => a + rng32((S.seed ^ hashStr(id + 'pp')) >>> 0)() * (b - a);
+const vpick = (id, list) => list[rng32((S.seed ^ hashStr(id + 'v')) >>> 0)() * list.length | 0];
+function bend(x, from, to, tau) { const sr = S.sr, n = Math.floor(x.length / Math.max(0.3, to)), y = new Float32Array(n); let p = 0; for (let i = 0; i < n; i++) { const r = to + (from - to) * Math.exp(-i / sr / tau), k = Math.floor(p); if (k + 1 >= x.length) break; const f = p - k; y[i] = x[k] * (1 - f) + x[k + 1] * f; p += r; } return y; }
+function wow(x, r) { const sr = S.sr, n = x.length, y = new Float32Array(n), rate = 0.4 + r() * 0.8, dep = 0.0025 + r() * 0.003; let p = 0; for (let i = 0; i < n; i++) { const k = Math.floor(p); if (k + 1 >= n) break; const f = p - k; y[i] = x[k] * (1 - f) + x[k + 1] * f; p += 1 + dep * Math.sin(2 * Math.PI * rate * i / sr); } return y; }
+// the guard: a sound that bites too much in the ear gets softened before you ever hear it
+function bite(c) { const h = biq(biq(c, 'hp', 2500), 'lp', 6500); let eh = 0, et = 1e-12; for (let i = 0; i < c.length; i++) { et += c[i] * c[i]; eh += h[i] * h[i]; } return eh / et; }
+function tameFilters(ch, lim) { const fs = []; let x = ch[0]; for (let k = 0; k < 7 && bite(x) > lim; k++) { const f = [['pk', 3300 + k * 400, 0.7, -6], ['hs', 6500, 0.7, -3]]; fs.push(...f); for (const q of f) x = biq(x, q[0], q[1], q[2], q[3]); } return fs; }
+const applyF = (ch, fs) => fs.length ? ch.map((c) => { let x = c; for (const q of fs) x = biq(x, q[0], q[1], q[2], q[3]); return x; }) : ch;
 // the pack's own way of making tones, chosen once per pack so every pack sounds different
 function toneStyle() { const r = rng32((S.seed ^ 0x51ab7) >>> 0), tonal = S.segs.some((q) => q.clar > 0.75 && q.f0 > 80);
-  return { keys: pk(r, ['pluck', 'bowed', 'bell'].concat(tonal ? ['sampled', 'sampled'] : ['bowed'])), lead: pk(r, ['bowed', 'buzz'].concat(tonal ? ['sampled'] : [])), pluck: pk(r, ['pluck', 'pluck', 'bell']),
-    bright: (r() - 0.5) * 0.3, dec: 0.7 + r() * 0.7, det: 0.0008 + r() * 0.004, ext: pk(r, [0, 0, 10, 14]), damp: 0.3 + r() * 0.2, dd: 0.8 + r() * 0.5 }; }
+  const wk = world().keys.filter((e) => e !== 'sampled' || tonal); return { keys: pk(r, wk.length ? wk : ['bowed']), lead: pk(r, ['bowed', 'buzz'].concat(tonal ? ['sampled'] : [])), pluck: pk(r, ['pluck', 'pluck', 'bell']),
+    bright: (r() - 0.5) * 0.3, dec: 0.7 + r() * 0.7, det: 0.0008 + r() * 0.004, ext: pk(r, [0, 0, 10, 14]), damp: 0.3 + r() * 0.2, dd: (0.8 + r() * 0.5) * (world().dec || 1) }; }
 // the app's own help (a sine for depth) may never be more than 30% of a sound; the rest is your recording
 function capAdd(own, syn, g, frac = 0.3) { let eo = 0, es = 0; for (let i = 0; i < own.length; i++) eo += own[i] * own[i]; for (let i = 0; i < syn.length; i++) es += syn[i] * syn[i]; const lim = es > 0 ? Math.sqrt((frac / (1 - frac)) * eo / es) : g; return add(own, syn, Math.min(g, lim)); }
 function ring(x, f, len, tau, g = 0.985) { const sr = S.sr, lo = biq(cut(x, 0.25 * sr), 'lp', Math.max(120, f * 4)); return decay(combs(lo, [f], g, 0.5), len, tau); }
@@ -855,24 +879,52 @@ function voice(eng, src, f, L, R, r, p, T, v) {
   return [env(add(a, o, 0.22), 0.002, 0.05), env(add(c, o, 0.22), 0.002, 0.05)];
 }
 const B = {
-  kick(src, R, r, p) {
-    const sr = S.sr, T = toneStyle(); let x = cut(src.x, 0.6 * sr); x = resample(x, semi(R.drop + p.pitch + (r() - 0.5) * 2)); x = biq(x, 'hp', 35);
-    const n = notes(); let f0 = mf(n.sub); if (f0 < 42) f0 *= 2; f0 *= semi(p.pitch * 0.5);
-    const len = sr * 0.45 * p.len * T.dd, top = norm([decay(x, len, 0.11 * p.len * T.dd)], 0.7)[0], rg = norm([ring(resample(src.x, semi(-12)), f0, len, 0.18 * p.len * T.dd)], 0.8)[0];
-    return { ch: capAdd(add(top, rg, 0.9), sine(f0, len, 0.14 * p.len, 0.0015, f0 * 3.2, 0.03), 0.22), o: { hp: 28, lp: R.lp, drive: R.drive * 0.8, comp: true, sendHP: 350 } };
+  kick(src, R, r, p, v) {
+    const sr = S.sr, T = toneStyle(), how = vpick('kick', world().kick), n = notes(); let x = cut(src.x, 0.6 * sr); x = resample(x, semi(R.drop + p.pitch + (r() - 0.5) * 2 + (how === 'drop' ? -7 - r() * 5 : 0))); x = biq(x, 'hp', 35);
+    if (how === 'bend') x = bend(x, 1.8, 0.7, 0.05);
+    let f0 = mf(n.sub); if (f0 < 42) f0 *= 2; f0 *= semi(p.pitch * 0.5);
+    const tight = how === 'tight' ? 0.5 : 1, len = sr * 0.45 * p.len * T.dd * tight, top = norm([decay(x, len, 0.11 * p.len * T.dd * tight)], 0.7)[0], rg = norm([ring(resample(src.x, semi(-12)), f0, len, 0.18 * p.len * T.dd * tight)], how === 'drop' ? 0.5 : 0.8)[0];
+    let own = add(top, rg, 0.9);
+    if (how === 'layer') { const l = S.rank.kick || [], c = l[(1 + (v || 0)) % Math.max(1, l.length)]; if (c) { const o = S.segs[c.i], y = decay(resample(slice(o.s, o.e), semi(-5)), len, 0.08 * p.len); own = add(own, norm([y], 0.6)[0], 1, Math.round(0.006 * sr)); } }
+    return { ch: capAdd(own, sine(f0, len, 0.14 * p.len * tight, 0.0015, f0 * 3.2, 0.03), 0.22), o: { hp: 28, lp: R.lp, drive: R.drive * 0.8, comp: true, sendHP: 350 } };
   },
   snare(src, R, r, p) {
-    const sr = S.sr, T = toneStyle(); let x = cut(src.x, 0.5 * sr); x = resample(x, semi(R.pitch + p.pitch + (r() - 0.5) * 2)); x = biq(x, 'hp', 120);
-    const len = sr * 0.4 * p.len, tau = 0.09 * p.len * T.dd, main = decay(x, len, tau), snap = decay(biq(x, 'hp', 2500), len, 0.05 * p.len), fb = 185 * semi(R.pitch + p.pitch);
-    return { ch: capAdd(add(add(main, snap, 0.45), norm([ring(x, fb, len, 0.07)], 0.3)[0], 1), sine(fb, len, 0.05, 0.001, 60, 0.01), 0.08), o: { hp: 90, lp: R.lp, drive: R.drive * 0.7, comp: true } };
+    const sr = S.sr, T = toneStyle(), how = vpick('snare', world().snare); let x = cut(src.x, 0.5 * sr); x = resample(x, semi(R.pitch + p.pitch + (r() - 0.5) * 2)); x = biq(x, 'hp', 120);
+    if (how === 'bend') x = bend(x, 1.5, 0.75, 0.04);
+    const len = sr * 0.4 * p.len, tau = 0.09 * p.len * T.dd, fb = (how === 'wood' ? 420 : 185) * semi(R.pitch + p.pitch);
+    let main = decay(x, len, how === 'gated' ? 1 : tau); if (how === 'gated') { const g = Math.round(0.12 * sr * p.len); main = fades(main.slice(0, g), 0, 0.012); }
+    let own = add(main, decay(biq(x, 'hp', 2500), len, 0.05 * p.len), how === 'wood' ? 0.15 : 0.45);
+    if (how === 'ringy') own = add(own, norm([combs(cut(x, 0.03 * sr), [fb * 2.3, fb * 3.7], 0.97, 0.3)], 0.35)[0], 1);
+    else own = add(own, norm([ring(x, fb, len, 0.07)], 0.3)[0], 1);
+    if (how === 'wood') own = biq(own, 'bp', 900, 0.8);
+    if (how === 'reverse') { const tail = fades(rev(decay(x, 0.12 * sr, 0.05)), 0.03, 0.002); own = add(tail, own, 1, tail.length); }
+    return { ch: capAdd(own, sine(fb, len, 0.05, 0.001, 60, 0.01), 0.08), o: { hp: 90, lp: R.lp, drive: R.drive * 0.7, comp: true } };
   },
   clap(src, R, r, p) {
-    const sr = S.sr; let x = cut(src.x, 0.14 * sr); x = resample(x, semi(R.pitch + p.pitch)); x = biq(biq(x, 'hp', 700), 'bp', 1500 + r() * 800, 0.7);
-    let y = new Float32Array(0); [[0, 0.7, 0.012], [0.011, 0.85, 0.012], [0.023, 0.75, 0.014], [0.034, 1, 0.12 * p.len]].forEach(([o, g, tau]) => { y = add(y, decay(x, sr * Math.max(0.05, tau * 5), tau), g, Math.round(o * sr)); });
+    const sr = S.sr; let x = cut(src.x, 0.14 * sr); x = resample(x, semi(R.pitch + p.pitch)); x = biq(biq(x, 'hp', 600), 'bp', ppk('clapf', 900, 2600), ppk('clapq', 0.5, 1.4));
+    let y = new Float32Array(0); (() => { const n = Math.round(ppk('clapn', 2, 5.9)), gap = ppk('clapg', 0.007, 0.016), l = []; for (let k = 0; k < n; k++) l.push([k * gap * (1 + 0.15 * Math.sin(k * 7)), 0.7 + 0.3 * (k / n), 0.012]); l.push([n * gap, 1, 0.12 * p.len]); return l; })().forEach(([o, g, tau]) => { y = add(y, decay(x, sr * Math.max(0.05, tau * 5), tau), g, Math.round(o * sr)); });
     return { ch: y, o: { hp: 300, lp: R.lp, drive: R.drive * 0.6, comp: true } };
   },
-  chat(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 0.3 * sr); if (src.cen < 4000) x = resample(x, 2); x = biq(biq(x, 'hp', 6500), 'hp', 6500); x = resample(x, semi(R.pitch + p.pitch)); const tau = R.hat * p.len; return { ch: decay(x, sr * tau * 6, tau), o: { hp: 5000, lp: Math.min(R.lp * 1.4, 19000), drive: R.drive * 0.3 } }; },
-  ohat(src, R, r, p) { const sr = S.sr; let x = src.cen < 4000 ? resample(src.x, 2) : src.x; if (x.length < 0.4 * sr) x = stretch(x, Math.round(0.6 * sr), r, 0.04, 0.01); x = biq(biq(x, 'hp', 6000), 'hp', 6000); x = resample(x, semi(R.pitch + p.pitch)); const tau = 0.16 * p.len; return { ch: decay(x, sr * tau * 4, tau), o: { hp: 4500, lp: Math.min(R.lp * 1.4, 19000), drive: R.drive * 0.3 } }; },
+  chat(src, R, r, p) {
+    const sr = S.sr, how = world().hat, open = 'chat' === 'ohat'; let x = cut(src.x, (open ? 0.6 : 0.3) * sr); if (src.cen < 3500) x = resample(x, 1.6);
+    if (open && x.length < 0.4 * sr) x = stretch(x, Math.round(0.6 * sr), r, 0.04, 0.01);
+    if (how === 'metal') x = add(x, combs(cut(x, 0.02 * sr), [3150, 4870, 7230].map((f) => f * semi(p.pitch)), 0.9, 0.35), 0.6);
+    if (how === 'glass') x = add(biq(x, 'bp', 6200, 2.5), x, 0.4);
+    if (how === 'airy') x = stretch(x, x.length, r, 0.02, 0.004);
+    x = biq(x, 'hp', { warm: 3000, metal: 3500, short: 4200, glass: 4500, dusty: 2800, airy: 5000 }[how] || 4000); x = biq(x, 'lp', how === 'dusty' ? 8000 : 12000);
+    x = resample(x, semi(R.pitch + p.pitch)); const tau = (open ? 0.16 : R.hat * (how === 'short' ? 0.7 : how === 'airy' ? 1.6 : 1)) * p.len;
+    return { ch: decay(x, sr * tau * (open ? 4 : 6), tau), o: { hp: 2500, lp: Math.min(R.lp * 1.2, 12500), drive: R.drive * 0.2 } };
+  },
+  ohat(src, R, r, p) {
+    const sr = S.sr, how = world().hat, open = 'ohat' === 'ohat'; let x = cut(src.x, (open ? 0.6 : 0.3) * sr); if (src.cen < 3500) x = resample(x, 1.6);
+    if (open && x.length < 0.4 * sr) x = stretch(x, Math.round(0.6 * sr), r, 0.04, 0.01);
+    if (how === 'metal') x = add(x, combs(cut(x, 0.02 * sr), [3150, 4870, 7230].map((f) => f * semi(p.pitch)), 0.9, 0.35), 0.6);
+    if (how === 'glass') x = add(biq(x, 'bp', 6200, 2.5), x, 0.4);
+    if (how === 'airy') x = stretch(x, x.length, r, 0.02, 0.004);
+    x = biq(x, 'hp', { warm: 3000, metal: 3500, short: 4200, glass: 4500, dusty: 2800, airy: 5000 }[how] || 4000); x = biq(x, 'lp', how === 'dusty' ? 8000 : 12000);
+    x = resample(x, semi(R.pitch + p.pitch)); const tau = (open ? 0.16 : R.hat * (how === 'short' ? 0.7 : how === 'airy' ? 1.6 : 1)) * p.len;
+    return { ch: decay(x, sr * tau * (open ? 4 : 6), tau), o: { hp: 2500, lp: Math.min(R.lp * 1.2, 12500), drive: R.drive * 0.2 } };
+  },
   tom(src, R, r, p) {
     const sr = S.sr, t0 = 48 + ((kPc() + 7) % 12), tm = t0 > 55 ? t0 - 12 : t0, f = mf(tm + p.pitch); let x = cut(src.x, 0.6 * sr);
     x = src.clar > 0.6 && src.f0 > 40 ? resample(x, fitRatio(src.f0, f)) : resample(x, semi(-5 + R.pitch + p.pitch));
@@ -880,27 +932,31 @@ const B = {
   },
   perc(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 0.3 * sr); x = resample(x, semi(R.pitch + p.pitch + (r() - 0.5) * 6)); const bp = biq(x, 'bp', clamp(src.cen, 400, 5000), 1.2); return { ch: decay(add(bp, x, 0.4), sr * 0.3 * p.len, 0.08 * p.len), o: { hp: 150, lp: R.lp, drive: R.drive * 0.5, comp: true } }; },
   rim(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 0.07 * sr); x = resample(x, semi(7 + R.pitch + p.pitch)); x = biq(x, 'hp', 1200); x = add(x, biq(x, 'bp', 1800, 3), 0.8); return { ch: decay(x, sr * 0.12 * p.len, 0.022 * p.len), o: { hp: 800, lp: R.lp, drive: R.drive * 0.4 } }; },
-  shaker(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 0.2 * sr); x = biq(biq(x, 'hp', 4500), 'hp', 4500); x = resample(x, semi(R.pitch + p.pitch)); const g = decay(x, sr * 0.2 * p.len, 0.06 * p.len, 0.022); return { ch: add(g, g, 0.55, Math.round(0.045 * sr)), o: { hp: 3000, lp: Math.min(R.lp * 1.3, 19000), drive: R.drive * 0.2 } }; },
+  shaker(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 0.2 * sr); x = biq(biq(x, 'hp', 3200), 'lp', 11000); x = resample(x, semi(R.pitch + p.pitch)); const g = decay(x, sr * 0.2 * p.len, 0.06 * p.len, 0.022); return { ch: add(g, g, 0.55, Math.round((0.03 + r() * 0.04) * sr)), o: { hp: 2500, lp: Math.min(R.lp * 1.2, 12000), drive: R.drive * 0.2 } }; },
   fx(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 1.2 * sr * p.len); if (R.glitch || r() < 0.5) x = stutter(x, r); x = rev(x); x = resample(x, semi(-5 + R.pitch + p.pitch + (r() - 0.5) * 6)); x = crush(x, 8, 2); return { ch: env(x, 0.15, 0.03), o: { hp: 100, lp: R.lp, drive: R.drive } }; },
   bass(src, R, r, p) {
-    const sr = S.sr, f = mf(notes().bass + p.pitch), L = Math.round(sr * 1.2 * p.len); let tone;
-    if (src.clar > 0.7 && src.f0 > 40) tone = decay(resample(src.x, f / src.f0), L, 0.5 * p.len, 0.004);
+    const sr = S.sr, how = vpick('bass', ['pluck', 'round', 'glide', 'growl'].concat(src.clar > 0.7 && src.f0 > 40 ? ['sampled', 'sampled'] : [])), oct = vpick('bassoct', [0, 0, -12]);
+    const f = mf(notes().bass + oct + p.pitch), L = Math.round(sr * (how === 'round' ? 1.6 : 1.2) * p.len); let tone;
+    if (how === 'sampled') tone = decay(resample(src.x, f / src.f0), L, 0.5 * p.len, 0.004);
+    else if (how === 'round') tone = biq(env(ks(excite(src.x, 0.05), f, L, 1.6 * p.len, 0.05), 0.006, 0.12), 'lp', 500);
+    else if (how === 'glide') tone = bend(env(ks(excite(src.x, 0.03), f, L, 1.2 * p.len, R.bright * 0.4), 0.003, 0.08), semi(5), 1, 0.06);
+    else if (how === 'growl') tone = env(combs(stretch(src.x, L, r, 0.06, 0.02), [f, f * 2], 0.975, 0.2), 0.01, 0.1);
     else tone = env(ks(excite(src.x, 0.03), f, L, 1.0 * p.len, R.bright * 0.4), 0.003, 0.08);
-    const rg = norm([ring(src.x, f, L, 0.5 * p.len, 0.99)], 0.5)[0];
-    return { ch: capAdd(add(norm([tone], 0.7)[0], rg, 1), sine(f, L, 0.6 * p.len, 0.004), 0.2), o: { hp: 30, lp: Math.min(R.lp, 2200), drive: clamp(R.drive + 0.15, 0, 1), comp: true, sendHP: 400 } };
+    const rg = norm([ring(src.x, f, L, 0.5 * p.len, 0.99)], how === 'growl' ? 0.25 : 0.5)[0];
+    return { ch: capAdd(add(norm([tone], 0.7)[0], rg, 1), sine(f, L, 0.6 * p.len, 0.004), 0.2), o: { hp: 30, lp: Math.min(R.lp, how === 'growl' ? 3500 : 2200), drive: clamp(R.drive + (how === 'growl' ? 0.35 : 0.15), 0, 1), comp: true, sendHP: 400 } };
   },
   sub(src, R, r, p) {
-    const sr = S.sr, f = mf(notes().sub + p.pitch), L = Math.round(sr * 1.4 * p.len), e = biq(excite(src.x, 0.06), 'lp', 300);
-    const body = norm([env(ks(e, f, L, 1.3 * p.len, 0.02), 0.004, 0.1)], 0.8)[0], click = decay(biq(cut(src.x, 0.02 * sr), 'hp', 2000), 0.02 * sr, 0.006);
-    return { ch: add(capAdd(body, sine(f, L, 0.9 * p.len, 0.005), 0.3), click, 0.15), o: { hp: 20, lp: 900, drive: R.drive * 0.5 + 0.1 } };
+    const sr = S.sr, how = vpick('sub', ['long', 'short', 'warm', 'click']), f = mf(notes().sub + p.pitch), dec = { long: 1.8, short: 0.6, warm: 1.2, click: 0.9 }[how] * p.len, L = Math.round(sr * dec * 1.2), e = biq(excite(src.x, 0.06), 'lp', how === 'warm' ? 600 : 300);
+    const body = norm([env(ks(e, f, L, dec, how === 'warm' ? 0.15 : 0.02), 0.004, 0.1)], 0.8)[0], click = decay(biq(cut(src.x, 0.02 * sr), 'hp', 2000), 0.02 * sr, 0.006);
+    return { ch: add(capAdd(body, sine(f, L, dec * 0.75, 0.005), 0.3), click, how === 'click' ? 0.35 : 0.12), o: { hp: 20, lp: how === 'warm' ? 1400 : 900, drive: R.drive * 0.5 + (how === 'warm' ? 0.25 : 0.1) } };
   },
   keys(src, R, r, p, v) {
-    const sr = S.sr, T = toneStyle(), f = mf(notes().keys + p.pitch), L = Math.round(sr * 2.6 * p.len * T.dec); let y = voice(T.keys, src, f, L, R, r, p, T, v);
+    const sr = S.sr, T = toneStyle(), f = mf(notes().keys + vpick('ko', [0, 0, 12, -12]) + p.pitch), L = Math.round(sr * 2.6 * p.len * T.dec); let y = voice(T.keys, src, f, L, R, r, p, T, v);
     let Lc = Array.isArray(y) ? y[0] : y, Rc = Array.isArray(y) ? y[1] : resample(y, 1 + T.det); if (R.vinyl) { const vv = vinyl(L, r); Lc = add(Lc, vv, 0.6); Rc = add(Rc, vv, 0.6); }
     return { ch: [Lc, Rc], o: { hp: 60, lp: R.lp * 0.7, drive: R.drive * 0.4 } };
   },
   pluck(src, R, r, p, v) {
-    const sr = S.sr, T = toneStyle(), f = mf(notes().keys + p.pitch), L = Math.round(sr * 1.2 * p.len * T.dec), b = clamp(R.bright + T.bright, 0.05, 0.95);
+    const sr = S.sr, T = toneStyle(), f = mf(notes().keys + vpick('po', [0, 12, 12, -12]) + p.pitch), L = Math.round(sr * 1.2 * p.len * T.dec), b = clamp(R.bright + T.bright, 0.05, 0.95);
     if (T.pluck === 'bell') { const y = voice('bell', src, f, L, R, r, p, T, v); return { ch: [y, resample(y, 1 + T.det)], o: { hp: 80, lp: R.lp, drive: R.drive * 0.4 } }; }
     const e = excite(src.x, 0.012); return { ch: [ks(e, f, L, 0.7 * p.len * T.dec, b), ks(e, f * (1 + T.det), L, 0.65 * p.len * T.dec, b)], o: { hp: 80, lp: R.lp, drive: R.drive * 0.5 } };
   },
@@ -918,11 +974,11 @@ const B = {
     return { ch: [env(Lc, 0.7 * p.len, 1.2), env(Rc, 0.7 * p.len, 1.2)], o: { hp: 80, lp: R.lp * 0.8, drive: R.drive * 0.3 } };
   },
   drone(src, R, r, p) { const sr = S.sr, n = notes(), L = Math.round(sr * 8 * p.len), f = mf(n.bass + p.pitch), r2 = rng32((r() * 4294967296) >>> 0); const side = (rr) => biq(combs(stretch(src.x, L, rr, 0.15, 0.08), [f, f * 1.5, f * 2], 0.99, 0.45), 'lp', 1500); return { ch: [env(side(r), 1.5, 2), env(side(r2), 1.5, 2)], o: { hp: 30, lp: 2500, drive: 0.1 } }; },
-  texture(src, R, r, p) { const sr = S.sr, L = Math.round(sr * 6 * p.len), r2 = rng32((r() * 4294967296) >>> 0), side = (rr) => biq(biq(stretch(resample(src.x, semi(R.pitch + p.pitch)), L, rr, 0.1, 0.2), 'hp', 200), 'lp', 2500 + 9000 * R.bright); return { ch: [env(side(r), 0.5, 1), env(side(r2), 0.5, 1)], o: { hp: 100, lp: R.lp, drive: R.drive * 0.3 } }; },
+  texture(src, R, r, p) { const sr = S.sr, L = Math.round(sr * 6 * p.len), r2 = rng32((r() * 4294967296) >>> 0), side = (rr) => biq(biq(stretch(resample(src.x, semi(R.pitch + p.pitch + Math.round(ppk('texp', -7, 5)))), L, rr, ppk('texg', 0.03, 0.25), ppk('texj', 0.05, 0.4)), 'hp', ppk('texh', 120, 900)), 'lp', ppk('texl', 1800, 7000)); return { ch: [env(side(r), 0.5, 1), env(side(r2), 0.5, 1)], o: { hp: 100, lp: R.lp, drive: R.drive * 0.3 } }; },
   riser(src, R, r, p) {
     const sr = S.sr, L = Math.round(sr * 4 * p.len), base = stretch(src.x, L, r, 0.1, 0.05), y = new Float32Array(L); let pos = 0, hpY = 0, hpX = 0;
     for (let i = 0; i < L; i++) {
-      const q = i / L, rate = 0.5 * Math.pow(4, q) * semi(p.pitch); pos += rate; const k = Math.floor(pos) % L, v = base[k] * q * q;
+      const q = i / L, rate = ppk('rs0', 0.35, 0.8) * Math.pow(ppk('rs1', 2.5, 6), q) * semi(p.pitch); pos += rate; const k = Math.floor(pos) % L, v = base[k] * q * q;
       const fc = 80 * Math.pow(60, q), a = Math.exp(-2 * Math.PI * fc / sr); hpY = a * (hpY + v - hpX); hpX = v; y[i] = hpY;
     }
     return { ch: env(y, 0.05, 0.02), o: { hp: 60, lp: R.lp, drive: R.drive * 0.5 } };
@@ -1000,19 +1056,23 @@ async function make(sl, v = 0) {
   const R = recipe(), r = rng32((S.seed ^ hashStr(sl.id)) + sl.seed * 31 + v * 7919);
   let b, src = null;
   if (sl.id === 'loop') b = await buildLoop(sl, r);
-  else { src = srcOf(sl, v); if (!src || !src.x || src.x.length < 64) return null; b = B[sl.id](src, R, r, sl.p, v); }
+  else { src = srcOf(sl, v); if (!src || !src.x || src.x.length < 64) return null; const pv = Object.assign({}, sl.p, { len: sl.p.len * ppk(sl.id + 'len', 0.7, 1.45) }); b = B[sl.id](src, R, r, pv, v); }
   let ch = Array.isArray(b.ch) ? b.ch : [b.ch, b.ch];
   if (!b.loop) {
     if (R.crush) ch = norm(ch, 0.8).map((c) => crush(c, R.crush, R.crush < 9 ? 3 : 1));
     if (sl.p.rev) ch = ch.map(rev);
     if (R.hp) b.o.hp = Math.max(b.o.hp || 20, R.hp);
   }
+  if (!b.loop && sl.grp === 'd' && sl.id !== 'kick') { const tn = semi(ppk(sl.id + 'tune', -4, 4)); ch = ch.map((c) => resample(c, tn)); }
+  if (!b.loop && b.o) { b.o.lp = Math.min(b.o.lp || 20000, (b.o.lp || 12000) * ppk(sl.id + 'lp', 0.55, 1)); }
   ch = norm(ch, 0.8);
   const o = Object.assign({}, b.o); o.drive = clamp((o.drive || 0) + sl.p.drive * 0.5, 0, 1);
-  const d0 = await fx(ch, o), dry = norm(b.loop ? d0 : trimTail(d0), 0.891);
+  if (!b.loop && world().wow && sl.grp !== 'd') ch = ch.map((c) => wow(c, rng32(S.seed ^ 0x3a)));
+  let d0 = await fx(ch, o); const fsT = b.loop ? [] : tameFilters(d0, ['chat', 'ohat', 'shaker'].includes(sl.id) ? 0.33 : 0.28); d0 = applyF(d0, fsT);
+  const dry = norm(b.loop ? d0 : trimTail(d0), 0.891);
   const vA = verbFor(sl, R), dl = S.delay && SEND[sl.id][1] > 0 ? { t: (60 / R.bpm) * R.div, fb: R.fb, mix: 0.3 * SEND[sl.id][1] } : null;
   let wet = null;
-  if (vA > 0.005 || dl) { const w = await fx(ch, Object.assign({}, o, { verb: vA, delay: dl, tail: (vA > 0.005 ? Math.min(R.room * 1.1, 6) : 0) + (dl ? 1.6 : 0) })); wet = norm(b.loop ? w.map((c) => c.slice(0, ch[0].length)) : trimTail(w), 0.891); }
+  if (vA > 0.005 || dl) { const w = await fx(ch, Object.assign({}, o, { verb: vA, delay: dl, tail: (vA > 0.005 ? Math.min(R.room * 1.1, 6) : 0) + (dl ? 1.6 : 0) })); wet = norm(b.loop ? w.map((c) => c.slice(0, ch[0].length)) : trimTail(applyF(w, fsT)), 0.891); }
   let raw = null;
   if (src && !b.loop) { const x = rawTrim(src.x.slice(0, Math.round(Math.min(src.x.length, 12 * S.sr)))); raw = norm([x, x], 0.891); }
   return { dry, wet, raw, src };
@@ -1052,7 +1112,7 @@ function renderGrid() {
     b.onclick = () => tapTile(i);
     (s.grp === 'x' ? xg : g).append(b);
   });
-  const R = recipe(); $('#pInfo').textContent = GEN[S.genre][lang] + (S.mood !== 'none' ? ' · ' + MOOD[S.mood][lang] : '') + ' · ' + keyName() + ' · ' + R.bpm + ' BPM';
+  const R = recipe(); $('#pInfo').textContent = (S.x ? world()[lang] + ' · ' : '') + GEN[S.genre][lang] + (S.mood !== 'none' ? ' · ' + MOOD[S.mood][lang] : '') + ' · ' + keyName() + ' · ' + R.bpm + ' BPM';
   $('#pName').textContent = S.name;
 }
 let lastTap = { i: -1, t: 0 };
@@ -1134,7 +1194,7 @@ function assignAuto(fresh) {
     if (s.keep && s.src) continue;
     if (s.id === 'loop') { s.src = null; continue; }
     const list = S.rank[s.id] || []; if (!list.length) { s.src = null; continue; }
-    let pick = -1; const top = Math.min(list.length, fresh ? 3 : 6), start = fresh ? Math.floor(r() * top) : 0;
+    let pick = -1; const top = Math.min(list.length, list[0].k === 'r' ? 6 : 3), start = Math.floor(r() * top);
     for (let j = 0; j < list.length && pick < 0; j++) { const k = (start + j) % list.length, key = list[k].k + list[k].i; if (!used.has(key) || j >= 6) pick = k; }
     if (pick < 0) pick = 0; used.add(list[pick].k + list[pick].i);
     s.src = { kind: 'c', i: pick }; s.seed = rnd32();
@@ -1224,7 +1284,7 @@ async function loadBlob(blob) {
   newSlots(); S.x = x; S.sr = buf.sampleRate; S.dur = n / S.sr; S.made = false; S.sel = -1; S.selR = null; S.guided = false; ovPeaks = null; S.view = { s: 0, d: Math.min(4, Math.max(0.5, S.dur)) };
   try { await analyse(); } catch (e) { console.error(e); }
   busy(null);
-  S.seed = rnd32(); S.name = packName();
+  S.seed = rnd32(); S.name = packName(); if (typeof BURP !== 'undefined') BURP.n = 0;
   $('#srcIdle').hidden = true; $('#srcDone').hidden = false; $('#srcInfo').textContent = t('found', { d: fmtD(S.dur), n: S.onsets });
   $('#srcWarn').hidden = !S.shaped; $('#srcWarn').textContent = t('few');
   $('#cDir').hidden = false; renderDir(); renderGrid(); renderEd(); showPack(); renderAssign(); requestAnimationFrame(drawWave);
@@ -1240,7 +1300,7 @@ $('#bGuide').onclick = async () => {
   showPack(); $('#cPack').hidden = false; await render1(s, true); renderEd(); $('#cEd').scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 $('#bAgain').onclick = async () => { if (!S.x) return; S.seed = rnd32(); assignAuto(true); await rebuild(S.slots.filter((s) => !s.keep || s.id === 'loop').map((s) => s.id), true); };
-$('#bName').onclick = () => { S.name = packName(); renderGrid(); };
+$('#bName').onclick = () => { S.name = packName(); BURP.n = 0; renderGrid(); };
 
 // direction controls
 $('#delay').onchange = () => { S.delay = $('#delay').checked; dirChanged(); };
@@ -1339,7 +1399,7 @@ function renderBurp() {
 }
 const SC = { min: [0, 2, 3, 5, 7, 8, 10], maj: [0, 2, 4, 5, 7, 9, 11] };
 function degMidi(root, d) { const sc = kMin() ? SC.min : SC.maj, o = Math.floor(d / 7), k = ((d % 7) + 7) % 7; return root + sc[k] + 12 * o; }
-function rootOf(id) { const n = notes(); return { bass: n.bass, sub: n.sub, keys: n.keys, pluck: n.keys, lead: n.keys + 12, pad: n.pad, drone: n.bass }[id]; }
+function rootOf(id) { const n = notes(); return { bass: n.bass + vpick('bassoct', [0, 0, -12]), sub: n.sub, keys: n.keys + vpick('ko', [0, 0, 12, -12]), pluck: n.keys + vpick('po', [0, 12, 12, -12]), lead: n.keys + 12, pad: n.pad, drone: n.bass }[id]; }
 let pcache = new Map();
 function outOf(id, wet) { const s = slot(id); if (!s || !s.out) return null; return (wet && s.out.wet) || s.out.dry; }
 function pitched(id, wet, st) {
@@ -1447,7 +1507,7 @@ function burpTrack() {
         if (fill) { const fid = slot('tom').out ? 'tom' : 'snare'; for (const q of [12, 13, 14, 15]) if (r() < 0.65) put(M, pitched(fid, false, fid === 'tom' ? pk(r, [0, -3, -5]) : 0), t0 + q * step, ag * DG[fid] * (0.6 + (q - 12) * 0.1)); }
       }
       if (L.bass) {
-        const bm = degMidi(n.bass, chord), stp = fold(bm - n.bass, -5, 6);
+        const br = rootOf('bass'), bm = degMidi(br, chord), stp = fold(bm - br, -5, 6);
         bassPat.forEach((q, i) => { const nx = i + 1 < bassPat.length ? bassPat[i + 1] : 16; put(M, pitched('bass', false, stp), t0 + q * step, 0.7 * ag, (nx - q) * step * 0.95); });
         if (g === 'triphop' || g === 'cinema' || g === 'ambient') put(M, pitched('sub', false, fold(degMidi(n.sub, chord) - n.sub, -5, 6)), t0, 0.6 * ag, bar * 0.9);
       }
@@ -1474,7 +1534,7 @@ function masterIn(M) { // in place, so long tracks fit in a phone's memory
 async function doBurp() {
   if (!S.made) { toast(t('midiFirst')); return; }
   stopTrack(); busy(t('burping'), '', 0.3); await tick(); await tick();
-  try { const tr = burpTrack(); BURP.track = tr.ch; BURP.secs = tr.secs; BURP.kind = 'burp'; BURP.len = tr.total; BURP.name = packName(); BURP.info = GEN[tr.g][lang] + ' · ' + keyName() + ' · ' + tr.bpm + ' BPM'; }
+  try { const tr = burpTrack(); BURP.track = tr.ch; BURP.secs = tr.secs; BURP.kind = 'burp'; BURP.len = tr.total; BURP.n = (BURP.n || 0) + 1; BURP.name = (S.name || 'Divine Sound') + ' Burp ' + BURP.n; BURP.info = GEN[tr.g][lang] + ' · ' + keyName() + ' · ' + tr.bpm + ' BPM'; }
   catch (e) { console.error(e); }
   busy(null); showTrack(); playTrack();
 }
