@@ -657,19 +657,20 @@ function stretch(x, n, r, grainS = 0.09, jitS = 0.03) {
   for (let i = 0; i < n; i++) y[i] *= 0.5;
   return y;
 }
-function excite(x, dur) { const n = Math.min(x.length, Math.max(32, Math.round(dur * S.sr))); const y = biq(x.slice(0, n), 'hp', 80); for (let i = 0; i < n; i++) y[i] *= 0.5 + 0.5 * Math.cos(Math.PI * i / n); return y; }
+function excite(x, dur) { const n = Math.min(x.length, Math.max(32, Math.round(dur * S.sr))); const y = biq(biq(biq(x.slice(0, n), 'hp', 80), 'lp', 2800), 'lp', 2800); for (let i = 0; i < n; i++) y[i] *= 0.5 + 0.5 * Math.cos(Math.PI * i / n); return y; }
 function ks(exc, f, len, dec, bright) {
   const sr = S.sr, n = Math.round(len), y = new Float32Array(n), D = sr / f - 0.5, M = Math.ceil(D) + 4, buf = new Float32Array(M);
   const g = Math.pow(0.001, 1 / (f * Math.max(0.05, dec))); let w = 0, prev = 0; const ex = norm([exc], 0.8)[0];
   for (let i = 0; i < n; i++) {
     let rp = w - D; while (rp < 0) rp += M; const k = Math.floor(rp), fr = rp - k, d = buf[k % M] * (1 - fr) + buf[(k + 1) % M] * fr;
-    const v = bright * d + (1 - bright) * 0.5 * (d + prev); prev = d;
+    const bb = Math.min(bright, 0.55), v = bb * d + (1 - bb) * 0.5 * (d + prev); prev = d;
     const o = (i < ex.length ? ex[i] : 0) + g * v; buf[w] = o; y[i] = o; w = (w + 1) % M;
   }
   return y;
 }
 function combs(x, fs, g, damp = 0.35) {
-  const sr = S.sr, y = new Float32Array(x.length);
+  const sr = S.sr, y = new Float32Array(x.length); damp = Math.max(damp, 0.6); // high partials die fast, like a real string, instead of whistling
+  x = biq(x, 'lp', 3500);
   for (const f of fs) {
     const D = sr / f, M = Math.ceil(D) + 4, buf = new Float32Array(M); let w = 0, lp = 0;
     for (let i = 0; i < x.length; i++) { let rp = w - D; while (rp < 0) rp += M; const k = Math.floor(rp), fr = rp - k, d = buf[k % M] * (1 - fr) + buf[(k + 1) % M] * fr; lp = lp + (1 - damp) * (d - lp); const o = x[i] + g * lp; buf[w] = o; y[i] += o / fs.length; w = (w + 1) % M; }
@@ -710,7 +711,7 @@ function yin(s0) {
 const tick = () => new Promise((r) => setTimeout(r, 0));
 async function analyse() {
   const x = S.x, sr = S.sr, N = 1024, H = 512, nb = N / 2 + 1, F = Math.max(1, Math.floor((x.length - N) / H) + 1);
-  const rms = new Float32Array(F), flux = new Float32Array(F), lo = new Float32Array(F), hi = new Float32Array(F), cen = new Float32Array(F), flat = new Float32Array(F);
+  const sqk = new Float32Array(F), k1k = Math.floor(1000 / (sr / 1024)), k5k = Math.floor(5000 / (sr / 1024)), rms = new Float32Array(F), flux = new Float32Array(F), lo = new Float32Array(F), hi = new Float32Array(F), cen = new Float32Array(F), flat = new Float32Array(F);
   const w = hann(N), re = new Float64Array(N), im = new Float64Array(N), prev = new Float32Array(nb), bin = sr / N, loB = Math.ceil(150 / bin), hiB = Math.floor(5000 / bin);
   for (let f = 0; f < F; f++) {
     const o = f * H; let e = 0;
@@ -719,6 +720,7 @@ async function analyse() {
     let tot = 1e-12, l = 0, h = 0, cs = 0, lg = 0, fl = 0;
     for (let k = 1; k < nb; k++) { const p = re[k] * re[k] + im[k] * im[k], m = Math.sqrt(p); tot += p; if (k <= loB) l += p; else if (k >= hiB) h += p; cs += k * bin * p; lg += Math.log(p + 1e-14); const lv = Math.log(1 + 100 * m), dv = lv - prev[k]; if (dv > 0) fl += dv; prev[k] = lv; }
     lo[f] = l / tot; hi[f] = h / tot; cen[f] = cs / tot; flat[f] = Math.exp(lg / (nb - 1)) / (tot / (nb - 1)); flux[f] = fl;
+    { let mx = -99, sm = 0, c = 0; for (let k = k1k; k < k5k; k++) { const v = Math.log(re[k] * re[k] + im[k] * im[k] + 1e-14); sm += v; c++; if (v > mx) mx = v; } sqk[f] = c ? mx - sm / c : 0; }
     if ((f & 2047) === 0) { busy(t('listening'), Math.round(100 * f / F) + '%', 0.8 * f / F); await tick(); }
   }
   const sF = Float32Array.from(flux).sort(), sR = Float32Array.from(rms).sort();
@@ -741,9 +743,9 @@ async function analyse() {
     let s = a0; for (; s < a1; s++) if (Math.abs(x[s]) > 0.25 * lp) break; s = Math.max(0, s - Math.round(0.002 * sr));
     let g = pf; while (g < nx && g < F && rms[g] > rms[pf] * 0.03 && (g - f) * H < 2.5 * sr) g++;
     const e = Math.min(x.length, g * H + N);
-    let wl = 0, sl = 0, sh = 0, sc = 0, sfl = 0; for (let k = f; k < Math.min(g, f + 12, F); k++) { const ww = rms[k] + 1e-9; wl += ww; sl += lo[k] * ww; sh += hi[k] * ww; sc += cen[k] * ww; sfl += flat[k] * ww; }
+    let wl = 0, sl = 0, sh = 0, sc = 0, sfl = 0, ssq = 0; for (let k = f; k < Math.min(g, f + 12, F); k++) { const ww = rms[k] + 1e-9; wl += ww; sl += lo[k] * ww; sh += hi[k] * ww; sc += cen[k] * ww; sfl += flat[k] * ww; ssq += sqk[k] * ww; }
     if (wl <= 0) continue;
-    segs.push({ s, e, len: (e - s) / sr, pk: rms[pf], lowR: sl / wl, highR: sh / wl, cen: sc / wl, flat: sfl / wl, f0: 0, clar: 0 });
+    segs.push({ s, e, len: (e - s) / sr, pk: rms[pf], lowR: sl / wl, highR: sh / wl, cen: sc / wl, flat: sfl / wl, sq: ssq / wl, f0: 0, clar: 0 });
   }
   segs.sort((a, b) => b.pk - a.pk); if (segs.length > 600) segs.length = 600;
   busy(t('listening'), '', 0.85); await tick();
@@ -752,11 +754,11 @@ async function analyse() {
   // steady stretches
   const wF = Math.max(4, Math.round(2 * sr / H)), st = Math.max(1, wF >> 2), cand = [];
   for (let g = 0; g + wF <= F; g += st) {
-    let m = 0, m2 = 0, l = 0, h = 0, fl = 0, c = 0, quiet = 0; for (let k = g; k < g + wF; k++) { m += rms[k]; m2 += rms[k] * rms[k]; l += lo[k]; h += hi[k]; fl += flat[k]; c += cen[k]; if (rms[k] < gate * 0.5) quiet++; }
+    let m = 0, m2 = 0, l = 0, h = 0, fl = 0, c = 0, quiet = 0, q2 = 0; for (let k = g; k < g + wF; k++) { m += rms[k]; m2 += rms[k] * rms[k]; l += lo[k]; h += hi[k]; fl += flat[k]; c += cen[k]; q2 += sqk[k]; if (rms[k] < gate * 0.5) quiet++; }
     if (quiet > wF * 0.1) continue;
     m /= wF; const sd = Math.sqrt(Math.max(0, m2 / wF - m * m)), cv = sd / (m + 1e-9);
     if (m < gate * 0.5) continue;
-    cand.push({ s: g * H, e: (g + wF) * H + N, score: m / (1 + 2 * cv), steady: 1 / (1 + cv), lowR: l / wF, highR: h / wF, flat: fl / wF, cen: c / wF, f0: 0, clar: 0, pk: m });
+    cand.push({ s: g * H, e: (g + wF) * H + N, sq: q2 / wF, score: m / (1 + 2 * cv), steady: 1 / (1 + cv), lowR: l / wF, highR: h / wF, flat: fl / wF, cen: c / wF, f0: 0, clar: 0, pk: m });
   }
   cand.sort((a, b) => b.score - a.score);
   const regs = []; for (const c of cand) { if (regs.length >= 12) break; if (regs.every((r) => c.e <= r.s || c.s >= r.e)) regs.push(c); }
@@ -806,8 +808,9 @@ function makeRanks() {
     down: (r) => r.flat * 1.5 + r.steady,
     lead: (r) => r.clar * 2 + r.steady
   };
-  for (const id in sc) R[id] = segs.map((s, i) => ({ k: 's', i, v: sc[id](s) })).sort((a, b) => b.v - a.v).slice(0, 8);
-  for (const id in rc) { const l = regs.map((r, i) => ({ k: 'r', i, v: rc[id](r) })).sort((a, b) => b.v - a.v).slice(0, 8); R[id] = id === 'lead' ? R.lead.slice(0, 4).filter((c) => segs[c.i].clar > 0.75).concat(l.slice(0, 4)) : l; }
+  const squeak = (o) => Math.max(0, (o.sq || 0) - 3.2) * 0.9; // a squeaky, scraping moment is a poor source: skip it when there is choice
+  for (const id in sc) R[id] = segs.map((s, i) => ({ k: 's', i, v: sc[id](s) - squeak(s) })).sort((a, b) => b.v - a.v).slice(0, 8);
+  for (const id in rc) { const l = regs.map((r, i) => ({ k: 'r', i, v: rc[id](r) - squeak(r) })).sort((a, b) => b.v - a.v).slice(0, 8); R[id] = id === 'lead' ? R.lead.slice(0, 4).filter((c) => segs[c.i].clar > 0.75).concat(l.slice(0, 4)) : l; }
   if (!R.lead.length) R.lead = R.keys.slice();
   R.loop = [];
   S.rank = R;
@@ -858,6 +861,15 @@ function wow(x, r) { const sr = S.sr, n = x.length, y = new Float32Array(n), rat
 // the guard: a sound that bites too much in the ear gets softened before you ever hear it
 function bite(c) { const h = biq(biq(c, 'hp', 2500), 'lp', 6500); let eh = 0, et = 1e-12; for (let i = 0; i < c.length; i++) { et += c[i] * c[i]; eh += h[i] * h[i]; } return eh / et; }
 function tameFilters(ch, lim) { const fs = []; let x = ch[0]; for (let k = 0; k < 7 && bite(x) > lim; k++) { const f = [['pk', 3300 + k * 400, 0.7, -6], ['hs', 6500, 0.7, -3]]; fs.push(...f); for (const q of f) x = biq(x, q[0], q[1], q[2], q[3]); } return fs; }
+// the second guard: a thin whistle that sticks out above its surroundings gets notched out
+function whistles(c, thr) {
+  const sr = S.sr, N = 8192, n = Math.min(c.length, N), re = new Float64Array(N), im = new Float64Array(N), off = Math.min(Math.max(0, c.length - n), Math.round(0.02 * sr));
+  for (let i = 0; i < n; i++) re[i] = (c[off + i] || 0) * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / (n - 1)));
+  fft(re, im); const nb = N / 2, db = new Float32Array(nb); for (let k = 0; k < nb; k++) db[k] = 10 * Math.log10(re[k] * re[k] + im[k] * im[k] + 1e-14);
+  const W = 60, out = [], k0 = Math.floor(900 * N / sr), k1 = Math.min(nb - W - 1, Math.floor(9000 * N / sr));
+  for (let k = k0; k < k1; k++) { if (db[k] < db[k - 1] || db[k] < db[k + 1]) continue; const win = Array.from(db.subarray(k - W, k + W)).sort((a, b) => a - b), med = win[W]; if (db[k] - med > thr) out.push([db[k] - med, k * sr / N]); }
+  out.sort((a, b) => b[0] - a[0]); const fs = []; for (const [h, f] of out) { if (fs.length >= 5) break; if (fs.every((q) => Math.abs(q[1] - f) > f * 0.04)) fs.push(['pk', f, 6, -Math.min(14, h - thr + 6)]); } return fs;
+}
 const applyF = (ch, fs) => fs.length ? ch.map((c) => { let x = c; for (const q of fs) x = biq(x, q[0], q[1], q[2], q[3]); return x; }) : ch;
 // the pack's own way of making tones, chosen once per pack so every pack sounds different
 function toneStyle() { const r = rng32((S.seed ^ 0x51ab7) >>> 0), tonal = S.segs.some((q) => q.clar > 0.75 && q.f0 > 80);
@@ -872,7 +884,7 @@ function voice(eng, src, f, L, R, r, p, T, v) {
   if (eng === 'sampled') { const ts = src.clar > 0.75 && src.f0 > 80 ? src : tonalSrc(v || 0); if (!ts) eng = 'bowed'; else { let x = resample(ts.x, fitRatio(ts.f0, f)); if (x.length < L) x = stretch(x, L, r, 0.07, 0.01); return env(cut(x, L), 0.01, 0.3); } }
   if (eng === 'bowed') { y = combs(stretch(src.x, L, r, 0.1, 0.03), [f, f * 2, f * 3], 0.98, T.damp); return env(y, 0.06 + r() * 0.1, 0.35); }
   if (eng === 'bell') { const e = excite(src.x, 0.015), pad0 = new Float32Array(L); pad0.set(e.subarray(0, Math.min(e.length, L))); y = new Float32Array(L);
-    [[1, 1], [2.76, 0.6], [5.4, 0.35]].forEach(([m, gn]) => { const ff = f * m, gg = Math.pow(0.001, 1 / (ff * 1.8 * p.len * T.dec)); y = add(y, combs(pad0, [ff], gg, 0.1), gn); }); return env(cut(y, L), 0.001, 0.2); }
+    [[1, 1], [2.76, 0.3], [5.4, 0.08]].forEach(([m, gn]) => { const ff = f * m, gg = Math.pow(0.001, 1 / (ff * 1.8 * p.len * T.dec / m)); y = add(y, combs(pad0, [ff], gg, 0.1), gn); }); return env(cut(y, L), 0.001, 0.2); }
   if (eng === 'buzz') return env(combs(stretch(src.x, L, r, 0.08, 0.02), [f, f * 2], 0.975, 0.25), 0.015, 0.25);
   const e = excite(src.x, 0.02), b = clamp(R.bright * 0.7 + T.bright, 0.05, 0.95);
   const a = ks(e, f, L, 2.2 * p.len * T.dec, b), c = ks(e, f * (1 + T.det), L, 2.0 * p.len * T.dec, b), o = ks(e, f * 2, L, 1.0 * p.len * T.dec, Math.min(0.95, b + 0.2));
@@ -1068,7 +1080,7 @@ async function make(sl, v = 0) {
   ch = norm(ch, 0.8);
   const o = Object.assign({}, b.o); o.drive = clamp((o.drive || 0) + sl.p.drive * 0.5, 0, 1);
   if (!b.loop && world().wow && sl.grp !== 'd') ch = ch.map((c) => wow(c, rng32(S.seed ^ 0x3a)));
-  let d0 = await fx(ch, o); const fsT = b.loop ? [] : tameFilters(d0, ['chat', 'ohat', 'shaker'].includes(sl.id) ? 0.33 : 0.28); d0 = applyF(d0, fsT);
+  let d0 = await fx(ch, o); const fsW = b.loop || sl.grp === 't' || sl.id === 'drone' ? [] : whistles(d0[0], 15); d0 = applyF(d0, fsW); const fsT0 = b.loop ? [] : tameFilters(d0, ['chat', 'ohat', 'shaker'].includes(sl.id) ? 0.33 : 0.28), fsT = fsW.concat(fsT0); d0 = applyF(d0, fsT0);
   const dry = norm(b.loop ? d0 : trimTail(d0), 0.891);
   const vA = verbFor(sl, R), dl = S.delay && SEND[sl.id][1] > 0 ? { t: (60 / R.bpm) * R.div, fb: R.fb, mix: 0.3 * SEND[sl.id][1] } : null;
   let wet = null;
