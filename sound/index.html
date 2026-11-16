@@ -1,0 +1,965 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Divine Sound Machine</title>
+<meta name="description" content="Record the world around you and turn it into a complete sample pack. Everything stays on your phone. By Divine Monday.">
+<meta name="author" content="Divine Monday"><meta name="copyright" content="© 2026 Divine Monday. All rights reserved.">
+<meta name="theme-color" content="#14151E">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Divine Monday">
+<meta property="og:title" content="Divine Sound Machine">
+<meta property="og:description" content="Record the world around you and turn it into a complete sample pack. By Divine Monday.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2314151E'/%3E%3Cpath d='M8 32h6l4-12 6 26 6-34 6 30 6-18 4 8h10' fill='none' stroke='%235EC8C0' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#14151E;--card:#1E2030;--line:#33364A;--ink:#F3F1EA;--soft:#A9A8B8;--acc:#5EC8C0;--ok:#5BC08A;--bad:#E5675A;--g:#5EC8C0}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+[hidden]{display:none!important}
+main{max-width:560px;margin:0 auto;padding:12px 16px 120px}
+h1{font-size:20px;margin:6px 0 12px}h1 b{color:var(--acc)}
+h2{font-size:15px;margin:0 0 10px;color:var(--soft);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}.top a{color:var(--soft);text-decoration:none;font-size:14px;padding:10px 4px}
+.lang{display:flex;gap:4px}.lang button{background:transparent;border:1px solid var(--line);color:var(--soft);border-radius:8px;padding:6px 9px;font:600 13px system-ui;min-height:34px}.lang button[aria-pressed=true]{background:var(--acc);color:#14151E;border-color:var(--acc)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sp{flex:1}
+button{font:inherit;cursor:pointer}
+.btn{padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:#272A3D;color:var(--ink);font-weight:700;min-height:46px}
+.btn.big{flex:1;padding:16px}.btn.acc{background:var(--acc);color:#14151E;border-color:var(--acc)}.btn.rec{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn.small{padding:8px 12px;min-height:38px;font-size:14px}
+.btn:disabled{opacity:.4}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--soft);font-weight:600;font-size:14px;min-height:38px}
+.chip[aria-pressed=true]{background:var(--c,var(--acc));border-color:var(--c,var(--acc));color:#14151E}
+.lbl{font-size:13px;color:var(--soft);margin:6px 0 6px}
+.muted{color:var(--soft);font-size:14px}
+.big-time{font:700 44px/1 ui-monospace,SFMono-Regular,Menlo,monospace;text-align:center;margin:8px 0}
+.meter{height:10px;background:#272A3D;border-radius:6px;overflow:hidden;margin:6px 0 12px}.meter i{display:block;height:100%;width:0;background:var(--acc);transition:width .06s}
+canvas{display:block;width:100%;border-radius:10px;background:#171826;touch-action:none}
+#ov{height:46px;margin-bottom:8px}#det{height:140px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tile{position:relative;aspect-ratio:1/0.82;border-radius:12px;border:1px solid var(--line);background:#191A28;color:var(--soft);font-weight:700;font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px;user-select:none}
+.tile small{font-weight:500;font-size:11px;opacity:.8}
+.tile.full{background:var(--g);color:#14151E;border-color:var(--g)}
+.tile.sel{outline:3px solid var(--ink);outline-offset:1px}
+.tile.keep::after{content:"";position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#14151E}
+.tile.busy{opacity:.55}
+.sub{font-size:12px;color:var(--soft);margin:10px 0 6px}
+.slider{display:grid;grid-template-columns:84px 1fr 48px;gap:8px;align-items:center;margin:6px 0}
+.slider span{font-size:14px;color:var(--soft)}.slider output{font:600 13px ui-monospace,monospace;text-align:right}
+input[type=range]{width:100%;accent-color:var(--acc)}
+select,input[type=number]{background:#272A3D;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit;min-height:40px}
+details summary{cursor:pointer;color:var(--soft);font-weight:600;padding:8px 0}
+.name{font:800 22px/1.2 system-ui;margin:2px 0 8px;color:var(--ink)}
+.cand{min-width:42px}
+#busy{position:fixed;inset:0;background:rgba(10,10,16,.78);display:flex;align-items:center;justify-content:center;z-index:50}
+#busy div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 26px;text-align:center;min-width:240px}
+#busy b{display:block;font-size:18px;margin-bottom:6px}
+.bar{height:6px;background:#272A3D;border-radius:4px;overflow:hidden;margin-top:12px}.bar i{display:block;height:100%;width:0;background:var(--acc)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#272A3D;border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;gap:12px;align-items:center;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60;max-width:92vw}
+#toast.on{opacity:1;pointer-events:auto}#toast button{background:transparent;border:0;color:var(--acc);font-weight:700}
+footer{color:var(--soft);font-size:13px;text-align:center;padding:24px 0 96px}
+.warn{color:#F2C14E;font-size:13px;margin-top:8px}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><h1>Divine <b>Sound</b> Machine</h1><div class="lang" role="group" aria-label="Language / Taal"><button type="button" data-l="en">EN</button><button type="button" data-l="nl">NL</button></div><a href="../" data-tt="back">&larr; Suite</a></div>
+
+<section class="card" id="cSrc">
+  <h2 data-t="h1"></h2>
+  <div id="srcIdle">
+    <div class="row"><button class="btn big rec" id="bRec" type="button" data-t="rec"></button><button class="btn big" id="bImp" type="button" data-t="imp"></button></div>
+    <input type="file" id="file" accept="audio/*,video/*" hidden>
+    <p class="muted" data-t="srcHint"></p>
+  </div>
+  <div id="srcRec" hidden>
+    <div class="big-time" id="recTime">0:00</div>
+    <div class="meter"><i id="recLvl"></i></div>
+    <button class="btn big rec" id="bStop" type="button" data-t="stop" style="width:100%"></button>
+  </div>
+  <div id="srcDone" hidden>
+    <div class="row"><span id="srcInfo" class="muted"></span><span class="sp"></span><button class="btn small" id="bNewSrc" type="button" data-t="newSrc"></button></div>
+    <p class="warn" id="srcWarn" hidden></p>
+  </div>
+</section>
+
+<section class="card" id="cDir" hidden>
+  <h2 data-t="h2"></h2>
+  <div class="lbl" data-t="genre"></div><div class="chips" id="genres"></div>
+  <div class="lbl" data-t="mood"></div><div class="chips" id="moods"></div>
+  <div class="lbl" data-t="verb"></div><div class="chips" id="verbs"></div>
+  <div class="row" style="margin-bottom:6px"><label class="row"><input type="checkbox" id="delay" checked> <span data-t="delay"></span></label></div>
+  <details><summary data-t="more"></summary>
+    <div class="row" style="margin:6px 0"><span class="muted" data-t="key"></span><select id="key"></select><select id="scale"></select></div>
+    <div class="row" style="margin:6px 0"><span class="muted" data-t="tempo"></span><input type="number" id="bpm" min="50" max="200" step="1" style="width:90px"> <span class="muted">BPM</span></div>
+    <div class="row" style="margin:6px 0"><span class="muted" data-t="variants"></span><select id="vars"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+    <label class="row" style="margin:6px 0"><input type="checkbox" id="both" checked> <span data-t="both"></span></label>
+    <label class="row" style="margin:6px 0"><input type="checkbox" id="raw" checked> <span data-t="rawOpt"></span></label>
+    <label class="row" style="margin:6px 0"><input type="checkbox" id="clean" checked> <span data-t="clean"></span></label>
+  </details>
+  <div class="row" style="margin-top:10px"><button class="btn big acc" id="bAuto" type="button" data-t="auto"></button></div>
+  <div class="row" style="margin-top:8px"><button class="btn big" id="bGuide" type="button" data-t="guide"></button></div>
+</section>
+
+<section class="card" id="cPack" hidden>
+  <h2 data-t="h3"></h2>
+  <div class="row"><div class="name" id="pName"></div><span class="sp"></span><button class="btn small" id="bName" type="button" data-t="newName"></button></div>
+  <div class="muted" id="pInfo" style="margin-bottom:10px"></div>
+  <div class="grid" id="grid"></div>
+  <div class="sub" data-t="extras"></div>
+  <div class="grid" id="xgrid"></div>
+  <p class="muted" data-t="tileHint" style="margin-top:10px"></p>
+  <div class="row" style="margin-top:6px"><button class="btn big" id="bAgain" type="button" data-t="again"></button></div>
+</section>
+
+<section class="card" id="cEd" hidden>
+  <div class="row"><h2 id="edTitle" style="margin:0;text-transform:none;color:var(--ink);font-size:17px"></h2><span class="sp"></span><span class="muted" id="edStep"></span></div>
+  <p class="muted" id="edSrc" style="margin:6px 0 10px"></p>
+  <div class="row"><button class="btn big acc" id="bPlayMade" type="button" data-t="playMade"></button><button class="btn big" id="bPlayRaw" type="button" data-t="playRaw"></button></div>
+  <div class="lbl" data-t="cands" style="margin-top:12px"></div>
+  <div class="chips" id="cands"></div>
+  <div class="slider"><span data-t="sPitch"></span><input type="range" id="sPitch" min="-12" max="12" step="1" value="0"><output id="oPitch">0</output></div>
+  <div class="slider"><span data-t="sLen"></span><input type="range" id="sLen" min="0.5" max="2" step="0.05" value="1"><output id="oLen">1.00</output></div>
+  <div class="slider"><span data-t="sDrive"></span><input type="range" id="sDrive" min="-1" max="1" step="0.05" value="0"><output id="oDrive">0</output></div>
+  <div class="slider"><span data-t="sVerb"></span><input type="range" id="sVerb" min="0" max="1" step="0.05" value="0.5"><output id="oVerb">0.50</output></div>
+  <div class="row" style="margin:8px 0"><label class="row"><input type="checkbox" id="sRev"> <span data-t="sRev"></span></label><span class="sp"></span><label class="row"><input type="checkbox" id="sKeep"> <span data-t="keep"></span></label></div>
+  <div class="row"><button class="btn" id="bVary" type="button" data-t="vary"></button><button class="btn" id="bPick" type="button" data-t="pick"></button><span class="sp"></span><button class="btn acc" id="bNext" type="button" data-t="next" hidden></button></div>
+</section>
+
+<section class="card" id="cWave" hidden>
+  <h2 data-t="h4"></h2>
+  <canvas id="ov" aria-label="overview"></canvas>
+  <canvas id="det" aria-label="detail"></canvas>
+  <div class="row" style="margin:8px 0"><button class="btn small" id="zOut" type="button">&minus;</button><span class="muted" id="zInfo"></span><button class="btn small" id="zIn" type="button">+</button><span class="sp"></span><button class="btn small" id="bPlaySel" type="button" data-t="playSel"></button></div>
+  <p class="muted" data-t="waveHint"></p>
+  <div class="lbl" data-t="makeThis"></div>
+  <div class="chips" id="assign"></div>
+</section>
+
+<section class="card" id="cExp" hidden>
+  <h2 data-t="h5"></h2>
+  <div class="row"><button class="btn big acc" id="bZip" type="button" data-t="zip"></button><button class="btn big" id="bLoose" type="button" data-t="loose"></button></div>
+  <p class="muted" id="expInfo" style="margin-top:8px"></p>
+  <div class="row" style="margin-top:12px"><span class="sp"></span><button class="btn small" id="bClear" type="button" data-t="clear"></button></div>
+</section>
+
+<footer>Divine Monday &middot; <span data-t="foot"></span></footer>
+</main>
+<div id="busy" hidden><div><b id="busyT"></b><span class="muted" id="busyS"></span><div class="bar"><i id="busyB"></i></div></div></div>
+<div id="toast"><span id="toastT"></span><button type="button" id="toastU" hidden></button></div>
+<script>
+const NW = {"W1":["Silent","Velvet","Cosmic","Hollow","Distant","Quiet","Secret","Hidden","Gentle","Tender","Dusty","Misty","Foggy","Hazy","Smoky","Dreamy","Sleepy","Lonely","Ancient","Faded","Fragile","Frozen","Silky","Satin","Woolen","Feathered","Mossy","Sandy","Salty","Sunken","Drowned","Buried","Forgotten","Haunted","Sacred","Holy","Divine","Pagan","Mystic","Mythic","Lunar","Solar","Stellar","Astral","Celestial","Orbital","Nocturnal","Twilight","Moonlit","Starlit","Candlelit","Lamplit","Shadowed","Veiled","Masked","Muted","Whispered","Soft","Warm","Cold","Cool","Icy","Frosty","Humid","Tropical","Arctic","Polar","Desert","Coastal","Oceanic","Tidal","Rainy","Stormy","Windy","Cloudy","Sunny","Shady","Dim","Pale","Hazed","Ghostly","Spectral","Phantom","Elusive","Endless","Infinite","Eternal","Timeless","Ageless","Vintage","Antique","Rustic","Wooden","Paper","Canvas","Leather","Linen","Cotton","Porcelain","Marble","Granite","Stone","Concrete","Rusted","Tarnished","Weathered","Worn","Broken","Cracked","Shattered","Scattered","Tangled","Woven","Knotted","Folded","Crumpled","Polished","Lacquered","Gilded","Plated","Enameled","Frosted","Clouded","Blurred","Grainy","Noisy","Static","Analog","Vinyl","Tape","Hollowed","Echoing","Resonant","Sonic","Tonal","Modal","Harmonic","Melodic","Lyrical","Poetic","Romantic","Wistful","Nostalgic","Melancholy","Somber","Solemn","Serene","Tranquil","Placid","Calm","Still","Peaceful","Mellow","Lazy","Idle","Hypnotic","Floating","Weightless","Airy","Ethereal","Bodiless","Formless","Shapeless","Nameless","Faceless","Wordless","Soundless","Restless","Sleepless","Homeless","Careless","Fearless","Reckless","Lawless","Boundless","Bottomless","Starless","Sunless","Moonless","Tideless","Windless","Painless","Gracious","Graceful","Elegant","Noble","Royal","Regal","Imperial","Majestic","Grand","Humble","Modest","Simple","Pure","Clean","Clear","Bright","Luminous","Radiant","Glowing","Shining","Gleaming","Glimmering","Shimmering","Sparkling","Twinkling","Flickering","Fading","Waning","Waxing","Rising","Setting","Falling","Drifting","Wandering","Lost","Found","Chosen","Blessed","Cursed","Wicked","Gothic","Baroque","Rococo","Victorian","Futurist","Retro","Modern","Atomic","Quantum","Digital","Virtual","Synthetic","Plastic","Chrome","Mirrored","Liquid","Molten","Smoldering","Ashen","Charred","Gossamer","Lucid","Sunlit","Ornate","Velveteen","Opaline","Wintry","Dreamlike"],"W2":["Kinetic","Fluid","Linear","Rapid","Swift","Quick","Fast","Slow","Steady","Stable","Shaky","Wobbly","Jittery","Nervous","Frantic","Manic","Hyper","Electric","Magnetic","Dynamic","Pulsing","Throbbing","Thumping","Pounding","Rolling","Spinning","Turning","Twisting","Swirling","Whirling","Looping","Cycling","Rotating","Orbiting","Bouncing","Jumping","Leaping","Skipping","Hopping","Dancing","Swinging","Swaying","Rocking","Shaking","Rattling","Stomping","Marching","Running","Racing","Rushing","Chasing","Hunting","Climbing","Soaring","Flying","Gliding","Sliding","Slipping","Rippling","Flowing","Streaming","Pouring","Flooding","Surging","Crashing","Breaking","Bursting","Exploding","Erupting","Igniting","Burning","Blazing","Flaming","Firing","Charging","Driving","Pushing","Pulling","Lifting","Dropping","Sinking","Diving","Plunging","Tumbling","Spiraling","Ascending","Descending","Accelerating","Bending","Stretching","Expanding","Shrinking","Unfolding","Opening","Closing","Breathing","Beating","Ticking","Clicking","Snapping","Popping","Cracking","Buzzing","Humming","Droning","Ringing","Chiming","Clanging","Booming","Roaring","Howling","Screaming","Shouting","Calling","Singing","Chanting","Grooving","Funky","Jazzy","Bluesy","Soulful","Punchy","Snappy","Crisp","Tight","Loose","Sloppy","Lean","Heavy","Light","Dense","Sparse","Thick","Thin","Wide","Narrow","Deep","Shallow","High","Low","Loud","Raw","Rough","Smooth","Sharp","Blunt","Hard","Tough","Solid","Brittle","Elastic","Rubber","Bouncy","Agile","Nimble","Lithe","Fleet","Brisk","Lively","Vivid","Vibrant","Wild","Feral","Savage","Fierce","Bold","Brave","Daring","Furious","Angry","Hungry","Thirsty","Greedy","Eager","Hasty","Urgent","Pressing","Relentless","Tireless","Unstoppable","Overdriven","Distorted","Saturated","Compressed","Amplified","Boosted","Pumped","Juiced","Wired","Charged","Loaded","Primed","Locked","Synced","Phased","Shifted","Displaced","Detuned","Pitched","Bent","Warped","Skewed","Tilted","Angled","Crooked","Zigzag","Jagged","Staggered","Stuttered","Stammered","Glitched","Fractured","Splintered","Shredded","Chopped","Sliced","Diced","Cut","Spliced","Mixed","Blended","Fused","Merged","Bonded","Linked","Chained","Coupled","Paired","Doubled","Tripled","Layered","Stacked","Piled","Packed","Crowded","Swarming","Teeming","Bustling","Hustling","Busy","Awake","Alert","Alive","Living","Pulsating","Radiating","Vibrating","Oscillating","Resonating","Modulating","Alternating","Repeating","Recurring","Returning","Reversing","Inverted","Flipped","Rotated","Translated","Scaled","Stretched","Quantized","Shuffled","Syncopated","Offbeat","Upbeat","Downbeat","Backbeat","Polyrhythmic","Strutting","Swaggering","Prowling","Stalking","Creeping","Crawling","Lurking","Sneaking","Rambling","Roaming","Roving","Travelling","Journeying","Voyaging","Sailing","Cruising","Coasting","Freewheeling","Barreling","Hurtling","Careening","Rocketing","Launching","Blasting","Thundering","Rumbling","Grinding","Churning","Pumping","Hammering","Drilling"],"W3":["Crimson","Scarlet","Ruby","Cherry","Rose","Coral","Salmon","Peach","Apricot","Amber","Honey","Golden","Gold","Saffron","Mustard","Lemon","Lime","Olive","Moss","Jade","Emerald","Mint","Sage","Forest","Pine","Teal","Cyan","Aqua","Turquoise","Azure","Cobalt","Sapphire","Navy","Indigo","Ultramarine","Violet","Purple","Lilac","Lavender","Mauve","Plum","Orchid","Magenta","Fuchsia","Pink","Blush","Ivory","Cream","Pearl","Silver","Platinum","Steel","Iron","Copper","Bronze","Brass","Rust","Ochre","Umber","Sienna","Sepia","Tan","Beige","Khaki","Taupe","Ash","Smoke","Charcoal","Graphite","Onyx","Obsidian","Ebony","Jet","Ink","Black","White","Grey","Gray","Snow","Chalk","Bone","Milk","Neon","Ultraviolet","Infrared","Fluorescent","Pastel","Matte","Glossy","Metallic","Iridescent","Opal","Prism","Spectrum","Rainbow","Holographic","Sunset","Sunrise","Dusk","Dawn","Midnight","Noon","Evening","Morning","Autumn","Winter","Summer","Spring","Harvest","Ember","Flame","Fire","Ice","Frost","Storm","Thunder","Lightning","Rain","Cloud","Mist","Fog","Haze","Shadow","Dark","Hot","Burnt","Smoked","Toasted","Roasted","Baked","Sunburnt","Rosewood","Mahogany","Walnut","Cedar","Oak","Birch","Bamboo","Coffee","Cocoa","Chocolate","Caramel","Vanilla","Cinnamon","Ginger","Pepper","Paprika","Tangerine","Orange","Citrus","Grape","Berry","Wine","Burgundy","Claret","Maroon","Garnet","Topaz","Citrine","Quartz","Diamond","Crystal","Glass","Amethyst","Tourmaline","Malachite","Lapis","Celadon","Vermilion","Carmine","Cadmium","Cinnabar","Woad","Henna","Kohl","Tar","Oil","Petrol","Velour","Suede","Denim","Tweed","Silk","Lace","Gauze","Acid","Toxic","Radioactive","Nuclear","Plasma","Laser","Tropic","Jungle","Savanna","Tundra","Ocean","Sea","River","Lake","Harbor","Island","Coastline","Canyon","Valley","Mountain","Alpine","Glacier","Volcanic","Lava","Magma","Sulfur","Mercury","Nickel","Zinc","Tin","Lead","Titanium","Uranium","Moonstone","Sunstone","Bloodstone","Firestone","Starstone","Skyline","Highland","Lowland","Northern","Southern","Eastern","Western","Inner","Outer","Upper","Lower","First","Last","Second","Third","Final","Early","Late","Lucky","Dear","Sweet","Bitter","Sour","Spicy","Free","Lone","Twin","Double","Single","Half","Full","Empty","Open","Closed"],"W4":["Echo","Grid","Mirror","Window","Door","Gate","Bridge","Tower","Wall","Arch","Dome","Pillar","Column","Stair","Ladder","Corridor","Hallway","Tunnel","Cave","Chamber","Vault","Cellar","Attic","Balcony","Terrace","Garden","Courtyard","Plaza","Square","Circle","Spiral","Helix","Cube","Sphere","Cone","Pyramid","Lens","Frame","Panel","Tile","Brick","Block","Beam","Wire","Cable","Chain","Rope","Thread","Ribbon","Strip","Band","Ring","Loop","Knot","Web","Net","Mesh","Lattice","Matrix","Array","Pattern","Mosaic","Collage","Fresco","Portrait","Sketch","Outline","Silhouette","Contour","Profile","Shape","Figure","Form","Body","Shell","Husk","Seed","Root","Branch","Leaf","Petal","Stem","Thorn","Vine","Tree","Field","Meadow","Hill","Peak","Ridge","Cliff","Shore","Beach","Dune","Reef","Wave","Tide","Current","Stream","Creek","Brook","Pond","Lagoon","Bay","Gulf","Strait","Channel","Canal","Harbour","Pier","Dock","Lighthouse","Beacon","Lantern","Candle","Torch","Flare","Spark","Star","Comet","Meteor","Planet","Moon","Sun","Galaxy","Nebula","Orbit","Satellite","Rocket","Station","Engine","Motor","Turbine","Piston","Gear","Wheel","Lever","Pulley","Hinge","Valve","Pipe","Tube","Hose","Pump","Tank","Barrel","Drum","Bell","Gong","Cymbal","Horn","Flute","Harp","Lyre","Organ","Piano","Violin","Cello","Guitar","Banjo","Bass","Synth","Sampler","Sequencer","Oscillator","Filter","Mixer","Speaker","Amplifier","Radio","Antenna","Receiver","Transmitter","Dial","Switch","Button","Knob","Fader","Slider","Meter","Gauge","Clock","Watch","Compass","Map","Atlas","Globe","Chart","Diagram","Blueprint","Model","Sculpture","Statue","Monument","Temple","Shrine","Altar","Chapel","Cathedral","Palace","Castle","Fortress","Citadel","Market","Bazaar","Arcade","Gallery","Museum","Library","Archive","Theater","Cinema","Studio","Stage","Arena","Stadium","Circus","Carnival","Parade","Motel","Hotel","Diner","Cafe","Bar","Club","Lounge","Ballroom","Disco","Garage","Warehouse","Factory","Foundry","Workshop","Mill","Farm","Ranch","Prairie","Oasis","Mirage","Horizon","Highway","Avenue","Boulevard","Street","Alley","Lane","Road","Path","Trail","Track","Rail","Railway","Platform","Terminal","Airport","Runway","Hangar","Cockpit","Cabin","Capsule","Pod","Module","Unit","Cell","Atom","Molecule","Fossil","Relic","Totem","Mask","Crown","Throne","Sword","Shield","Arrow","Anchor","Sail","Mast","Hull","Raft","Canoe","Ship","Boat","Ferry","Submarine","Train","Tram","Bus","Taxi","Bicycle","Skateboard","Kite","Balloon","Feather","Wing","Claw","Fang","Tail","Eye","Hand","Heart","Vein"],"W5":["Drift","Phase","Flux","Pulse","Signal","Frequency","Wavelength","Amplitude","Resonance","Harmony","Melody","Rhythm","Tempo","Groove","Swing","Shuffle","Cadence","Chord","Scale","Mode","Key","Tone","Timbre","Noise","Silence","Feedback","Delay","Reverb","Chorus","Flanger","Tremolo","Vibrato","Sustain","Decay","Release","Attack","Envelope","Gain","Drive","Fuzz","Overtone","Undertone","Fundamental","Interval","Octave","Unison","Dissonance","Tension","Balance","Symmetry","Gravity","Momentum","Inertia","Velocity","Motion","Friction","Pressure","Density","Entropy","Energy","Power","Force","Charge","Voltage","Circuit","Logic","Code","Algorithm","Protocol","Sequence","Series","Cycle","Iteration","Recursion","Fractal","Chaos","Order","System","Network","Structure","Process","Function","Variable","Constant","Equation","Formula","Theorem","Paradox","Theory","Hypothesis","Dimension","Plane","Vector","Axis","Angle","Curve","Arc","Line","Point","Vertex","Node","Edge","Border","Boundary","Limit","Threshold","Margin","Distance","Depth","Height","Width","Length","Volume","Mass","Weight","Measure","Ratio","Proportion","Fraction","Digit","Number","Zero","Infinity","Origin","Genesis","Exodus","Omen","Oracle","Prophecy","Destiny","Fate","Fortune","Chance","Luck","Hazard","Risk","Promise","Oath","Vow","Pact","Treaty","Accord","Truce","Rebellion","Revolution","Evolution","Mutation","Transition","Transformation","Metamorphosis","Rebirth","Renaissance","Revival","Awakening","Dream","Vision","Illusion","Memory","Reverie","Nostalgia","Longing","Desire","Passion","Devotion","Rapture","Bliss","Euphoria","Ecstasy","Trance","Hypnosis","Meditation","Prayer","Ritual","Ceremony","Mystery","Riddle","Enigma","Cipher","Glyph","Rune","Symbol","Sign","Token","Whisper","Rumor","Story","Legend","Myth","Fable","Saga","Chronicle","Anthem","Hymn","Ballad","Lullaby","Serenade","Requiem","Elegy","Ode","Sonnet","Verse","Refrain","Motif","Theme","Variation","Fugue","Canon","Prelude","Interlude","Overture","Finale","Encore","Coda","Epilogue","Prologue","Chapter","Episode","Moment","Instant","Season","Era","Epoch","Age","Century","Decade","Hour","Minute","Daybreak","Nightfall","Eclipse","Solstice","Equinox","Zenith","Apex","Summit","Abyss","Void","Vacuum","Ether","Aura","Halo","Spirit","Soul","Ghost","Shade","Specter","Presence","Absence","Departure","Arrival","Return","Escape","Exile","Journey","Voyage","Odyssey","Quest","Mission","Expedition","Pilgrimage","Passage","Crossing","Migration","Flight","Fall","Rise","Ascent","Descent","Collapse","Surrender","Victory","Glory","Honor","Grace","Mercy","Freedom","Liberty","Justice","Wisdom","Truth","Faith","Hope","Love","Joy","Fear","Rage","Grief","Sorrow","Comfort","Shelter","Refuge","Haven","Sanctuary","Paradise","Utopia","Nowhere","Elsewhere","Somewhere","Anywhere"],"PREP":["Through","Under","Beyond","Into","On","Across","Inside","Above","Below","Behind","Over","Beneath","Within","After","Before","Past","Toward","Around","Along","Against","Among","Beside","Upon","Amid"]};
+
+'use strict';
+const $ = (s) => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const mf = (m) => 440 * Math.pow(2, (m - 69) / 12);
+const semi = (n) => Math.pow(2, n / 12);
+const NOTE = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+// ---------- words ----------
+const TXT = {
+  en: {
+    h1: '1. Sound source', rec: 'Record', imp: 'Import audio or video', srcHint: 'Record as long as you like: a forest, your kitchen, a train, your own voice. Everything stays on your phone.',
+    stop: 'Stop', newSrc: 'New sound', h2: '2. Direction', genre: 'Genre', mood: 'Mood', verb: 'Reverb', delay: 'Delay on tempo', more: 'More options',
+    key: 'Key', tempo: 'Tempo', variants: 'Variants per sound', both: 'Export dry and wet', rawOpt: 'Also export the pure sounds', clean: 'Clean up rumble and wind',
+    auto: 'Make the whole pack', guide: 'Guided, slot by slot', h3: '3. Your pack', newName: 'New name', extras: 'Extras',
+    tileHint: 'Tap a sound to hear and edit it. Double tap removes it.', again: 'Make again (keeps the ones marked Keep)',
+    playMade: 'Play', playRaw: 'Play pure', cands: 'Other moments from your recording', sPitch: 'Pitch', sLen: 'Length', sDrive: 'Drive', sVerb: 'Reverb', sRev: 'Reverse', keep: 'Keep',
+    vary: 'New variation', pick: 'Pick from recording', next: 'Next', h4: 'Your recording', playSel: 'Play selection',
+    waveHint: 'Drag across the bottom view to select a piece. Tap a dot to hear a hit. Drag the top bar to move through the recording.',
+    makeThis: 'Make this a:', h5: '4. Export', zip: 'Download zip', loose: 'Download loose WAVs', clear: 'Clear all', foot: 'nothing leaves your phone',
+    auto_: 'Auto', minor: 'minor', major: 'major', listening: 'Listening to your recording', building: 'Building your pack', exporting: 'Writing your files',
+    found: '{d} of sound, {n} hits found', few: 'Few clear hits found; the drums are shaped from the sound itself.', removed: 'Removed', undo: 'Undo',
+    micErr: 'No access to the microphone.', fileErr: 'This file cannot be read.', noRec: 'Recording is not supported in this browser; import a file instead.',
+    step: '{i} of 16', fromHit: 'From the moment at {t}', fromSel: 'From your selection at {t}', fromReg: 'From the stretch at {t}', fromLoop: 'Built from your drums',
+    done: 'Pack complete', files: '{n} files, 24 bit WAV', choose: 'Select a piece first', assigned: 'Made it a {s}', selFirst: 'Tap a sound in the pack first'
+  },
+  nl: {
+    h1: '1. Geluidsbron', rec: 'Opnemen', imp: 'Audio of video importeren', srcHint: 'Neem zo lang op als je wilt: een bos, je keuken, een trein, je eigen stem. Alles blijft op je telefoon.',
+    stop: 'Stop', newSrc: 'Nieuw geluid', h2: '2. Richting', genre: 'Genre', mood: 'Sfeer', verb: 'Galm', delay: 'Echo op tempo', more: 'Meer opties',
+    key: 'Toonsoort', tempo: 'Tempo', variants: 'Varianten per geluid', both: 'Droog en nat exporteren', rawOpt: 'Ook de pure geluiden exporteren', clean: 'Gerommel en wind wegfilteren',
+    auto: 'Maak het hele pack', guide: 'Met begeleiding, vakje voor vakje', h3: '3. Jouw pack', newName: 'Nieuwe naam', extras: 'Extra',
+    tileHint: 'Tik op een geluid om het te horen en te bewerken. Dubbeltik haalt het weg.', again: 'Opnieuw maken (houdt wat op Bewaren staat)',
+    playMade: 'Speel', playRaw: 'Speel puur', cands: 'Andere momenten uit je opname', sPitch: 'Toonhoogte', sLen: 'Lengte', sDrive: 'Vervorming', sVerb: 'Galm', sRev: 'Achterstevoren', keep: 'Bewaren',
+    vary: 'Nieuwe variatie', pick: 'Kies uit opname', next: 'Volgende', h4: 'Je opname', playSel: 'Speel selectie',
+    waveHint: 'Sleep over de onderste weergave om een stuk te kiezen. Tik op een stip om een klap te horen. Sleep de bovenste balk om door de opname te gaan.',
+    makeThis: 'Maak hier een:', h5: '4. Exporteren', zip: 'Download zip', loose: 'Download losse WAVs', clear: 'Alles wissen', foot: 'er verlaat niets je telefoon',
+    auto_: 'Auto', minor: 'mineur', major: 'majeur', listening: 'Ik luister naar je opname', building: 'Je pack wordt gebouwd', exporting: 'Bestanden worden geschreven',
+    found: '{d} geluid, {n} klappen gevonden', few: 'Weinig duidelijke klappen gevonden; de drums worden uit het geluid zelf gevormd.', removed: 'Weggehaald', undo: 'Terug',
+    micErr: 'Geen toegang tot de microfoon.', fileErr: 'Dit bestand kan ik niet lezen.', noRec: 'Opnemen werkt niet in deze browser; importeer een bestand.',
+    step: '{i} van 16', fromHit: 'Van het moment op {t}', fromSel: 'Van je selectie op {t}', fromReg: 'Van het stuk op {t}', fromLoop: 'Gebouwd uit je drums',
+    done: 'Pack compleet', files: '{n} bestanden, 24 bit WAV', choose: 'Kies eerst een stuk', assigned: 'Er is een {s} van gemaakt', selFirst: 'Tik eerst op een geluid in het pack'
+  }
+};
+let lang = 'en';
+try { const l = (navigator.language || '').toLowerCase(); if (l.startsWith('nl')) lang = 'nl'; } catch (e) {}
+const t = (k, v) => { let s = (TXT[lang] && TXT[lang][k]) || TXT.en[k] || k; if (v) for (const q in v) s = s.replace('{' + q + '}', v[q]); return s; };
+
+const SLOTS = [
+  ['kick', 'Kick', 'Kick', 'd'], ['snare', 'Snare', 'Snare', 'd'], ['clap', 'Clap', 'Clap', 'd'], ['chat', 'Closed hat', 'Hihat dicht', 'd'],
+  ['ohat', 'Open hat', 'Hihat open', 'd'], ['tom', 'Tom', 'Tom', 'd'], ['perc', 'Perc', 'Percussie', 'd'], ['rim', 'Rim', 'Rim', 'd'],
+  ['shaker', 'Shaker', 'Shaker', 'd'], ['fx', 'FX', 'FX', 'd'], ['bass', 'Bass', 'Bas', 't'], ['sub', 'Sub', 'Sub', 't'],
+  ['keys', 'Keys', 'Keys', 't'], ['pluck', 'Pluck', 'Pluck', 't'], ['pad', 'Pad', 'Pad', 't'], ['lead', 'Lead', 'Lead', 't'],
+  ['drone', 'Drone', 'Drone', 'x'], ['texture', 'Texture', 'Textuur', 'x'], ['riser', 'Riser', 'Riser', 'x'], ['down', 'Downlifter', 'Downlifter', 'x'],
+  ['impact', 'Impact', 'Impact', 'x'], ['loop', 'Loop', 'Loop', 'x']
+];
+const sName = (id) => { const s = SLOTS.find((q) => q[0] === id); return lang === 'nl' ? s[2] : s[1]; };
+const fName = (id) => SLOTS.find((q) => q[0] === id)[1];
+
+const GEN = {
+  free: { en: 'Free', nl: 'Vrij', c: '#A9A8B8', bpm: 110, drop: 0, drive: 0.15, crush: 0, verb: 1, room: 1.8, div: 0.75, fb: 0.35, lp: 16000, hat: 0.035, pad: 5, swing: 0, bright: 0 },
+  triphop: { en: 'Trip hop', nl: 'Trip hop', c: '#C792EA', bpm: 88, drop: -3, drive: 0.35, crush: 12, verb: 1.1, room: 2.0, div: 0.75, fb: 0.38, lp: 9000, hat: 0.03, pad: 5, swing: 0.16, bright: -0.1, vinyl: true },
+  techno: { en: 'Techno', nl: 'Techno', c: '#5EC8C0', bpm: 128, drop: -2, drive: 0.45, crush: 0, verb: 0.75, room: 1.4, div: 0.75, fb: 0.4, lp: 15000, hat: 0.022, pad: 4, swing: 0, bright: 0.1 },
+  ambient: { en: 'Ambient', nl: 'Ambient', c: '#7FB2F0', bpm: 70, drop: -5, drive: 0.05, crush: 0, verb: 1.6, room: 4.5, div: 1.5, fb: 0.5, lp: 8500, hat: 0.05, pad: 8, swing: 0, bright: -0.05 },
+  cinema: { en: 'Cinematic', nl: 'Cinematisch', c: '#F2994A', bpm: 90, drop: -7, drive: 0.25, crush: 0, verb: 1.4, room: 3.6, div: 1, fb: 0.42, lp: 11000, hat: 0.04, pad: 7, swing: 0, bright: 0 },
+  exp: { en: 'Experimental', nl: 'Experimenteel', c: '#E5675A', bpm: 110, drop: 0, drive: 0.5, crush: 7, verb: 1, room: 2.4, div: 0.375, fb: 0.45, lp: 14000, hat: 0.03, pad: 5, swing: 0.05, bright: 0.05, glitch: true }
+};
+const MOOD = {
+  none: { en: 'None', nl: 'Geen' },
+  warm: { en: 'Warm', nl: 'Warm', lp: 0.65, drive: 0.1, bright: -0.15 },
+  cold: { en: 'Cold', nl: 'Koud', hp: 60, bright: 0.25, crush: 10 },
+  raw: { en: 'Raw', nl: 'Ruw', drive: 0.35, crush: 9, bright: 0.1 },
+  dreamy: { en: 'Dreamy', nl: 'Dromerig', verb: 1.5, room: 1.4, lp: 0.8, bright: -0.1 },
+  dark: { en: 'Dark', nl: 'Donker', pitch: -2, lp: 0.5, bright: -0.25 },
+  light: { en: 'Light', nl: 'Licht', pitch: 2, lp: 1.2, verb: 0.8, bright: 0.2 }
+};
+const VERB = { dry: [0, 'Dry', 'Droog'], little: [0.3, 'A little', 'Beetje'], much: [0.7, 'Much', 'Veel'] };
+// per slot: send amount for reverb and delay
+const SEND = { kick: [0.25, 0], snare: [1, 0.3], clap: [1, 0.4], chat: [0.4, 0.2], ohat: [0.5, 0.2], tom: [0.7, 0.2], perc: [0.8, 0.6], rim: [0.8, 0.7], shaker: [0.5, 0.3], fx: [1.2, 1],
+  bass: [0.12, 0], sub: [0, 0], keys: [0.9, 0.5], pluck: [0.8, 0.8], pad: [1.2, 0.3], lead: [0.7, 0.7], drone: [1, 0], texture: [0.9, 0.4], riser: [1, 0.6], down: [1, 0.6], impact: [1.5, 0], loop: [0.4, 0.2] };
+
+// ---------- state ----------
+const S = {
+  sr: 48000, x: null, dur: 0, segs: [], regs: [], rank: {}, shaped: false,
+  genre: 'free', mood: 'none', verb: 'little', delay: true, keyMode: 'auto', keyPc: 9, minor: true, autoPc: 9, autoMinor: true,
+  bpm: null, vars: 1, both: true, raw: true, clean: true, name: '', seed: 1, ir: null, slots: [], sel: -1, guided: false,
+  view: { s: 0, d: 4 }, selR: null, made: false
+};
+function newSlots() { S.slots = SLOTS.map((q) => ({ id: q[0], grp: q[3], src: null, seed: 1, p: { pitch: 0, len: 1, drive: 0, verb: null, rev: false }, keep: false, out: null, busy: false })); }
+newSlots();
+const slot = (id) => S.slots.find((s) => s.id === id);
+
+// ---------- random ----------
+function rng32(a) { return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; let q = Math.imul(a ^ (a >>> 15), 1 | a); q = (q + Math.imul(q ^ (q >>> 7), 61 | q)) ^ q; return ((q ^ (q >>> 14)) >>> 0) / 4294967296; }; }
+function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+const rnd32 = () => (Math.random() * 4294967296) >>> 0;
+
+// ---------- name wheels (from the Divine Name Oracle) ----------
+function packName() {
+  const A = NW.W1.concat(NW.W2), N = NW.W4.concat(NW.W5), M = NW.W3, p = (a) => a[Math.floor(Math.random() * a.length)];
+  const r = Math.random();
+  let n = r < 0.4 ? p(A) + ' ' + p(N) : r < 0.55 ? p(M) + ' ' + p(N) : p(A) + ' ' + p(M) + ' ' + p(N);
+  const q = Math.random();
+  if (q < 0.12) n = p(NW.PREP) + ' the ' + n; else if (q < 0.22) n = 'The ' + n;
+  return n;
+}
+
+// ---------- audio ----------
+let AC = null, cur = null;
+function ac() { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); return AC; }
+function stopPlay() { if (cur) { try { cur.stop(); } catch (e) {} cur = null; } }
+function play(ch) {
+  if (!ch) return; const c = ac(); stopPlay(); const L = ch[0], R = ch[1] || ch[0];
+  const b = c.createBuffer(2, Math.max(1, L.length), S.sr); b.copyToChannel(L, 0); b.copyToChannel(R, 1);
+  const s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(); cur = s;
+}
+
+// ---------- dsp ----------
+function biq(x, type, f, q = 0.707) {
+  const sr = S.sr; f = clamp(f, 10, sr * 0.45);
+  const w = 2 * Math.PI * f / sr, c = Math.cos(w), s = Math.sin(w), al = s / (2 * q);
+  let b0, b1, b2; const a0 = 1 + al, a1 = -2 * c / a0, a2 = (1 - al) / a0;
+  if (type === 'lp') { b0 = (1 - c) / 2; b1 = 1 - c; b2 = b0; } else if (type === 'hp') { b0 = (1 + c) / 2; b1 = -(1 + c); b2 = b0; } else { b0 = al; b1 = 0; b2 = -al; }
+  b0 /= a0; b1 /= a0; b2 /= a0;
+  const y = new Float32Array(x.length); let x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+  for (let i = 0; i < x.length; i++) { const v = x[i], o = b0 * v + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2; x2 = x1; x1 = v; y2 = y1; y1 = o; y[i] = o; }
+  return y;
+}
+function slice(s, e) { s = clamp(Math.round(s), 0, S.x.length - 1); e = clamp(Math.round(e), s + 1, S.x.length); let y = S.x.slice(s, e); if (S.clean) y = biq(biq(y, 'hp', 40), 'hp', 40); return y; }
+function cut(x, n) { n = Math.max(8, Math.round(n)); if (x.length <= n) return x.slice(); return x.slice(0, n); }
+function fades(x, a, r) { const sr = S.sr, na = Math.min(x.length >> 1, Math.round(a * sr)), nr = Math.min(x.length >> 1, Math.round(r * sr)); for (let i = 0; i < na; i++) x[i] *= i / na; for (let i = 0; i < nr; i++) x[x.length - 1 - i] *= i / nr; return x; }
+function decay(x, len, tau, att = 0.001) { const sr = S.sr, n = Math.max(8, Math.round(len)), y = new Float32Array(n), na = Math.max(1, att * sr); for (let i = 0; i < n; i++) { const v = i < x.length ? x[i] : 0; y[i] = v * Math.exp(-(i / sr) / tau) * Math.min(1, i / na); } return fades(y, 0, 0.004); }
+function resample(x, ratio) {
+  ratio = clamp(ratio, 0.05, 8); const n = Math.max(8, Math.floor(x.length / ratio)), y = new Float32Array(n), L = x.length;
+  const g = (i) => x[i < 0 ? 0 : i >= L ? L - 1 : i];
+  for (let i = 0; i < n; i++) {
+    const p = i * ratio, k = Math.floor(p), f = p - k, xm = g(k - 1), x0 = g(k), x1 = g(k + 1), x2 = g(k + 2);
+    const c1 = 0.5 * (x1 - xm), c2 = xm - 2.5 * x0 + 2 * x1 - 0.5 * x2, c3 = 0.5 * (x2 - xm) + 1.5 * (x0 - x1);
+    y[i] = ((c3 * f + c2) * f + c1) * f + x0;
+  }
+  return y;
+}
+const rev = (x) => x.slice().reverse();
+function peak(chs) { let m = 0; for (const c of chs) for (let i = 0; i < c.length; i++) { const a = Math.abs(c[i]); if (a > m) m = a; } return m; }
+function norm(chs, to) { const m = peak(chs); if (m < 1e-9) return chs; const g = to / m; return chs.map((c) => { const y = new Float32Array(c.length); for (let i = 0; i < c.length; i++) y[i] = c[i] * g; return y; }); }
+function add(a, b, gb = 1, off = 0) { const n = Math.max(a.length, b.length + off), y = new Float32Array(n); y.set(a); for (let i = 0; i < b.length; i++) y[i + off] += b[i] * gb; return y; }
+function hann(n) { const w = new Float32Array(n); for (let i = 0; i < n; i++) w[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (n - 1)); return w; }
+function stretch(x, n, r, grainS = 0.09, jitS = 0.03) {
+  const sr = S.sr, G = Math.max(64, Math.min(Math.round(grainS * sr), x.length - 2)), hop = Math.max(16, G >> 2), w = hann(G), y = new Float32Array(n), J = jitS * sr;
+  if (x.length < 128) return y;
+  for (let p = 0; p < n; p += hop) {
+    const c = (p / n) * (x.length - G), rp = Math.round(clamp(c + (r() - 0.5) * 2 * J, 0, x.length - G));
+    for (let j = 0; j < G && p + j < n; j++) y[p + j] += x[rp + j] * w[j];
+  }
+  for (let i = 0; i < n; i++) y[i] *= 0.5;
+  return y;
+}
+function excite(x, dur) { const n = Math.min(x.length, Math.max(32, Math.round(dur * S.sr))); const y = biq(x.slice(0, n), 'hp', 80); for (let i = 0; i < n; i++) y[i] *= 0.5 + 0.5 * Math.cos(Math.PI * i / n); return y; }
+function ks(exc, f, len, dec, bright) {
+  const sr = S.sr, n = Math.round(len), y = new Float32Array(n), D = sr / f - 0.5, M = Math.ceil(D) + 4, buf = new Float32Array(M);
+  const g = Math.pow(0.001, 1 / (f * Math.max(0.05, dec))); let w = 0, prev = 0; const ex = norm([exc], 0.8)[0];
+  for (let i = 0; i < n; i++) {
+    let rp = w - D; while (rp < 0) rp += M; const k = Math.floor(rp), fr = rp - k, d = buf[k % M] * (1 - fr) + buf[(k + 1) % M] * fr;
+    const v = bright * d + (1 - bright) * 0.5 * (d + prev); prev = d;
+    const o = (i < ex.length ? ex[i] : 0) + g * v; buf[w] = o; y[i] = o; w = (w + 1) % M;
+  }
+  return y;
+}
+function combs(x, fs, g, damp = 0.35) {
+  const sr = S.sr, y = new Float32Array(x.length);
+  for (const f of fs) {
+    const D = sr / f, M = Math.ceil(D) + 4, buf = new Float32Array(M); let w = 0, lp = 0;
+    for (let i = 0; i < x.length; i++) { let rp = w - D; while (rp < 0) rp += M; const k = Math.floor(rp), fr = rp - k, d = buf[k % M] * (1 - fr) + buf[(k + 1) % M] * fr; lp = lp + (1 - damp) * (d - lp); const o = x[i] + g * lp; buf[w] = o; y[i] += o / fs.length; w = (w + 1) % M; }
+  }
+  return y;
+}
+function sine(f, len, tau, att = 0.003, sweep = 0, sweepTau = 0.03) { const sr = S.sr, n = Math.round(len), y = new Float32Array(n); let ph = 0; for (let i = 0; i < n; i++) { const tt = i / sr, ff = f + sweep * Math.exp(-tt / sweepTau); ph += 2 * Math.PI * ff / sr; y[i] = Math.sin(ph) * Math.exp(-tt / tau) * Math.min(1, tt / att); } return y; }
+function crush(x, bits, hold) { const q = Math.pow(2, bits - 1), y = new Float32Array(x.length); let h = 0; for (let i = 0; i < x.length; i++) { if (i % hold === 0) h = Math.round(x[i] * q) / q; y[i] = h; } return y; }
+function stutter(x, r) { const sr = S.sr, ch = Math.round((0.02 + r() * 0.05) * sr), reps = 2 + Math.floor(r() * 4), piece = fades(x.slice(0, Math.min(ch, x.length)), 0.001, 0.002); let y = new Float32Array(0); for (let i = 0; i < reps; i++) y = add(y, piece, 1, y.length); return add(y, x, 1, y.length); }
+function env(x, att, rel) { const sr = S.sr, n = x.length, na = Math.round(att * sr), nr = Math.round(rel * sr), y = x.slice(); for (let i = 0; i < Math.min(na, n); i++) y[i] *= i / na; for (let i = 0; i < Math.min(nr, n); i++) y[n - 1 - i] *= i / nr; return y; }
+function vinyl(n, r) { const y = new Float32Array(n); for (let i = 0; i < n; i++) { if (r() < 0.00025) y[i] = (r() - 0.5) * 0.6; y[i] += (r() - 0.5) * 0.004; } return biq(y, 'hp', 1500); }
+function trimTail(chs, db = -64) { const th = Math.pow(10, db / 20); let e = chs[0].length; for (; e > 64; e--) { if (Math.abs(chs[0][e - 1]) > th || Math.abs(chs[1][e - 1]) > th) break; } e = Math.min(chs[0].length, e + Math.round(0.01 * S.sr)); return chs.map((c) => fades(c.slice(0, e), 0, 0.006)); }
+function rawTrim(x) { let pk = 0; for (let i = 0; i < x.length; i++) pk = Math.max(pk, Math.abs(x[i])); const th = pk * 0.004; let e = x.length; while (e > 64 && Math.abs(x[e - 1]) < th) e--; return fades(x.slice(0, e), 0.002, 0.01); }
+
+// ---------- fft ----------
+function fft(re, im) {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) { let b = n >> 1; for (; j & b; b >>= 1) j ^= b; j ^= b; if (i < j) { let q = re[i]; re[i] = re[j]; re[j] = q; q = im[i]; im[i] = im[j]; im[j] = q; } }
+  for (let len = 2; len <= n; len <<= 1) {
+    const a = -2 * Math.PI / len, wr = Math.cos(a), wi = Math.sin(a);
+    for (let i = 0; i < n; i += len) { let cr = 1, ci = 0; for (let j = 0; j < len / 2; j++) { const ur = re[i + j], ui = im[i + j], k = i + j + len / 2, vr = re[k] * cr - im[k] * ci, vi = re[k] * ci + im[k] * cr; re[i + j] = ur + vr; im[i + j] = ui + vi; re[k] = ur - vr; im[k] = ui - vi; const nr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = nr; } }
+  }
+}
+function yin(s0) {
+  const sr = S.sr, d = sr >= 44100 ? 2 : 1, fs = sr / d, W = 1024, minT = Math.floor(fs / 1100), maxT = Math.floor(fs / 45);
+  if (s0 + (W + maxT) * d >= S.x.length) return { f0: 0, clar: 0 };
+  const x = new Float32Array(W + maxT); for (let i = 0; i < x.length; i++) { const p = s0 + i * d; x[i] = d === 2 ? 0.5 * (S.x[p] + S.x[p + 1]) : S.x[p]; }
+  const df = new Float32Array(maxT + 1); let run = 0, best = -1, bv = 1;
+  for (let tau = 1; tau <= maxT; tau++) { let s = 0; for (let j = 0; j < W; j++) { const v = x[j] - x[j + tau]; s += v * v; } run += s; df[tau] = run > 0 ? s * tau / run : 1; }
+  for (let tau = minT; tau < maxT; tau++) { if (df[tau] < 0.2) { while (tau + 1 < maxT && df[tau + 1] < df[tau]) tau++; best = tau; bv = df[tau]; break; } }
+  if (best < 0) { for (let tau = minT; tau < maxT; tau++) if (df[tau] < bv) { bv = df[tau]; best = tau; } }
+  if (best <= 0) return { f0: 0, clar: 0 };
+  const a = df[best - 1], b = df[best], c = df[best + 1], den = a - 2 * b + c, sh = den !== 0 ? 0.5 * (a - c) / den : 0;
+  return { f0: fs / (best + sh), clar: clamp(1 - bv, 0, 1) };
+}
+
+// ---------- analysis ----------
+const tick = () => new Promise((r) => setTimeout(r, 0));
+async function analyse() {
+  const x = S.x, sr = S.sr, N = 1024, H = 512, nb = N / 2 + 1, F = Math.max(1, Math.floor((x.length - N) / H) + 1);
+  const rms = new Float32Array(F), flux = new Float32Array(F), lo = new Float32Array(F), hi = new Float32Array(F), cen = new Float32Array(F), flat = new Float32Array(F);
+  const w = hann(N), re = new Float64Array(N), im = new Float64Array(N), prev = new Float32Array(nb), bin = sr / N, loB = Math.ceil(150 / bin), hiB = Math.floor(5000 / bin);
+  for (let f = 0; f < F; f++) {
+    const o = f * H; let e = 0;
+    for (let i = 0; i < N; i++) { const v = x[o + i] || 0; e += v * v; re[i] = v * w[i]; im[i] = 0; }
+    rms[f] = Math.sqrt(e / N); fft(re, im);
+    let tot = 1e-12, l = 0, h = 0, cs = 0, lg = 0, fl = 0;
+    for (let k = 1; k < nb; k++) { const p = re[k] * re[k] + im[k] * im[k], m = Math.sqrt(p); tot += p; if (k <= loB) l += p; else if (k >= hiB) h += p; cs += k * bin * p; lg += Math.log(p + 1e-14); const lv = Math.log(1 + 100 * m), dv = lv - prev[k]; if (dv > 0) fl += dv; prev[k] = lv; }
+    lo[f] = l / tot; hi[f] = h / tot; cen[f] = cs / tot; flat[f] = Math.exp(lg / (nb - 1)) / (tot / (nb - 1)); flux[f] = fl;
+    if ((f & 2047) === 0) { busy(t('listening'), Math.round(100 * f / F) + '%', 0.8 * f / F); await tick(); }
+  }
+  const sF = Float32Array.from(flux).sort(), sR = Float32Array.from(rms).sort();
+  const p70 = sF[Math.floor(0.7 * (F - 1))], rFloor = sR[Math.floor(0.2 * (F - 1))], rMax = sR[F - 1] || 1e-6;
+  const gate = Math.max(rFloor * 3, rMax * 0.02, 1e-5);
+  const pre = new Float64Array(F + 1); for (let i = 0; i < F; i++) pre[i + 1] = pre[i] + flux[i];
+  const on = []; let last = -99;
+  for (let f = 2; f < F - 3; f++) {
+    const a = Math.max(0, f - 8), b = Math.min(F, f + 9), m = (pre[b] - pre[a]) / (b - a), thr = m * 1.35 + p70 * 0.5;
+    const v = flux[f];
+    if (v > thr && v >= flux[f - 1] && v >= flux[f + 1] && v >= flux[f - 2] && v >= flux[f + 2] && f - last >= 6) {
+      const pr = Math.max(rms[f], rms[f + 1], rms[f + 2], rms[f + 3]); if (pr > gate) { on.push(f); last = f; }
+    }
+  }
+  const segs = [];
+  for (let q = 0; q < on.length; q++) {
+    const f = on[q], nx = q + 1 < on.length ? on[q + 1] : F;
+    let pf = f; for (let g = f; g < Math.min(F, f + 5); g++) if (rms[g] > rms[pf]) pf = g;
+    const a0 = Math.max(0, f * H - H), a1 = Math.min(x.length, f * H + N); let lp = 0; for (let i = a0; i < a1; i++) lp = Math.max(lp, Math.abs(x[i]));
+    let s = a0; for (; s < a1; s++) if (Math.abs(x[s]) > 0.25 * lp) break; s = Math.max(0, s - Math.round(0.002 * sr));
+    let g = pf; while (g < nx && g < F && rms[g] > rms[pf] * 0.03 && (g - f) * H < 2.5 * sr) g++;
+    const e = Math.min(x.length, g * H + N);
+    let wl = 0, sl = 0, sh = 0, sc = 0, sfl = 0; for (let k = f; k < Math.min(g, f + 12, F); k++) { const ww = rms[k] + 1e-9; wl += ww; sl += lo[k] * ww; sh += hi[k] * ww; sc += cen[k] * ww; sfl += flat[k] * ww; }
+    if (wl <= 0) continue;
+    segs.push({ s, e, len: (e - s) / sr, pk: rms[pf], lowR: sl / wl, highR: sh / wl, cen: sc / wl, flat: sfl / wl, f0: 0, clar: 0 });
+  }
+  segs.sort((a, b) => b.pk - a.pk); if (segs.length > 600) segs.length = 600;
+  busy(t('listening'), '', 0.85); await tick();
+  const pc = segs.filter((s) => s.len > 0.12 && s.flat < 0.35).slice(0, 150);
+  for (const s of pc) { const r = yin(s.s + Math.round(0.03 * sr)); s.f0 = r.f0; s.clar = r.clar; }
+  // steady stretches
+  const wF = Math.max(4, Math.round(2 * sr / H)), st = Math.max(1, wF >> 2), cand = [];
+  for (let g = 0; g + wF <= F; g += st) {
+    let m = 0, m2 = 0, l = 0, h = 0, fl = 0, c = 0, quiet = 0; for (let k = g; k < g + wF; k++) { m += rms[k]; m2 += rms[k] * rms[k]; l += lo[k]; h += hi[k]; fl += flat[k]; c += cen[k]; if (rms[k] < gate * 0.5) quiet++; }
+    if (quiet > wF * 0.1) continue;
+    m /= wF; const sd = Math.sqrt(Math.max(0, m2 / wF - m * m)), cv = sd / (m + 1e-9);
+    if (m < gate * 0.5) continue;
+    cand.push({ s: g * H, e: (g + wF) * H + N, score: m / (1 + 2 * cv), steady: 1 / (1 + cv), lowR: l / wF, highR: h / wF, flat: fl / wF, cen: c / wF, f0: 0, clar: 0, pk: m });
+  }
+  cand.sort((a, b) => b.score - a.score);
+  const regs = []; for (const c of cand) { if (regs.length >= 12) break; if (regs.every((r) => c.e <= r.s || c.s >= r.e)) regs.push(c); }
+  if (!regs.length) regs.push({ s: 0, e: x.length, score: 1, steady: 1, lowR: 0.3, highR: 0.1, flat: 0.3, cen: 1500, f0: 0, clar: 0, pk: rMax });
+  for (const r of regs) { const q = yin(Math.round((r.s + r.e) / 2)); r.f0 = q.f0; r.clar = q.clar; }
+  S.shaped = false;
+  if (segs.length < 6) {
+    S.shaped = true;
+    const loud = []; for (let f = 0; f < F; f += 4) loud.push(f); loud.sort((a, b) => rms[b] - rms[a]);
+    for (const f of loud.slice(0, 16)) { const s = f * H; segs.push({ s, e: Math.min(x.length, s + Math.round(0.35 * sr)), len: 0.35, pk: rms[f], lowR: lo[f], highR: hi[f], cen: cen[f], flat: flat[f], f0: 0, clar: 0, shaped: true }); }
+  }
+  S.segs = segs; S.regs = regs; S.onsets = on.length;
+  // key
+  const hist = new Float32Array(12);
+  for (const s of segs.concat(regs)) if (s.clar > 0.75 && s.f0 > 80 && s.f0 < 2000 && s.lowR < 0.5) { const m = Math.round(69 + 12 * Math.log2(s.f0 / 440)); hist[((m % 12) + 12) % 12] += s.clar; }
+  let bk = 9, bm = true, bs = -1;
+  for (let k = 0; k < 12; k++) for (const mi of [true, false]) { const sc = (mi ? [0, 2, 3, 5, 7, 8, 10] : [0, 2, 4, 5, 7, 9, 11]); let v = 0; sc.forEach((iv, j) => { v += hist[(k + iv) % 12] * (j === 0 ? 2 : j === 4 ? 1.5 : 1); }); if (mi) v *= 1.02; if (v > bs) { bs = v; bk = k; bm = mi; } }
+  if (bs <= 0) { bk = 9; bm = true; }
+  S.autoPc = bk; S.autoMinor = bm;
+  makeRanks();
+}
+function makeRanks() {
+  const segs = S.segs, regs = S.regs, pm = Math.max(1e-9, ...segs.map((s) => s.pk)), R = {};
+  const sc = {
+    kick: (s) => s.lowR * 3 + (s.pk / pm) * 0.8 - s.highR * 2 - s.flat * 0.5 + (s.len > 0.08 && s.len < 0.9 ? 0.3 : 0),
+    snare: (s) => s.flat * 1.6 + (s.pk / pm) * 0.6 - s.lowR * 1.5 - Math.max(0, s.highR - 0.85) * 4 - s.clar * 0.8 + (s.len > 0.08 && s.len < 0.5 ? 0.3 : 0),
+    clap: (s) => s.flat * 2 + (1 - s.lowR - s.highR) + (s.cen > 1000 && s.cen < 4500 ? 0.5 : 0) - s.lowR,
+    chat: (s) => s.highR * 3 + s.flat * 0.5 - s.lowR * 2 - Math.min(s.len, 1) * 1.5 + (s.highR > 0.85 ? 0.8 : 0) + (s.cen > 6000 ? 0.4 : 0),
+    ohat: (s) => s.highR * 2.5 + s.flat * 0.5 + Math.min(s.len, 0.6) - s.lowR * 2,
+    tom: (s) => s.lowR * 1.2 + (1 - s.lowR - s.highR) + s.clar * 0.8 - s.highR * 1.5,
+    perc: (s) => (1 - s.lowR - s.highR) + (s.pk / pm) * 0.5 + (s.len < 0.3 ? 0.4 : 0) - s.flat * 0.3,
+    rim: (s) => (s.len < 0.15 ? 1 : 0) + (1 - s.lowR - s.highR) + s.highR * 0.5 + (s.pk / pm) * 0.5 - s.lowR,
+    shaker: (s) => s.flat * 1.5 + s.highR * 1.5 - s.lowR * 2 + (s.len < 0.3 ? 0.3 : 0),
+    fx: (s) => Math.min(s.len, 2) * 0.6 + s.flat * 0.3 + (1 - s.lowR - s.highR) * 0.3,
+    bass: (s) => s.clar * 1.5 + s.lowR + (s.pk / pm) * 0.3,
+    sub: (s) => s.lowR * 2 + (s.pk / pm),
+    keys: (s) => (s.pk / pm) * 0.6 + s.clar * 0.8 + (1 - s.lowR) * 0.8 + (s.len < 1 ? 0.2 : 0),
+    pluck: (s) => (s.pk / pm) * 0.8 + (1 - s.lowR) * 0.8 + s.highR * 0.3 + (s.len < 0.5 ? 0.3 : 0),
+    lead: (s) => s.clar * 2 + Math.min(s.len, 1.5) * 0.3,
+    impact: (s) => s.lowR * 2 + (s.pk / pm) * 1.5
+  };
+  const rc = {
+    pad: (r) => r.score * 0.5 / (r.pk + 1e-9) + r.clar * 1.2 + r.steady,
+    drone: (r) => r.lowR * 1.5 + r.steady + r.clar * 0.5,
+    texture: (r) => r.flat * 1.5 + r.highR + r.steady * 0.5,
+    riser: (r) => r.flat * 2 + r.highR,
+    down: (r) => r.flat * 1.5 + r.steady,
+    lead: (r) => r.clar * 2 + r.steady
+  };
+  for (const id in sc) R[id] = segs.map((s, i) => ({ k: 's', i, v: sc[id](s) })).sort((a, b) => b.v - a.v).slice(0, 8);
+  for (const id in rc) { const l = regs.map((r, i) => ({ k: 'r', i, v: rc[id](r) })).sort((a, b) => b.v - a.v).slice(0, 8); R[id] = id === 'lead' ? R.lead.slice(0, 4).filter((c) => segs[c.i].clar > 0.75).concat(l.slice(0, 4)) : l; }
+  if (!R.lead.length) R.lead = R.keys.slice();
+  R.loop = [];
+  S.rank = R;
+}
+function srcOf(sl, v = 0) {
+  if (sl.id === 'loop') return { loop: true };
+  if (!sl.src) return null;
+  if (sl.src.kind === 'man') { const q = sl.src; return Object.assign({ x: slice(q.s, q.e), man: true }, q); }
+  const list = S.rank[sl.id] || []; if (!list.length) return null;
+  const drum = sl.grp === 'd' || sl.id === 'impact';
+  const c = list[(sl.src.i + (drum ? v : 0)) % list.length];
+  const o = c.k === 's' ? S.segs[c.i] : S.regs[c.i];
+  return Object.assign({ x: slice(o.s, o.e), reg: c.k === 'r' }, o);
+}
+
+// ---------- recipe and key ----------
+function recipe() {
+  const g = GEN[S.genre], m = MOOD[S.mood] || {};
+  return {
+    bpm: S.bpm || g.bpm, drop: g.drop + (m.pitch || 0), pitch: m.pitch || 0, drive: clamp(g.drive + (m.drive || 0), 0, 1), crush: Math.max(g.crush || 0, m.crush || 0) ? Math.min(g.crush || 99, m.crush || 99) : 0,
+    lp: Math.min(19000, g.lp * (m.lp || 1)), hp: m.hp || 0, verbMul: g.verb * (m.verb || 1), room: g.room * (m.room || 1), div: g.div, fb: g.fb, hat: g.hat, padLen: g.pad,
+    swing: g.swing, glitch: !!g.glitch, vinyl: !!g.vinyl, bright: clamp(0.5 + (m.bright || 0) + (g.bright || 0), 0.05, 0.95)
+  };
+}
+const kPc = () => (S.keyMode === 'auto' ? S.autoPc : S.keyPc);
+const kMin = () => (S.keyMode === 'auto' ? S.autoMinor : S.minor);
+const keyName = () => NOTE[kPc()] + (kMin() ? ' min' : ' maj');
+function notes() { const pc = kPc(), bass = 36 + pc, keys = pc >= 6 ? 48 + pc : 60 + pc; return { bass, sub: pc >= 4 ? bass - 12 : bass, keys, pad: keys - 12, third: kMin() ? 3 : 4 }; }
+function fitRatio(f0, target) { let r = target / f0; while (r > 2.05) r /= 2; while (r < 0.49) r *= 2; return r; }
+
+// ---------- builders: they shape your sound, then fx() colours it ----------
+const B = {
+  kick(src, R, r, p) {
+    const sr = S.sr; let x = cut(src.x, 0.6 * sr); x = resample(x, semi(R.drop + p.pitch + (r() - 0.5) * 2)); x = biq(x, 'hp', 35);
+    const n = notes(); let f0 = mf(n.sub); if (f0 < 42) f0 *= 2; f0 *= semi(p.pitch * 0.5);
+    const len = sr * 0.45 * p.len, body = sine(f0, len, 0.2 * p.len, 0.0015, f0 * 3.2, 0.032), top = decay(x, len, 0.11 * p.len);
+    return { ch: add(norm([top], 0.75)[0], body, 0.4 + 0.55 * (1 - clamp(src.lowR * 1.4, 0, 1))), o: { hp: 28, lp: R.lp, drive: R.drive * 0.8, comp: true, sendHP: 350 } };
+  },
+  snare(src, R, r, p) {
+    const sr = S.sr; let x = cut(src.x, 0.5 * sr); x = resample(x, semi(R.pitch + p.pitch + (r() - 0.5) * 2)); x = biq(x, 'hp', 120);
+    const len = sr * 0.4 * p.len, main = decay(x, len, 0.09 * p.len), snap = decay(biq(x, 'hp', 2500), len, 0.05 * p.len), body = sine(185 * semi(R.pitch + p.pitch), len, 0.06, 0.001, 60, 0.01);
+    return { ch: add(add(main, snap, 0.45), body, 0.28), o: { hp: 90, lp: R.lp, drive: R.drive * 0.7, comp: true } };
+  },
+  clap(src, R, r, p) {
+    const sr = S.sr; let x = cut(src.x, 0.14 * sr); x = resample(x, semi(R.pitch + p.pitch)); x = biq(biq(x, 'hp', 700), 'bp', 1500 + r() * 800, 0.7);
+    let y = new Float32Array(0); [[0, 0.7, 0.012], [0.011, 0.85, 0.012], [0.023, 0.75, 0.014], [0.034, 1, 0.12 * p.len]].forEach(([o, g, tau]) => { y = add(y, decay(x, sr * Math.max(0.05, tau * 5), tau), g, Math.round(o * sr)); });
+    return { ch: y, o: { hp: 300, lp: R.lp, drive: R.drive * 0.6, comp: true } };
+  },
+  chat(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 0.3 * sr); if (src.cen < 4000) x = resample(x, 2); x = biq(biq(x, 'hp', 6500), 'hp', 6500); x = resample(x, semi(R.pitch + p.pitch)); const tau = R.hat * p.len; return { ch: decay(x, sr * tau * 6, tau), o: { hp: 5000, lp: Math.min(R.lp * 1.4, 19000), drive: R.drive * 0.3 } }; },
+  ohat(src, R, r, p) { const sr = S.sr; let x = src.cen < 4000 ? resample(src.x, 2) : src.x; if (x.length < 0.4 * sr) x = stretch(x, Math.round(0.6 * sr), r, 0.04, 0.01); x = biq(biq(x, 'hp', 6000), 'hp', 6000); x = resample(x, semi(R.pitch + p.pitch)); const tau = 0.16 * p.len; return { ch: decay(x, sr * tau * 4, tau), o: { hp: 4500, lp: Math.min(R.lp * 1.4, 19000), drive: R.drive * 0.3 } }; },
+  tom(src, R, r, p) {
+    const sr = S.sr, n = notes(), t0 = 48 + ((kPc() + 7) % 12), tm = t0 > 55 ? t0 - 12 : t0, f = mf(tm + p.pitch); let x = cut(src.x, 0.6 * sr);
+    x = src.clar > 0.6 && src.f0 > 40 ? resample(x, fitRatio(src.f0, f)) : resample(x, semi(-5 + R.pitch + p.pitch));
+    const len = sr * 0.6 * p.len; return { ch: add(decay(x, len, 0.15 * p.len), sine(f, len, 0.25 * p.len, 0.002, f * 0.5, 0.05), 0.55), o: { hp: 50, lp: R.lp, drive: R.drive * 0.6, comp: true } };
+  },
+  perc(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 0.3 * sr); x = resample(x, semi(R.pitch + p.pitch + (r() - 0.5) * 6)); const bp = biq(x, 'bp', clamp(src.cen, 400, 5000), 1.2); return { ch: decay(add(bp, x, 0.4), sr * 0.3 * p.len, 0.08 * p.len), o: { hp: 150, lp: R.lp, drive: R.drive * 0.5, comp: true } }; },
+  rim(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 0.07 * sr); x = resample(x, semi(7 + R.pitch + p.pitch)); x = biq(x, 'hp', 1200); x = add(x, biq(x, 'bp', 1800, 3), 0.8); return { ch: decay(x, sr * 0.12 * p.len, 0.022 * p.len), o: { hp: 800, lp: R.lp, drive: R.drive * 0.4 } }; },
+  shaker(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 0.2 * sr); x = biq(biq(x, 'hp', 4500), 'hp', 4500); x = resample(x, semi(R.pitch + p.pitch)); const g = decay(x, sr * 0.2 * p.len, 0.06 * p.len, 0.022); return { ch: add(g, g, 0.55, Math.round(0.045 * sr)), o: { hp: 3000, lp: Math.min(R.lp * 1.3, 19000), drive: R.drive * 0.2 } }; },
+  fx(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 1.2 * sr * p.len); if (R.glitch || r() < 0.5) x = stutter(x, r); x = rev(x); x = resample(x, semi(-5 + R.pitch + p.pitch + (r() - 0.5) * 6)); x = crush(x, 8, 2); return { ch: env(x, 0.15, 0.03), o: { hp: 100, lp: R.lp, drive: R.drive } }; },
+  bass(src, R, r, p) {
+    const sr = S.sr, f = mf(notes().bass + p.pitch), L = Math.round(sr * 1.2 * p.len); let tone;
+    if (src.clar > 0.7 && src.f0 > 40) tone = decay(resample(src.x, f / src.f0), L, 0.5 * p.len, 0.004);
+    else tone = env(ks(excite(src.x, 0.03), f, L, 1.0 * p.len, R.bright * 0.4), 0.003, 0.08);
+    return { ch: add(norm([tone], 0.7)[0], sine(f, L, 0.6 * p.len, 0.004), 0.55), o: { hp: 30, lp: Math.min(R.lp, 2200), drive: clamp(R.drive + 0.15, 0, 1), comp: true, sendHP: 400 } };
+  },
+  sub(src, R, r, p) { const sr = S.sr, f = mf(notes().sub + p.pitch), L = sr * 1.4 * p.len, s = add(sine(f, L, 1.2 * p.len, 0.005), sine(f * 2, L, 0.6 * p.len, 0.005), 0.1); const click = decay(biq(cut(src.x, 0.02 * sr), 'hp', 2000), 0.02 * sr, 0.006); return { ch: add(s, click, 0.15), o: { hp: 20, lp: 900, drive: R.drive * 0.5 + 0.1 } }; },
+  keys(src, R, r, p) {
+    const sr = S.sr, f = mf(notes().keys + p.pitch), L = Math.round(sr * 2.6 * p.len), e = excite(src.x, 0.02), b = R.bright * 0.7;
+    const a = ks(e, f, L, 2.2 * p.len, b), c = ks(e, f * 1.0017, L, 2.0 * p.len, b), o = ks(e, f * 2, L, 1.0 * p.len, Math.min(0.95, b + 0.2));
+    let Lc = add(a, o, 0.22), Rc = add(c, o, 0.22); if (R.vinyl) { const v = vinyl(L, r); Lc = add(Lc, v, 0.6); Rc = add(Rc, v, 0.6); }
+    return { ch: [env(Lc, 0.002, 0.05), env(Rc, 0.002, 0.05)], o: { hp: 60, lp: R.lp * 0.7, drive: R.drive * 0.4 } };
+  },
+  pluck(src, R, r, p) { const sr = S.sr, f = mf(notes().keys + p.pitch), L = Math.round(sr * 1.2 * p.len), e = excite(src.x, 0.012); return { ch: [ks(e, f, L, 0.7 * p.len, R.bright), ks(e, f * 1.002, L, 0.65 * p.len, R.bright)], o: { hp: 80, lp: R.lp, drive: R.drive * 0.5 } }; },
+  lead(src, R, r, p) {
+    const sr = S.sr, f = mf(notes().keys + 12 + p.pitch), L = Math.round(sr * 1.8 * p.len); let y;
+    if (src.clar > 0.7 && src.f0 > 40) y = stretch(resample(src.x, f / src.f0), L, r, 0.06, 0.01);
+    else y = combs(stretch(src.x, L, r, 0.08, 0.02), [f, f * 2], 0.975, 0.25);
+    return { ch: env(y, 0.015, 0.25), o: { hp: 120, lp: R.lp, drive: clamp(R.drive + 0.25, 0, 1) } };
+  },
+  pad(src, R, r, p) {
+    const sr = S.sr, n = notes(), L = Math.round(sr * R.padLen * p.len), fr = [0, 7, 12, n.third].map((i) => mf(n.pad + i + p.pitch));
+    let x = src.x; if (src.clar > 0.6 && src.f0 > 40) x = resample(x, fitRatio(src.f0, fr[0]));
+    const r2 = rng32((r() * 4294967296) >>> 0), side = (rr) => { const s = stretch(x, L, rr, 0.12, 0.05); return add(norm([combs(s, fr, 0.985, 0.4)], 0.8)[0], biq(s, 'lp', 3000), 0.35); };
+    let Lc = side(r), Rc = side(r2); if (R.vinyl) { const v = vinyl(L, r); Lc = add(Lc, v, 0.4); Rc = add(Rc, v, 0.4); }
+    return { ch: [env(Lc, 0.7 * p.len, 1.2), env(Rc, 0.7 * p.len, 1.2)], o: { hp: 80, lp: R.lp * 0.8, drive: R.drive * 0.3 } };
+  },
+  drone(src, R, r, p) { const sr = S.sr, n = notes(), L = Math.round(sr * 8 * p.len), f = mf(n.bass + p.pitch), r2 = rng32((r() * 4294967296) >>> 0); const side = (rr) => biq(combs(stretch(src.x, L, rr, 0.15, 0.08), [f, f * 1.5, f * 2], 0.99, 0.45), 'lp', 1500); return { ch: [env(side(r), 1.5, 2), env(side(r2), 1.5, 2)], o: { hp: 30, lp: 2500, drive: 0.1 } }; },
+  texture(src, R, r, p) { const sr = S.sr, L = Math.round(sr * 6 * p.len), r2 = rng32((r() * 4294967296) >>> 0), side = (rr) => biq(biq(stretch(resample(src.x, semi(R.pitch + p.pitch)), L, rr, 0.1, 0.2), 'hp', 200), 'lp', 2500 + 9000 * R.bright); return { ch: [env(side(r), 0.5, 1), env(side(r2), 0.5, 1)], o: { hp: 100, lp: R.lp, drive: R.drive * 0.3 } }; },
+  riser(src, R, r, p) {
+    const sr = S.sr, L = Math.round(sr * 4 * p.len), base = stretch(src.x, L, r, 0.1, 0.05), y = new Float32Array(L); let pos = 0, hpY = 0, hpX = 0;
+    for (let i = 0; i < L; i++) {
+      const q = i / L, rate = 0.5 * Math.pow(4, q) * semi(p.pitch); pos += rate; const k = Math.floor(pos) % L, v = base[k] * q * q;
+      const fc = 80 * Math.pow(60, q), a = Math.exp(-2 * Math.PI * fc / sr); hpY = a * (hpY + v - hpX); hpX = v; y[i] = hpY;
+    }
+    return { ch: env(y, 0.05, 0.02), o: { hp: 60, lp: R.lp, drive: R.drive * 0.5 } };
+  },
+  down(src, R, r, p) { const b = B.riser(src, R, r, p); return { ch: env(rev(b.ch), 0.01, 0.4), o: b.o }; },
+  impact(src, R, r, p) { const sr = S.sr, L = sr * 3 * p.len, x = decay(resample(cut(src.x, 0.5 * sr), semi(-12 + R.pitch + p.pitch)), L, 0.25 * p.len); const boom = sine(45 * semi(p.pitch), L, 1.1 * p.len, 0.002, 70, 0.08); return { ch: add(norm([x], 0.7)[0], boom, 0.8), o: { hp: 25, lp: R.lp, drive: clamp(R.drive + 0.2, 0, 1), comp: true, sendHP: 250 } }; }
+};
+
+// the loop plays your own made drums
+const PAT = {
+  free: { kick: [0, 8, 16, 24], snare: [4, 12, 20, 28], chat: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30] },
+  triphop: { kick: [0, 7, 10, 16, 23, 26], snare: [4, 12, 20, 28], chat: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30], perc: [14, 30] },
+  techno: { kick: [0, 4, 8, 12, 16, 20, 24, 28], clap: [4, 12, 20, 28], chat: [2, 6, 10, 14, 18, 22, 26, 30], perc: [3, 11, 19, 27], ohat: [14, 30] },
+  ambient: { kick: [0, 16], rim: [6, 22], shaker: [2, 6, 10, 14, 18, 22, 26, 30] },
+  cinema: { tom: [0, 3, 6, 16, 19, 22], kick: [0, 8, 16], snare: [28] },
+  exp: null
+};
+async function buildLoop(sl, r) {
+  const sr = S.sr, R = recipe(), step = 60 / R.bpm / 4, L = Math.round(sr * step * 32), y = [new Float32Array(L + sr * 2), new Float32Array(L + sr * 2)];
+  let pat = PAT[S.genre];
+  if (!pat) { pat = {}; for (const id of ['kick', 'snare', 'chat', 'perc', 'rim']) { pat[id] = []; const d = { kick: 0.25, snare: 0.12, chat: 0.45, perc: 0.2, rim: 0.15 }[id]; for (let s = 0; s < 32; s++) if (r() < d) pat[id].push(s); } }
+  for (const id in pat) {
+    const s = slot(id); if (!s || !s.out) continue; const b = s.out.dry;
+    for (const st of pat[id]) {
+      const sw = st % 2 === 1 ? R.swing * step : 0, o = Math.round((st * step + sw) * sr), g = (id === 'kick' ? 1 : 0.8) * (0.85 + r() * 0.15);
+      for (let c = 0; c < 2; c++) for (let i = 0; i < b[c].length && o + i < y[c].length; i++) y[c][o + i] += b[c][i] * g;
+    }
+  }
+  for (let c = 0; c < 2; c++) { for (let i = L; i < y[c].length; i++) y[c][i - L] += y[c][i]; y[c] = y[c].slice(0, L); }
+  return { ch: y, o: { hp: 25, lp: 20000, drive: 0, comp: true }, loop: true };
+}
+
+// ---------- room and fx ----------
+function makeIR(sec, bright, seed) {
+  const sr = S.sr, n = Math.round(sec * sr), pre = Math.round(0.012 * sr), out = [];
+  for (let c = 0; c < 2; c++) {
+    const r = rng32(seed + c * 977), y = new Float32Array(n + pre); let lp = 0;
+    for (let i = 0; i < n; i++) { const q = i / n, a = (0.12 + 0.75 * bright) * (1 - 0.8 * q); lp += a * ((r() * 2 - 1) - lp); y[pre + i] = lp * Math.exp(-6.9 * i / n); }
+    for (let k = 0; k < 6; k++) { const p = pre + Math.round((0.004 + r() * 0.035) * sr); y[p] += (r() - 0.5) * 0.8; }
+    out.push(y);
+  }
+  return out;
+}
+function curve(d) { const n = 2048, k = 1 + d * 18, c = new Float32Array(n), th = Math.tanh(k); for (let i = 0; i < n; i++) { const x = i * 2 / (n - 1) - 1; c[i] = Math.tanh(k * x) / th; } return c; }
+async function fx(ch, o) {
+  const sr = S.sr, n = Math.max(32, ch[0].length), tail = Math.round((o.tail || 0) * sr), oc = new OfflineAudioContext(2, n + tail, sr);
+  const b = oc.createBuffer(2, n, sr); b.copyToChannel(ch[0], 0); b.copyToChannel(ch[1] || ch[0], 1);
+  const src = oc.createBufferSource(); src.buffer = b;
+  const hp = oc.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = Math.max(20, o.hp || 20); hp.Q.value = 0.7;
+  const lp = oc.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = clamp(o.lp || 20000, 200, sr * 0.45); lp.Q.value = 0.7;
+  src.connect(hp); hp.connect(lp); let node = lp;
+  if (o.drive > 0.01) { const ws = oc.createWaveShaper(); ws.curve = curve(o.drive); ws.oversample = '4x'; const pre = oc.createGain(); pre.gain.value = 0.9; node.connect(pre); pre.connect(ws); node = ws; }
+  if (o.comp) { const c = oc.createDynamicsCompressor(); c.threshold.value = -18; c.ratio.value = 4; c.attack.value = 0.004; c.release.value = 0.12; c.knee.value = 6; node.connect(c); node = c; }
+  node.connect(oc.destination);
+  if (o.verb > 0.005 && S.ir) {
+    const s = oc.createBiquadFilter(); s.type = 'highpass'; s.frequency.value = o.sendHP || 220; const cv = oc.createConvolver(); cv.normalize = true;
+    const ib = oc.createBuffer(2, S.ir[0].length, sr); ib.copyToChannel(S.ir[0], 0); ib.copyToChannel(S.ir[1], 1); cv.buffer = ib;
+    const g = oc.createGain(); g.gain.value = o.verb; node.connect(s); s.connect(cv); cv.connect(g); g.connect(oc.destination);
+  }
+  if (o.delay && o.delay.mix > 0.005) {
+    const s = oc.createBiquadFilter(); s.type = 'highpass'; s.frequency.value = 300; const d = oc.createDelay(4); d.delayTime.value = clamp(o.delay.t, 0.01, 3.9);
+    const f = oc.createGain(); f.gain.value = o.delay.fb; const dl = oc.createBiquadFilter(); dl.type = 'lowpass'; dl.frequency.value = 3800; const m = oc.createGain(); m.gain.value = o.delay.mix;
+    node.connect(s); s.connect(d); d.connect(dl); dl.connect(f); f.connect(d); dl.connect(m); m.connect(oc.destination);
+  }
+  src.start(0);
+  const res = await oc.startRendering();
+  return [res.getChannelData(0).slice(), res.getChannelData(1).slice()];
+}
+function verbFor(sl, R) { const base = VERB[S.verb][0] * R.verbMul * SEND[sl.id][0]; return sl.p.verb != null ? sl.p.verb : clamp(base, 0, 1); }
+async function make(sl, v = 0) {
+  const R = recipe(), r = rng32((S.seed ^ hashStr(sl.id)) + sl.seed * 31 + v * 7919);
+  let b, src = null;
+  if (sl.id === 'loop') b = await buildLoop(sl, r);
+  else { src = srcOf(sl, v); if (!src || !src.x || src.x.length < 64) return null; b = B[sl.id](src, R, r, sl.p); }
+  let ch = Array.isArray(b.ch) ? b.ch : [b.ch, b.ch];
+  if (!b.loop) {
+    if (R.crush) ch = norm(ch, 0.8).map((c) => crush(c, R.crush, R.crush < 9 ? 3 : 1));
+    if (sl.p.rev) ch = ch.map(rev);
+    if (R.hp) b.o.hp = Math.max(b.o.hp || 20, R.hp);
+  }
+  ch = norm(ch, 0.8);
+  const o = Object.assign({}, b.o); o.drive = clamp((o.drive || 0) + sl.p.drive * 0.5, 0, 1);
+  const d0 = await fx(ch, o), dry = norm(b.loop ? d0 : trimTail(d0), 0.891);
+  const vA = verbFor(sl, R), dl = S.delay && SEND[sl.id][1] > 0 ? { t: (60 / R.bpm) * R.div, fb: R.fb, mix: 0.3 * SEND[sl.id][1] } : null;
+  let wet = null;
+  if (vA > 0.005 || dl) { const w = await fx(ch, Object.assign({}, o, { verb: vA, delay: dl, tail: (vA > 0.005 ? Math.min(R.room * 1.1, 6) : 0) + (dl ? 1.6 : 0) })); wet = norm(b.loop ? w.map((c) => c.slice(0, ch[0].length)) : trimTail(w), 0.891); }
+  let raw = null;
+  if (src && !b.loop) { const x = rawTrim(src.x.slice(0, Math.round(Math.min(src.x.length, 12 * S.sr)))); raw = norm([x, x], 0.891); }
+  return { dry, wet, raw, src };
+}
+
+// ---------- ui helpers ----------
+function busy(title, sub, frac) { const el = $('#busy'); if (title == null) { el.hidden = true; return; } el.hidden = false; $('#busyT').textContent = title; $('#busyS').textContent = sub || ''; $('#busyB').style.width = Math.round(100 * clamp(frac || 0, 0, 1)) + '%'; }
+let toastUndo = null;
+function toast(msg, undo) { const el = $('#toast'); $('#toastT').textContent = msg; const u = $('#toastU'); u.hidden = !undo; u.textContent = t('undo'); toastUndo = undo || null; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), undo ? 4000 : 1800); }
+$('#toastU').onclick = () => { if (toastUndo) toastUndo(); toastUndo = null; $('#toast').classList.remove('on'); };
+const fmt = (sec) => { const m = Math.floor(sec / 60), s = sec - m * 60; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1); };
+const fmtD = (sec) => { const m = Math.floor(sec / 60), s = Math.floor(sec % 60); return m + ':' + (s < 10 ? '0' : '') + s; };
+
+function chipRow(el, items, cur, onPick, color) {
+  el.innerHTML = '';
+  for (const [k, label, c] of items) { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = label; b.setAttribute('aria-pressed', String(k === cur)); if (c || color) b.style.setProperty('--c', c || color); b.onclick = () => onPick(k); el.append(b); }
+}
+function renderDir() {
+  chipRow($('#genres'), Object.keys(GEN).map((k) => [k, GEN[k][lang], GEN[k].c]), S.genre, (k) => { S.genre = k; renderDir(); dirChanged(); });
+  chipRow($('#moods'), Object.keys(MOOD).map((k) => [k, MOOD[k][lang]]), S.mood, (k) => { S.mood = k; renderDir(); dirChanged(); }, GEN[S.genre].c);
+  chipRow($('#verbs'), Object.keys(VERB).map((k) => [k, VERB[k][lang === 'nl' ? 2 : 1]]), S.verb, (k) => { S.verb = k; S.slots.forEach((s) => (s.p.verb = null)); renderDir(); dirChanged(); }, GEN[S.genre].c);
+  const ks = $('#key'); ks.innerHTML = '<option value="auto">' + t('auto_') + (S.x ? ' (' + NOTE[S.autoPc] + (S.autoMinor ? ' min' : ' maj') + ')' : '') + '</option>' + NOTE.map((n, i) => '<option value="' + i + '">' + n + '</option>').join('');
+  ks.value = S.keyMode === 'auto' ? 'auto' : String(S.keyPc);
+  const sc = $('#scale'); sc.innerHTML = '<option value="min">' + t('minor') + '</option><option value="maj">' + t('major') + '</option>'; sc.value = kMin() ? 'min' : 'maj'; sc.disabled = S.keyMode === 'auto';
+  $('#bpm').placeholder = String(GEN[S.genre].bpm); $('#bpm').value = S.bpm || '';
+  document.documentElement.style.setProperty('--g', GEN[S.genre].c);
+}
+let dirT = null;
+function dirChanged() { if (!S.made) return; clearTimeout(dirT); dirT = setTimeout(() => rebuild(S.slots.filter((s) => s.src || s.id === 'loop').map((s) => s.id), false), 500); }
+
+function renderGrid() {
+  const g = $('#grid'), xg = $('#xgrid'); g.innerHTML = ''; xg.innerHTML = '';
+  S.slots.forEach((s, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'tile' + (s.out ? ' full' : '') + (i === S.sel ? ' sel' : '') + (s.keep ? ' keep' : '') + (s.busy ? ' busy' : '');
+    b.innerHTML = '<span></span><small></small>'; b.firstChild.textContent = sName(s.id);
+    b.lastChild.textContent = s.grp === 't' && s.out ? NOTE[kPc()] : s.id === 'loop' && s.out ? recipe().bpm + ' BPM' : '';
+    b.onclick = () => tapTile(i);
+    (s.grp === 'x' ? xg : g).append(b);
+  });
+  const R = recipe(); $('#pInfo').textContent = GEN[S.genre][lang] + (S.mood !== 'none' ? ' · ' + MOOD[S.mood][lang] : '') + ' · ' + keyName() + ' · ' + R.bpm + ' BPM';
+  $('#pName').textContent = S.name;
+}
+let lastTap = { i: -1, t: 0 };
+function tapTile(i) {
+  const now = performance.now(), s = S.slots[i];
+  if (lastTap.i === i && now - lastTap.t < 320) {
+    lastTap = { i: -1, t: 0 }; stopPlay(); if (!s.out && !s.src) return;
+    const keep = { src: s.src, out: s.out, p: Object.assign({}, s.p), keep: s.keep };
+    s.src = null; s.out = null; s.keep = false; renderGrid(); renderEd();
+    toast(t('removed') + ': ' + sName(s.id), () => { Object.assign(s, keep); renderGrid(); renderEd(); }); return;
+  }
+  lastTap = { i, t: now }; S.sel = i;
+  if (s.out) play(s.out.wet || s.out.dry);
+  else if (S.x && s.id === 'loop') { s.seed = rnd32(); render1(s, true); }
+  else if (S.x && (S.rank[s.id] || []).length) { s.src = { kind: 'c', i: 0 }; s.seed = rnd32(); render1(s, true); }
+  renderGrid(); renderEd();
+}
+
+function renderEd() {
+  const s = S.slots[S.sel], card = $('#cEd'); if (!s || !S.x) { card.hidden = true; return; }
+  card.hidden = false; $('#edTitle').textContent = sName(s.id) + (s.grp === 't' ? ' · ' + keyName() : '');
+  $('#edStep').textContent = S.guided && S.sel < 16 ? t('step', { i: S.sel + 1 }) : '';
+  $('#bNext').hidden = !(S.guided && S.sel < 16);
+  let info = '';
+  if (s.id === 'loop') info = t('fromLoop');
+  else if (s.src && s.src.kind === 'man') info = t('fromSel', { t: fmt(s.src.s / S.sr) });
+  else if (s.src) { const c = (S.rank[s.id] || [])[s.src.i]; if (c) { const o = c.k === 's' ? S.segs[c.i] : S.regs[c.i]; info = t(c.k === 's' ? 'fromHit' : 'fromReg', { t: fmt(o.s / S.sr) }); } }
+  $('#edSrc').textContent = info;
+  const cs = $('#cands'); cs.innerHTML = '';
+  (S.rank[s.id] || []).slice(0, 6).forEach((c, k) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip cand'; b.textContent = String(k + 1); b.setAttribute('aria-pressed', String(!!(s.src && s.src.kind === 'c' && s.src.i === k))); b.style.setProperty('--c', GEN[S.genre].c); b.onclick = () => { s.src = { kind: 'c', i: k }; render1(s, true); }; cs.append(b); });
+  $('#cands').previousElementSibling.hidden = !cs.children.length;
+  const R = recipe();
+  setSl('Pitch', s.p.pitch, String(s.p.pitch)); setSl('Len', s.p.len, s.p.len.toFixed(2)); setSl('Drive', s.p.drive, s.p.drive.toFixed(2)); const va = verbFor(s, R); setSl('Verb', va, va.toFixed(2));
+  $('#sRev').checked = s.p.rev; $('#sKeep').checked = s.keep;
+  $('#bPlayRaw').disabled = !(s.out && s.out.raw); $('#bPlayMade').disabled = !s.out; $('#bPick').hidden = s.id === 'loop';
+}
+function setSl(n, v, txt) { $('#s' + n).value = v; $('#o' + n).textContent = txt; }
+const curS = () => S.slots[S.sel];
+['Pitch', 'Len', 'Drive', 'Verb'].forEach((n) => {
+  const el = $('#s' + n);
+  el.oninput = () => { $('#o' + n).textContent = n === 'Pitch' ? el.value : (+el.value).toFixed(2); };
+  el.onchange = () => { const s = curS(); if (!s) return; const v = +el.value; if (n === 'Pitch') s.p.pitch = v; if (n === 'Len') s.p.len = v; if (n === 'Drive') s.p.drive = v; if (n === 'Verb') s.p.verb = v; if (s.src || s.id === 'loop') render1(s, true); };
+});
+$('#sRev').onchange = () => { const s = curS(); if (!s) return; s.p.rev = $('#sRev').checked; render1(s, true); };
+$('#sKeep').onchange = () => { const s = curS(); if (!s) return; s.keep = $('#sKeep').checked; renderGrid(); };
+$('#bPlayMade').onclick = () => { const s = curS(); if (s && s.out) play(s.out.wet || s.out.dry); };
+$('#bPlayRaw').onclick = () => { const s = curS(); if (s && s.out && s.out.raw) play(s.out.raw); };
+$('#bVary').onclick = () => { const s = curS(); if (!s) return; s.seed = rnd32(); if (!s.src && s.id !== 'loop') s.src = { kind: 'c', i: 0 }; render1(s, true); };
+$('#bPick').onclick = () => {
+  const s = curS(); if (!s) return; S.assignTo = s.id; renderAssign();
+  if (s.src) { let o = null; if (s.src.kind === 'man') o = s.src; else { const c = (S.rank[s.id] || [])[s.src.i]; if (c) o = c.k === 's' ? S.segs[c.i] : S.regs[c.i]; } if (o) { S.view.s = Math.max(0, o.s / S.sr - S.view.d * 0.25); S.selR = [o.s, o.e]; } }
+  drawWave(); $('#cWave').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+$('#bNext').onclick = async () => {
+  if (S.sel < 15) { S.sel++; const s = curS(); if (!s.out) { if (!s.src) s.src = { kind: 'c', i: 0 }; s.seed = s.seed || rnd32(); await render1(s, true); } renderGrid(); renderEd(); $('#cEd').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  else { S.guided = false; await rebuild(['drone', 'texture', 'riser', 'down', 'impact', 'loop'].filter((id) => { const s = slot(id); if (!s.src && id !== 'loop') { s.src = { kind: 'c', i: 0 }; s.seed = rnd32(); } return true; }), false); toast(t('done')); }
+};
+
+let renderQ = Promise.resolve();
+function render1(s, andPlay) {
+  s.busy = true; renderGrid();
+  renderQ = renderQ.then(async () => { try { s.out = await make(s, 0); } catch (e) { console.error(e); s.out = null; } s.busy = false; S.made = true; renderGrid(); if (S.slots[S.sel] === s) renderEd(); if (andPlay && s.out) play(s.out.wet || s.out.dry); showPack(); });
+  return renderQ;
+}
+async function rebuild(ids, fresh) {
+  const R = recipe(); S.ir = makeIR(Math.max(0.6, R.room), R.bright, S.seed);
+  const list = ids.map(slot), n = list.length; let k = 0;
+  const order = list.filter((s) => s.id !== 'loop').concat(list.filter((s) => s.id === 'loop'));
+  for (const s of order) {
+    busy(t('building'), sName(s.id), k / n); await tick();
+    try { s.out = await make(s, 0); } catch (e) { console.error(e); s.out = null; }
+    k++;
+  }
+  busy(null); S.made = true; renderGrid(); renderEd(); showPack();
+}
+function assignAuto(fresh) {
+  const used = new Set(), r = rng32(S.seed);
+  for (const s of S.slots) {
+    if (s.keep && s.src) continue;
+    if (s.id === 'loop') { s.src = null; continue; }
+    const list = S.rank[s.id] || []; if (!list.length) { s.src = null; continue; }
+    let pick = -1; const top = Math.min(list.length, fresh ? 3 : 6), start = fresh ? Math.floor(r() * top) : 0;
+    for (let j = 0; j < list.length && pick < 0; j++) { const k = (start + j) % list.length, key = list[k].k + list[k].i; if (!used.has(key) || j >= 6) pick = k; }
+    if (pick < 0) pick = 0; used.add(list[pick].k + list[pick].i);
+    s.src = { kind: 'c', i: pick }; s.seed = rnd32();
+  }
+}
+function showPack() { const on = S.made && S.slots.some((s) => s.out); $('#cPack').hidden = !S.x; $('#cExp').hidden = !on; $('#cWave').hidden = !S.x; }
+
+// ---------- waveform ----------
+const ZOOM = [0.5, 1, 2, 4, 8, 16, 30];
+function canvasPx(cv) { const r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1; const w = Math.max(10, Math.round(r.width * d)), h = Math.max(10, Math.round(r.height * d)); if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; } return [w, h, d]; }
+let ovPeaks = null;
+function dotColor(s) { if (s.clar > 0.7) return '#C792EA'; if (s.lowR > 0.45) return '#E5675A'; if (s.highR > 0.35) return '#7FB2F0'; if (s.flat > 0.3) return '#F2C14E'; return '#A9A8B8'; }
+function drawWave() {
+  if (!S.x || $('#cWave').hidden) return;
+  const x = S.x, sr = S.sr, ov = $('#ov'), [w, h] = canvasPx(ov), c = ov.getContext('2d');
+  if (!ovPeaks || ovPeaks.w !== w) { const p = new Float32Array(w), per = x.length / w; for (let i = 0; i < w; i++) { let m = 0; const a = Math.floor(i * per), b = Math.min(x.length, Math.floor((i + 1) * per)); for (let j = a; j < b; j += 4) { const v = Math.abs(x[j]); if (v > m) m = v; } p[i] = m; } ovPeaks = { w, p, mx: Math.max(1e-6, ...p) }; }
+  c.clearRect(0, 0, w, h); c.fillStyle = '#3A3D55'; for (let i = 0; i < w; i++) { const v = ovPeaks.p[i] / ovPeaks.mx * h * 0.9; c.fillRect(i, (h - v) / 2, 1, Math.max(1, v)); }
+  const vs = S.view.s / S.dur * w, vw = Math.max(3, S.view.d / S.dur * w); c.fillStyle = 'rgba(94,200,192,.25)'; c.fillRect(vs, 0, vw, h); c.strokeStyle = GEN[S.genre].c; c.lineWidth = 2; c.strokeRect(vs + 1, 1, vw - 2, h - 2);
+  const dt = $('#det'), [W, Hh, d] = canvasPx(dt), g = dt.getContext('2d'), s0 = Math.round(S.view.s * sr), n = Math.round(S.view.d * sr), per = n / W;
+  g.clearRect(0, 0, W, Hh);
+  if (S.selR) { const a = (S.selR[0] - s0) / per, b = (S.selR[1] - s0) / per; g.fillStyle = 'rgba(243,241,234,.13)'; g.fillRect(a, 0, b - a, Hh); }
+  g.fillStyle = '#8C8FA8';
+  for (let i = 0; i < W; i++) { let mn = 0, mx = 0; const a = s0 + Math.floor(i * per), b = Math.min(x.length, s0 + Math.floor((i + 1) * per)); const stp = Math.max(1, Math.floor((b - a) / 64)); for (let j = a; j < b; j += stp) { const v = x[j]; if (v < mn) mn = v; if (v > mx) mx = v; } g.fillRect(i, Hh / 2 - mx * Hh * 0.45, 1, Math.max(1, (mx - mn) * Hh * 0.45)); }
+  for (const s of S.segs) { if (s.s < s0 || s.s > s0 + n) continue; const px = (s.s - s0) / per; g.fillStyle = dotColor(s); g.beginPath(); g.arc(px, 9 * d, 5 * d, 0, Math.PI * 2); g.fill(); }
+  $('#zInfo').textContent = S.view.d + ' s · ' + fmt(S.view.s);
+}
+function viewClamp() { S.view.d = Math.min(S.view.d, Math.max(0.5, S.dur)); S.view.s = clamp(S.view.s, 0, Math.max(0, S.dur - S.view.d)); }
+$('#zIn').onclick = () => { const i0 = ZOOM.findIndex((z) => z >= S.view.d - 1e-9), i = Math.max(0, (i0 < 0 ? ZOOM.length : i0) - 1), c = S.view.s + S.view.d / 2; S.view.d = ZOOM[i]; S.view.s = c - S.view.d / 2; viewClamp(); drawWave(); };
+$('#zOut').onclick = () => { const i0 = ZOOM.findIndex((z) => z >= S.view.d - 1e-9), i = Math.min(ZOOM.length - 1, (i0 < 0 ? ZOOM.length - 1 : ZOOM[i0] > S.view.d + 1e-9 ? i0 - 1 : i0) + 1), c = S.view.s + S.view.d / 2; S.view.d = ZOOM[i]; S.view.s = c - S.view.d / 2; viewClamp(); drawWave(); };
+(function () {
+  const ov = $('#ov'); let down = false;
+  const mv = (e) => { const r = ov.getBoundingClientRect(), q = clamp((e.clientX - r.left) / r.width, 0, 1); S.view.s = q * S.dur - S.view.d / 2; viewClamp(); drawWave(); };
+  ov.addEventListener('pointerdown', (e) => { if (!S.x) return; down = true; ov.setPointerCapture(e.pointerId); mv(e); });
+  ov.addEventListener('pointermove', (e) => { if (down) mv(e); });
+  ov.addEventListener('pointerup', () => { down = false; });
+  const dt = $('#det'); let st = null;
+  const toS = (e) => { const r = dt.getBoundingClientRect(); return Math.round((S.view.s + clamp((e.clientX - r.left) / r.width, 0, 1) * S.view.d) * S.sr); };
+  dt.addEventListener('pointerdown', (e) => { if (!S.x) return; dt.setPointerCapture(e.pointerId); st = { x: e.clientX, s: toS(e), drag: false }; });
+  dt.addEventListener('pointermove', (e) => { if (!st) return; if (Math.abs(e.clientX - st.x) > 6) st.drag = true; if (st.drag) { const a = st.s, b = toS(e); S.selR = [Math.min(a, b), Math.max(a, b)]; drawWave(); } });
+  dt.addEventListener('pointerup', (e) => {
+    if (!st) return; const wasDrag = st.drag, at = st.s; st = null;
+    if (wasDrag) { playSel(); return; }
+    const r = dt.getBoundingClientRect(), tol = 14 / r.width * S.view.d * S.sr; let best = null, bd = 1e18;
+    for (const s of S.segs) { const dd = Math.abs(s.s - at); if (dd < bd && dd < tol) { bd = dd; best = s; } }
+    S.selR = best ? [best.s, best.e] : [at, Math.min(S.x.length, at + Math.round(0.5 * S.sr))]; drawWave(); playSel();
+  });
+})();
+function playSel() { if (!S.selR) return; const x = fades(slice(S.selR[0], S.selR[1]), 0.002, 0.01); play([x, x]); }
+$('#bPlaySel').onclick = playSel;
+function renderAssign() {
+  chipRow($('#assign'), SLOTS.filter((q) => q[0] !== 'loop').map((q) => [q[0], sName(q[0])]), S.assignTo, async (id) => {
+    if (!S.selR || S.selR[1] - S.selR[0] < 64) { toast(t('choose')); return; }
+    const [s, e] = S.selR, q = yin(s + Math.min(Math.round(0.03 * S.sr), (e - s) >> 2));
+    const sub = S.x.subarray(s, e); let lo = 0, hi = 0, tot = 1e-9; const lpY = biq(sub, 'lp', 150), hpY = biq(sub, 'hp', 5000); for (let i = 0; i < sub.length; i++) { tot += sub[i] * sub[i]; lo += lpY[i] * lpY[i]; hi += hpY[i] * hpY[i]; }
+    const sl = slot(id); sl.src = { kind: 'man', s, e, f0: q.f0, clar: q.clar, lowR: lo / tot, highR: hi / tot, cen: 2000, flat: 0.3, len: (e - s) / S.sr, pk: 1 };
+    sl.keep = true; sl.seed = sl.seed || rnd32(); S.assignTo = id; S.sel = S.slots.indexOf(sl); renderAssign();
+    if (!S.ir) { const R = recipe(); S.ir = makeIR(Math.max(0.6, R.room), R.bright, S.seed); }
+    await render1(sl, true); toast(t('assigned', { s: sName(id) }));
+  }, GEN[S.genre].c);
+}
+
+// ---------- recording and import ----------
+let rec = null;
+$('#bRec').onclick = async () => {
+  if (!navigator.mediaDevices || !window.MediaRecorder) { toast(t('noRec')); return; }
+  const c = ac(); let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); } catch (e) { toast(t('micErr')); return; }
+  const mr = new MediaRecorder(stream), chunks = [], an = c.createAnalyser(); an.fftSize = 2048; c.createMediaStreamSource(stream).connect(an);
+  mr.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+  const t0 = performance.now(), buf = new Float32Array(2048);
+  const loop = () => { if (!rec) return; an.getFloatTimeDomainData(buf); let m = 0; for (const v of buf) m = Math.max(m, Math.abs(v)); $('#recLvl').style.width = Math.round(100 * Math.min(1, m * 1.2)) + '%'; $('#recTime').textContent = fmtD((performance.now() - t0) / 1000); requestAnimationFrame(loop); };
+  rec = { mr, stream, chunks }; mr.start(1000); $('#srcIdle').hidden = true; $('#srcRec').hidden = false; loop();
+};
+$('#bStop').onclick = () => {
+  if (!rec) return; const r = rec; rec = null;
+  r.mr.onstop = async () => { r.stream.getTracks().forEach((q) => q.stop()); $('#srcRec').hidden = true; await loadBlob(new Blob(r.chunks, { type: r.mr.mimeType || 'audio/webm' })); };
+  r.mr.stop();
+};
+$('#bImp').onclick = () => $('#file').click();
+$('#file').onchange = async (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) await loadBlob(f); };
+async function loadBlob(blob) {
+  const c = ac(); busy(t('listening'), '', 0.02); await tick();
+  let buf; try { buf = await c.decodeAudioData(await blob.arrayBuffer()); } catch (e) { busy(null); toast(t('fileErr')); $('#srcIdle').hidden = false; return; }
+  const n = buf.length, nc = buf.numberOfChannels, x = new Float32Array(n);
+  for (let ch = 0; ch < nc; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < n; i++) x[i] += d[i] / nc; }
+  let dc = 0; for (let i = 0; i < n; i++) dc += x[i]; dc /= n || 1; if (Math.abs(dc) > 1e-6) for (let i = 0; i < n; i++) x[i] -= dc;
+  newSlots(); S.x = x; S.sr = buf.sampleRate; S.dur = n / S.sr; S.made = false; S.sel = -1; S.selR = null; S.guided = false; ovPeaks = null; S.view = { s: 0, d: Math.min(4, Math.max(0.5, S.dur)) };
+  try { await analyse(); } catch (e) { console.error(e); }
+  busy(null);
+  S.seed = rnd32(); S.name = packName();
+  $('#srcIdle').hidden = true; $('#srcDone').hidden = false; $('#srcInfo').textContent = t('found', { d: fmtD(S.dur), n: S.onsets });
+  $('#srcWarn').hidden = !S.shaped; $('#srcWarn').textContent = t('few');
+  $('#cDir').hidden = false; renderDir(); renderGrid(); renderEd(); showPack(); renderAssign(); requestAnimationFrame(drawWave);
+}
+$('#bNewSrc').onclick = () => clearAll();
+
+// ---------- make ----------
+$('#bAuto').onclick = async () => { if (!S.x) return; S.guided = false; S.seed = rnd32(); assignAuto(false); await rebuild(S.slots.map((s) => s.id), true); S.sel = -1; renderGrid(); renderEd(); $('#cPack').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+$('#bGuide').onclick = async () => {
+  if (!S.x) return; S.guided = true; S.seed = rnd32(); const R = recipe(); S.ir = makeIR(Math.max(0.6, R.room), R.bright, S.seed);
+  S.slots.forEach((s) => { if (!s.keep) { s.out = null; s.src = null; } }); S.sel = 0; const s = S.slots[0]; if (!s.src) { s.src = { kind: 'c', i: 0 }; s.seed = rnd32(); }
+  showPack(); $('#cPack').hidden = false; await render1(s, true); renderEd(); $('#cEd').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+$('#bAgain').onclick = async () => { if (!S.x) return; S.seed = rnd32(); assignAuto(true); await rebuild(S.slots.filter((s) => !s.keep || s.id === 'loop').map((s) => s.id), true); };
+$('#bName').onclick = () => { S.name = packName(); renderGrid(); };
+
+// direction controls
+$('#delay').onchange = () => { S.delay = $('#delay').checked; dirChanged(); };
+$('#key').onchange = () => { const v = $('#key').value; if (v === 'auto') S.keyMode = 'auto'; else { if (S.keyMode === 'auto') S.minor = S.autoMinor; S.keyMode = 'man'; S.keyPc = +v; } renderDir(); dirChanged(); };
+$('#scale').onchange = () => { S.minor = $('#scale').value === 'min'; dirChanged(); renderGrid(); };
+$('#bpm').onchange = () => { const v = Math.round(+$('#bpm').value); S.bpm = v >= 50 && v <= 200 ? v : null; renderDir(); dirChanged(); };
+$('#vars').onchange = () => { S.vars = +$('#vars').value; };
+$('#both').onchange = () => { S.both = $('#both').checked; };
+$('#raw').onchange = () => { S.raw = $('#raw').checked; };
+$('#clean').onchange = () => { S.clean = $('#clean').checked; dirChanged(); };
+
+// ---------- export ----------
+function wav24(ch) {
+  const n = ch[0].length, ba = 6, size = 44 + n * ba, ab = new ArrayBuffer(size), d = new DataView(ab), u = new Uint8Array(ab);
+  const ws = (o, s) => { for (let i = 0; i < s.length; i++) u[o + i] = s.charCodeAt(i); };
+  ws(0, 'RIFF'); d.setUint32(4, size - 8, true); ws(8, 'WAVE'); ws(12, 'fmt '); d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 2, true);
+  d.setUint32(24, S.sr, true); d.setUint32(28, S.sr * ba, true); d.setUint16(32, ba, true); d.setUint16(34, 24, true); ws(36, 'data'); d.setUint32(40, n * ba, true);
+  let o = 44; for (let i = 0; i < n; i++) for (let c = 0; c < 2; c++) { const v = Math.round(clamp(ch[c][i], -1, 1) * 8388607); u[o++] = v & 255; u[o++] = (v >> 8) & 255; u[o++] = (v >> 16) & 255; }
+  return u;
+}
+const CRC = (() => { const tb = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; tb[n] = c >>> 0; } return tb; })();
+function crc32(u) { let c = ~0; for (let i = 0; i < u.length; i++) c = CRC[(c ^ u[i]) & 255] ^ (c >>> 8); return (~c) >>> 0; }
+function zip(files) {
+  const enc = new TextEncoder(), parts = [], cen = []; let off = 0;
+  for (const f of files) {
+    const nb = enc.encode(f.name), crc = crc32(f.data), h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true); h.setUint16(10, 0, true); h.setUint16(12, 0x5d21, true);
+    h.setUint32(14, crc, true); h.setUint32(18, f.data.length, true); h.setUint32(22, f.data.length, true); h.setUint16(26, nb.length, true); h.setUint16(28, 0, true);
+    parts.push(h.buffer, nb, f.data);
+    const c = new DataView(new ArrayBuffer(46)); c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true); c.setUint16(12, 0, true); c.setUint16(14, 0x5d21, true);
+    c.setUint32(16, crc, true); c.setUint32(20, f.data.length, true); c.setUint32(24, f.data.length, true); c.setUint16(28, nb.length, true); c.setUint32(42, off, true);
+    cen.push(c.buffer, nb); off += 30 + nb.length + f.data.length;
+  }
+  const cs = cen.reduce((a, b) => a + (b.byteLength || b.length), 0), e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, cs, true); e.setUint32(16, off, true);
+  return new Blob(parts.concat(cen, [e.buffer]), { type: 'application/zip' });
+}
+function dl(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 5000); }
+const safe = (s) => s.replace(/[\\/:*?"<>|]+/g, '').trim();
+async function collect() {
+  const N = safe(S.name || 'Divine Sound Pack'), out = [], R = recipe(), list = S.slots.filter((s) => s.out); let k = 0;
+  for (const s of list) {
+    const folder = s.grp === 'd' ? 'Drums' : s.grp === 't' ? 'Tones' : 'Extras';
+    let label = fName(s.id); if (s.grp === 't' || s.id === 'drone') label += ' ' + keyName(); if (s.id === 'loop') label += ' ' + R.bpm + ' BPM';
+    const nv = s.id === 'loop' ? 1 : S.vars;
+    for (let v = 0; v < nv; v++) {
+      busy(t('exporting'), sName(s.id) + (nv > 1 ? ' ' + (v + 1) : ''), k / (list.length * S.vars)); await tick();
+      const res = v === 0 ? s.out : await make(s, v); if (!res) continue;
+      const base = N + ' ' + label + (nv > 1 ? ' ' + (v + 1) : '');
+      if (res.wet) { if (S.both) out.push({ name: N + '/' + folder + '/' + base + ' Dry.wav', ch: res.dry }); out.push({ name: N + '/' + folder + '/' + base + ' Wet.wav', ch: res.wet }); }
+      else out.push({ name: N + '/' + folder + '/' + base + '.wav', ch: res.dry });
+      if (v === 0 && S.raw && res.raw) out.push({ name: N + '/Pure/' + N + ' ' + fName(s.id) + ' Pure.wav', ch: res.raw });
+      k++;
+    }
+  }
+  return out;
+}
+$('#bZip').onclick = async () => {
+  const fl = await collect(); busy(t('exporting'), 'zip', 0.95); await tick();
+  const blob = zip(fl.map((f) => ({ name: f.name, data: wav24(f.ch) }))); busy(null); dl(blob, safe(S.name) + '.zip'); $('#expInfo').textContent = t('files', { n: fl.length });
+};
+$('#bLoose').onclick = async () => {
+  const fl = await collect(); busy(null); $('#expInfo').textContent = t('files', { n: fl.length });
+  for (const f of fl) { dl(new Blob([wav24(f.ch)], { type: 'audio/wav' }), f.name.split('/').pop()); await new Promise((r) => setTimeout(r, 450)); }
+};
+
+// ---------- clear and language ----------
+function clearAll() {
+  stopPlay(); if (rec) { try { rec.mr.stop(); rec.stream.getTracks().forEach((q) => q.stop()); } catch (e) {} rec = null; }
+  S.x = null; S.dur = 0; S.segs = []; S.regs = []; S.rank = {}; S.made = false; S.sel = -1; S.selR = null; S.guided = false; S.ir = null; S.assignTo = null; ovPeaks = null;
+  S.genre = 'free'; S.mood = 'none'; S.verb = 'little'; S.delay = true; S.keyMode = 'auto'; S.bpm = null; S.vars = 1; S.both = true; S.raw = true; S.clean = true;
+  $('#delay').checked = true; $('#vars').value = '1'; $('#both').checked = true; $('#raw').checked = true; $('#clean').checked = true;
+  newSlots(); ['#srcRec', '#srcDone', '#cDir', '#cPack', '#cEd', '#cWave', '#cExp'].forEach((q) => ($(q).hidden = true)); $('#srcIdle').hidden = false; $('#expInfo').textContent = '';
+  renderDir(); renderGrid();
+}
+$('#bClear').onclick = clearAll;
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-t]').forEach((e) => (e.textContent = t(e.dataset.t)));
+  document.querySelectorAll('.lang button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.l === lang)));
+  renderDir(); renderGrid(); renderEd(); if (S.x) { renderAssign(); $('#srcInfo').textContent = t('found', { d: fmtD(S.dur), n: S.onsets }); $('#srcWarn').textContent = t('few'); }
+}
+document.querySelectorAll('.lang button').forEach((b) => (b.onclick = () => { lang = b.dataset.l; applyLang(); }));
+window.addEventListener('resize', () => { ovPeaks = null; drawWave(); });
+applyLang();
+</script>
+<script>(function(){try{if(!/\.github\.io$/.test(location.hostname))return;var q=new URLSearchParams({p:location.pathname,t:document.title,s:screen.width+','+screen.height,rnd:Math.random().toString(36).slice(2)});if(document.referrer&&document.referrer.indexOf(location.hostname)<0)q.set('r',document.referrer.split('?')[0]);var u='https://divine-monday.goatcounter.com/count?'+q;if(!(navigator.sendBeacon&&navigator.sendBeacon(u)))new Image().src=u;}catch(e){}})();</script>
+<!-- Divine Monday suite bar: the name of every machine leads home, and the same Suite button sits next to it in every app -->
+<style>.dm-suite{display:inline-flex;align-items:center;gap:6px;margin-left:12px;padding:6px 12px;min-height:34px;border:1px solid rgba(128,128,128,.45);border-radius:999px;color:inherit;text-decoration:none;font:600 13px/1 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;white-space:nowrap;vertical-align:middle;opacity:.85;flex:none}.dm-suite:hover,.dm-suite:focus-visible{opacity:1;border-color:currentColor}.dm-home{cursor:pointer}</style>
+<script>(function(){var LOGO=['.trow .brand','header.top .logo','.brand .logo','header .logo','.top h1','.col > h1','header h1','.dm-row > .dm-home'],HIDE='#suiteBtn, header a.back, .suiteback, .top a[data-tt=back]';
+var url=/\/ujam(\/|$)/.test(location.pathname)?'https://divineacidmonday.github.io/ujam/':'https://divineacidmonday.github.io/',go=function(){location.href=url;},busy=false;
+function fix(){busy=false;var l=null;for(var q=0;q<LOGO.length&&!l;q++)l=[].slice.call(document.querySelectorAll(LOGO[q])).filter(function(e){return e.offsetParent!==null;})[0]||null;if(!l)return; // the first kind of name that is on screen, in this order
+ if(!l.classList.contains('dm-home')){l.classList.add('dm-home');l.setAttribute('role','link');l.setAttribute('tabindex','0');l.title='Back to the Divine Music Suite';l.addEventListener('click',go);l.addEventListener('keydown',function(e){if(e.key==='Enter')go();});}
+ var n=l.nextElementSibling;if(!(n&&n.classList.contains('dm-suite'))){var a=document.createElement('a');a.className='dm-suite';a.href=url;a.title='All Divine Monday machines';a.textContent='← Suite';
+  var P=l.parentElement,ps=getComputedStyle(P),row=ps.display.indexOf('flex')>=0&&ps.flexDirection.indexOf('row')===0;
+  if(row||P.classList.contains('dm-row'))l.insertAdjacentElement('afterend',a);
+  else{var w=document.createElement('div');w.className='dm-row';w.style.cssText='display:flex;align-items:center;flex-wrap:wrap;gap:6px 0;justify-content:'+(ps.textAlign==='center'||ps.alignItems==='center'?'center':'flex-start');P.insertBefore(w,l);w.appendChild(l);w.appendChild(a);l.style.margin='0';}}
+ document.querySelectorAll(HIDE).forEach(function(e){if(!e.classList.contains('dm-suite'))e.style.display='none';});}
+new MutationObserver(function(){if(!busy){busy=true;requestAnimationFrame(fix);}}).observe(document.documentElement,{childList:true,subtree:true});fix();})();</script>
+</body>
+</html>
