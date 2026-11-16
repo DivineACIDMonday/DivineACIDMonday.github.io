@@ -69,7 +69,7 @@ footer{color:var(--soft);font-size:13px;text-align:center;padding:24px 0 96px}
 </head>
 <body>
 <main>
-<div class="top"><h1>Divine <b>Sound</b> Machine</h1><div class="lang" role="group" aria-label="Language / Taal"><button type="button" data-l="en">EN</button><button type="button" data-l="nl">NL</button></div><a href="../" data-tt="back">&larr; Suite</a></div>
+<div class="top"><h1>Divine <b>Sound</b> Machine</h1><div class="lang" role="group" aria-label="Language / Taal / Sprache"><button type="button" data-l="en">EN</button><button type="button" data-l="nl">NL</button><button type="button" data-l="de">DE</button></div><a href="../" data-tt="back">&larr; Suite</a></div>
 
 <section class="card" id="cSrc">
   <h2 data-t="h1"></h2>
@@ -519,10 +519,27 @@ const TXT = {
     micErr: 'Geen toegang tot de microfoon.', fileErr: 'Dit bestand kan ik niet lezen.', noRec: 'Opnemen werkt niet in deze browser; importeer een bestand.',
     step: '{i} van 16', fromHit: 'Van het moment op {t}', fromSel: 'Van je selectie op {t}', fromReg: 'Van het stuk op {t}', fromLoop: 'Gebouwd uit je drums',
     done: 'Pack compleet', recDl: 'Opname downloaden', burpH: 'Burp', burpHint: 'Eén tik maakt een complete track met jouw pack. Elke burp is anders. Of laad een MIDI uit je machines.', burpGen: 'Genre voor de burp', same: 'Zelfde als pack', loadMidi: 'MIDI laden', play: 'Speel', stopT: 'Stop', burping: 'Je track wordt geburpt', midiErr: 'Deze MIDI kan ik niet lezen.', midiFirst: 'Maak eerst een pack, laad dan je MIDI.', routedMidi: 'Dat was een MIDI bestand; hij speelt nu met je pack.', routedAudio: 'Dat was een geluidsbestand; het is nu je nieuwe opname.', mp3ing: 'MP3 wordt geschreven', files: '{n} bestanden, 24 bit WAV', choose: 'Kies eerst een stuk', assigned: 'Er is een {s} van gemaakt', selFirst: 'Tik eerst op een geluid in het pack'
+  },
+  de: {
+    h1: '1. Klangquelle', rec: 'Aufnehmen', imp: 'Audio oder Video importieren', srcHint: 'Nimm so lange auf, wie du willst: einen Wald, deine Küche, einen Zug, deine eigene Stimme. Alles bleibt auf deinem Handy.',
+    stop: 'Stopp', newSrc: 'Neuer Klang', h2: '2. Richtung', genre: 'Genre', mood: 'Stimmung', verb: 'Hall', delay: 'Echo im Tempo', more: 'Mehr Optionen',
+    key: 'Tonart', tempo: 'Tempo', variants: 'Varianten pro Klang', both: 'Trocken und nass exportieren', rawOpt: 'Auch die puren Klänge exportieren', clean: 'Rumpeln und Wind herausfiltern',
+    auto: 'Das ganze Pack machen', guide: 'Begleitet, Feld für Feld', h3: '3. Dein Pack', newName: 'Neuer Name', extras: 'Extras',
+    tileHint: 'Tippe auf einen Klang, um ihn zu hören und zu bearbeiten. Doppeltippen entfernt ihn.', again: 'Neu machen (behält, was auf Behalten steht)',
+    playMade: 'Abspielen', playRaw: 'Pur abspielen', cands: 'Andere Momente aus deiner Aufnahme', sPitch: 'Tonhöhe', sLen: 'Länge', sDrive: 'Verzerrung', sVerb: 'Hall', sRev: 'Rückwärts', keep: 'Behalten',
+    vary: 'Neue Variation', pick: 'Aus Aufnahme wählen', next: 'Weiter', h4: 'Deine Aufnahme', playSel: 'Auswahl abspielen',
+    waveHint: 'Ziehe über die untere Ansicht, um ein Stück zu wählen. Tippe auf einen Punkt, um einen Schlag zu hören. Ziehe den oberen Balken, um durch die Aufnahme zu gehen.',
+    makeThis: 'Mach daraus:', h5: '4. Exportieren', zip: 'Zip herunterladen', loose: 'Einzelne WAVs herunterladen', clear: 'Alles löschen', foot: 'nichts verlässt dein Handy',
+    auto_: 'Auto', minor: 'Moll', major: 'Dur', listening: 'Ich höre mir deine Aufnahme an', building: 'Dein Pack wird gebaut', exporting: 'Dateien werden geschrieben',
+    found: '{d} Klang, {n} Schläge gefunden', few: 'Wenige klare Schläge gefunden; die Drums werden aus dem Klang selbst geformt.', removed: 'Entfernt', undo: 'Zurück',
+    micErr: 'Kein Zugriff auf das Mikrofon.', fileErr: 'Diese Datei kann ich nicht lesen.', noRec: 'Aufnehmen geht in diesem Browser nicht; importiere eine Datei.',
+    step: '{i} von 16', fromHit: 'Vom Moment bei {t}', fromSel: 'Von deiner Auswahl bei {t}', fromReg: 'Vom Abschnitt bei {t}', fromLoop: 'Aus deinen Drums gebaut',
+    done: 'Pack fertig', recDl: 'Aufnahme herunterladen', burpH: 'Burp', burpHint: 'Ein Tipp macht einen kompletten Track mit deinem Pack. Jeder Burp ist anders. Oder lade eine MIDI aus deinen Maschinen.', burpGen: 'Genre für den Burp', same: 'Wie das Pack', loadMidi: 'MIDI laden', play: 'Abspielen', stopT: 'Stopp', burping: 'Dein Track wird geburpt', midiErr: 'Diese MIDI kann ich nicht lesen.', midiFirst: 'Mach zuerst ein Pack, lade dann deine MIDI.', routedMidi: 'Das war eine MIDI Datei; sie spielt jetzt mit deinem Pack.', routedAudio: 'Das war eine Klangdatei; sie ist jetzt deine neue Aufnahme.', mp3ing: 'MP3 wird geschrieben',
+    files: '{n} Dateien, 24 Bit WAV', choose: 'Wähle zuerst ein Stück', assigned: 'Daraus ist ein {s} geworden', selFirst: 'Tippe zuerst auf einen Klang im Pack'
   }
 };
 let lang = 'en';
-try { const l = (navigator.language || '').toLowerCase(); if (l.startsWith('nl')) lang = 'nl'; } catch (e) {}
+try { const l = (navigator.language || '').toLowerCase(); if (l.startsWith('nl')) lang = 'nl'; else if (l.startsWith('de')) lang = 'de'; } catch (e) {}
 const t = (k, v) => { let s = (TXT[lang] && TXT[lang][k]) || TXT.en[k] || k; if (v) for (const q in v) s = s.replace('{' + q + '}', v[q]); return s; };
 
 const SLOTS = [
@@ -533,27 +550,28 @@ const SLOTS = [
   ['drone', 'Drone', 'Drone', 'x'], ['texture', 'Texture', 'Textuur', 'x'], ['riser', 'Riser', 'Riser', 'x'], ['down', 'Downlifter', 'Downlifter', 'x'],
   ['impact', 'Impact', 'Impact', 'x'], ['loop', 'Loop', 'Loop', 'x']
 ];
-const sName = (id) => { const s = SLOTS.find((q) => q[0] === id); return lang === 'nl' ? s[2] : s[1]; };
+const SDE = { chat: 'Hihat zu', ohat: 'Hihat offen', perc: 'Perkussion', texture: 'Textur' };
+const sName = (id) => { const s = SLOTS.find((q) => q[0] === id); return lang === 'nl' ? s[2] : lang === 'de' ? SDE[id] || s[1] : s[1]; };
 const fName = (id) => SLOTS.find((q) => q[0] === id)[1];
 
 const GEN = {
-  free: { en: 'Free', nl: 'Vrij', c: '#A9A8B8', bpm: 110, drop: 0, drive: 0.15, crush: 0, verb: 1, room: 1.8, div: 0.75, fb: 0.35, lp: 16000, hat: 0.035, pad: 5, swing: 0, bright: 0 },
-  triphop: { en: 'Trip hop', nl: 'Trip hop', c: '#C792EA', bpm: 88, drop: -3, drive: 0.35, crush: 12, verb: 1.1, room: 2.0, div: 0.75, fb: 0.38, lp: 9000, hat: 0.03, pad: 5, swing: 0.16, bright: -0.1, vinyl: true },
-  techno: { en: 'Techno', nl: 'Techno', c: '#5EC8C0', bpm: 128, drop: -2, drive: 0.45, crush: 0, verb: 0.75, room: 1.4, div: 0.75, fb: 0.4, lp: 15000, hat: 0.022, pad: 4, swing: 0, bright: 0.1 },
-  ambient: { en: 'Ambient', nl: 'Ambient', c: '#7FB2F0', bpm: 70, drop: -5, drive: 0.05, crush: 0, verb: 1.6, room: 4.5, div: 1.5, fb: 0.5, lp: 8500, hat: 0.05, pad: 8, swing: 0, bright: -0.05 },
-  cinema: { en: 'Cinematic', nl: 'Cinematisch', c: '#F2994A', bpm: 90, drop: -7, drive: 0.25, crush: 0, verb: 1.4, room: 3.6, div: 1, fb: 0.42, lp: 11000, hat: 0.04, pad: 7, swing: 0, bright: 0 },
-  exp: { en: 'Experimental', nl: 'Experimenteel', c: '#E5675A', bpm: 110, drop: 0, drive: 0.5, crush: 7, verb: 1, room: 2.4, div: 0.375, fb: 0.45, lp: 14000, hat: 0.03, pad: 5, swing: 0.05, bright: 0.05, glitch: true }
+  free: { en: 'Free', nl: 'Vrij', de: 'Frei', c: '#A9A8B8', bpm: 110, drop: 0, drive: 0.15, crush: 0, verb: 1, room: 1.8, div: 0.75, fb: 0.35, lp: 16000, hat: 0.035, pad: 5, swing: 0, bright: 0 },
+  triphop: { en: 'Trip hop', nl: 'Trip hop', de: 'Trip hop', c: '#C792EA', bpm: 88, drop: -3, drive: 0.35, crush: 12, verb: 1.1, room: 2.0, div: 0.75, fb: 0.38, lp: 9000, hat: 0.03, pad: 5, swing: 0.16, bright: -0.1, vinyl: true },
+  techno: { en: 'Techno', nl: 'Techno', de: 'Techno', c: '#5EC8C0', bpm: 128, drop: -2, drive: 0.45, crush: 0, verb: 0.75, room: 1.4, div: 0.75, fb: 0.4, lp: 15000, hat: 0.022, pad: 4, swing: 0, bright: 0.1 },
+  ambient: { en: 'Ambient', nl: 'Ambient', de: 'Ambient', c: '#7FB2F0', bpm: 70, drop: -5, drive: 0.05, crush: 0, verb: 1.6, room: 4.5, div: 1.5, fb: 0.5, lp: 8500, hat: 0.05, pad: 8, swing: 0, bright: -0.05 },
+  cinema: { en: 'Cinematic', nl: 'Cinematisch', de: 'Filmisch', c: '#F2994A', bpm: 90, drop: -7, drive: 0.25, crush: 0, verb: 1.4, room: 3.6, div: 1, fb: 0.42, lp: 11000, hat: 0.04, pad: 7, swing: 0, bright: 0 },
+  exp: { en: 'Experimental', nl: 'Experimenteel', de: 'Experimentell', c: '#E5675A', bpm: 110, drop: 0, drive: 0.5, crush: 7, verb: 1, room: 2.4, div: 0.375, fb: 0.45, lp: 14000, hat: 0.03, pad: 5, swing: 0.05, bright: 0.05, glitch: true }
 };
 const MOOD = {
-  none: { en: 'None', nl: 'Geen' },
-  warm: { en: 'Warm', nl: 'Warm', lp: 0.65, drive: 0.1, bright: -0.15 },
-  cold: { en: 'Cold', nl: 'Koud', hp: 60, bright: 0.25, crush: 10 },
-  raw: { en: 'Raw', nl: 'Ruw', drive: 0.35, crush: 9, bright: 0.1 },
-  dreamy: { en: 'Dreamy', nl: 'Dromerig', verb: 1.5, room: 1.4, lp: 0.8, bright: -0.1 },
-  dark: { en: 'Dark', nl: 'Donker', pitch: -2, lp: 0.5, bright: -0.25 },
-  light: { en: 'Light', nl: 'Licht', pitch: 2, lp: 1.2, verb: 0.8, bright: 0.2 }
+  none: { en: 'None', nl: 'Geen', de: 'Keine' },
+  warm: { en: 'Warm', nl: 'Warm', de: 'Warm', lp: 0.65, drive: 0.1, bright: -0.15 },
+  cold: { en: 'Cold', nl: 'Koud', de: 'Kalt', hp: 60, bright: 0.25, crush: 10 },
+  raw: { en: 'Raw', nl: 'Ruw', de: 'Roh', drive: 0.35, crush: 9, bright: 0.1 },
+  dreamy: { en: 'Dreamy', nl: 'Dromerig', de: 'Verträumt', verb: 1.5, room: 1.4, lp: 0.8, bright: -0.1 },
+  dark: { en: 'Dark', nl: 'Donker', de: 'Dunkel', pitch: -2, lp: 0.5, bright: -0.25 },
+  light: { en: 'Light', nl: 'Licht', de: 'Hell', pitch: 2, lp: 1.2, verb: 0.8, bright: 0.2 }
 };
-const VERB = { dry: [0, 'Dry', 'Droog'], little: [0.3, 'A little', 'Beetje'], much: [0.7, 'Much', 'Veel'] };
+const VERB = { dry: [0, 'Dry', 'Droog', 'Trocken'], little: [0.3, 'A little', 'Beetje', 'Etwas'], much: [0.7, 'Much', 'Veel', 'Viel'] };
 // per slot: send amount for reverb and delay
 const SEND = { kick: [0.25, 0], snare: [1, 0.3], clap: [1, 0.4], chat: [0.4, 0.2], ohat: [0.5, 0.2], tom: [0.7, 0.2], perc: [0.8, 0.6], rim: [0.8, 0.7], shaker: [0.5, 0.3], fx: [1.2, 1],
   bass: [0.12, 0], sub: [0, 0], keys: [0.9, 0.5], pluck: [0.8, 0.8], pad: [1.2, 0.3], lead: [0.7, 0.7], drone: [1, 0], texture: [0.9, 0.4], riser: [1, 0.6], down: [1, 0.6], impact: [1.5, 0], loop: [0.4, 0.2] };
@@ -983,7 +1001,7 @@ function chipRow(el, items, cur, onPick, color) {
 function renderDir() {
   chipRow($('#genres'), Object.keys(GEN).map((k) => [k, GEN[k][lang], GEN[k].c]), S.genre, (k) => { S.genre = k; renderDir(); dirChanged(); });
   chipRow($('#moods'), Object.keys(MOOD).map((k) => [k, MOOD[k][lang]]), S.mood, (k) => { S.mood = k; renderDir(); dirChanged(); }, GEN[S.genre].c);
-  chipRow($('#verbs'), Object.keys(VERB).map((k) => [k, VERB[k][lang === 'nl' ? 2 : 1]]), S.verb, (k) => { S.verb = k; S.slots.forEach((s) => (s.p.verb = null)); renderDir(); dirChanged(); }, GEN[S.genre].c);
+  chipRow($('#verbs'), Object.keys(VERB).map((k) => [k, VERB[k][lang === 'nl' ? 2 : lang === 'de' ? 3 : 1]]), S.verb, (k) => { S.verb = k; S.slots.forEach((s) => (s.p.verb = null)); renderDir(); dirChanged(); }, GEN[S.genre].c);
   const ks = $('#key'); ks.innerHTML = '<option value="auto">' + t('auto_') + (S.x ? ' (' + NOTE[S.autoPc] + (S.autoMinor ? ' min' : ' maj') + ')' : '') + '</option>' + NOTE.map((n, i) => '<option value="' + i + '">' + n + '</option>').join('');
   ks.value = S.keyMode === 'auto' ? 'auto' : String(S.keyPc);
   const sc = $('#scale'); sc.innerHTML = '<option value="min">' + t('minor') + '</option><option value="maj">' + t('major') + '</option>'; sc.value = kMin() ? 'min' : 'maj'; sc.disabled = S.keyMode === 'auto';
