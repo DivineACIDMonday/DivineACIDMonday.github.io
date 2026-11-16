@@ -1,0 +1,15 @@
+{
+ "name": "Divine Sound Machine",
+ "short_name": "Sound Machine",
+ "description": "Record the world around you and turn it into a complete sample pack.",
+ "id": "/sound/",
+ "start_url": "/sound/",
+ "scope": "/sound/",
+ "display": "standalone",
+ "background_color": "#14151E",
+ "theme_color": "#14151E",
+ "icons": [
+  { "src": "/sound/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+  { "src": "/sound/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+ ]
+}
