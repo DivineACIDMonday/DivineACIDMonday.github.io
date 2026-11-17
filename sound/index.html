@@ -36,7 +36,11 @@ button{font:inherit;cursor:pointer}
 .btn:disabled{opacity:.4}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .chip{padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--soft);font-weight:600;font-size:14px;min-height:38px}
-.chip.has{border-color:var(--g);color:var(--ink)}
+.chip.st-test{background:color-mix(in srgb,var(--acc) 40%,transparent);border-color:var(--acc);color:var(--ink)}
+.chip.st-lock{background:var(--acc);border-color:var(--acc);color:#14151E}
+.chip.act{outline:2px solid #F3F1EA;outline-offset:2px}
+.chip.act.st-empty{background:color-mix(in srgb,var(--acc) 16%,transparent);color:var(--ink)}
+.tile.tent{background:color-mix(in srgb,var(--acc) 40%,#191A28);color:var(--ink);border-color:var(--acc)}
 .chip[aria-pressed=true]{background:var(--c,var(--acc));border-color:var(--c,var(--acc));color:#14151E}
 .lbl{font-size:13px;color:var(--soft);margin:6px 0 6px}
 .muted{color:var(--soft);font-size:14px}
@@ -514,7 +518,7 @@ const TXT = {
     found: '{d} of sound, {n} hits found', few: 'Few clear hits found; the drums are shaped from the sound itself.', removed: 'Removed', undo: 'Undo',
     micErr: 'No access to the microphone.', fileErr: 'This file cannot be read.', noRec: 'Recording is not supported in this browser; import a file instead.',
     step: '{i} of 16', fromHit: 'From the moment at {t}', fromSel: 'From your selection at {t}', fromReg: 'From the stretch at {t}', fromLoop: 'Built from your drums',
-    done: 'Pack complete', tapReplace: 'This is your current {s}. Tap {s} again to use this moment instead.', tapAlso: 'This moment is already your {a}. Tap {b} again to use it as {b} too.', usedAlso: 'This moment is already your {a}. Use it as {b} too?', replaceQ: '{s} is locked with another sound. Replace it?', yes: 'Yes', no: 'No', lockedAs: 'Locked as: {s}', guess: 'Sounds like: {s}', moveTo: 'Move to', moved: 'Moved to {s}', guide: 'Listen and choose', prevM: 'Back', skipM: 'Next', fillRest: 'Fill the rest', moment: '{i} of {n}', guideHint: 'Listen to a moment, tap what it becomes and hear the result. Next takes you to the following moment.', sMach: 'Machine', sTone: 'Tone', sAtt: 'Attack', sRel: 'Release', loopT: 'Repeat', recDl: 'Download recording', burpH: 'Burp', burpHint: 'One tap makes a complete track with your pack. Every burp is different. Or load a MIDI from your machines.', burpGen: 'Genre for the burp', same: 'Same as pack', loadMidi: 'Load MIDI', play: 'Play', stopT: 'Stop', burping: 'Burping your track', midiErr: 'This MIDI cannot be read.', midiFirst: 'Make a pack first, then load your MIDI.', routedMidi: 'That was a MIDI file; it now plays with your pack.', routedAudio: 'That was a sound file; it is now your new recording.', mp3ing: 'Writing the MP3', secs: { intro: 'Intro', verse: 'Verse', prechorus: 'Pre', chorus: 'Chorus', drop: 'Drop', build: 'Build', break: 'Break', outro: 'Outro' }, files: '{n} files, 24 bit WAV', choose: 'Select a piece first', assigned: 'Made it a {s}', selFirst: 'Tap a sound in the pack first'
+    done: 'Pack complete', stTest: '{s}: testing. Every moment you choose now goes into {s}. Tap {s} again to lock it.', stLock: '{s} is locked. Tap {s} again to unlock and test other moments.', stEmpty: '{s} is active. Choose a moment in your recording.', locked2: '{s} locked', tapReplace: 'This is your current {s}. Tap {s} again to use this moment instead.', tapAlso: 'This moment is already your {a}. Tap {b} again to use it as {b} too.', usedAlso: 'This moment is already your {a}. Use it as {b} too?', replaceQ: '{s} is locked with another sound. Replace it?', yes: 'Yes', no: 'No', lockedAs: 'Locked as: {s}', guess: 'Sounds like: {s}', moveTo: 'Move to', moved: 'Moved to {s}', guide: 'Listen and choose', prevM: 'Back', skipM: 'Next', fillRest: 'Fill the rest', moment: '{i} of {n}', guideHint: 'Listen to a moment, tap what it becomes and hear the result. Next takes you to the following moment.', sMach: 'Machine', sTone: 'Tone', sAtt: 'Attack', sRel: 'Release', loopT: 'Repeat', recDl: 'Download recording', burpH: 'Burp', burpHint: 'One tap makes a complete track with your pack. Every burp is different. Or load a MIDI from your machines.', burpGen: 'Genre for the burp', same: 'Same as pack', loadMidi: 'Load MIDI', play: 'Play', stopT: 'Stop', burping: 'Burping your track', midiErr: 'This MIDI cannot be read.', midiFirst: 'Make a pack first, then load your MIDI.', routedMidi: 'That was a MIDI file; it now plays with your pack.', routedAudio: 'That was a sound file; it is now your new recording.', mp3ing: 'Writing the MP3', secs: { intro: 'Intro', verse: 'Verse', prechorus: 'Pre', chorus: 'Chorus', drop: 'Drop', build: 'Build', break: 'Break', outro: 'Outro' }, files: '{n} files, 24 bit WAV', choose: 'Select a piece first', assigned: 'Made it a {s}', selFirst: 'Tap a sound in the pack first'
   },
   nl: {
     h1: '1. Geluidsbron', rec: 'Opnemen', imp: 'Audio of video importeren', srcHint: 'Neem zo lang op als je wilt: een bos, je keuken, een trein, je eigen stem. Alles blijft op je telefoon.',
@@ -530,7 +534,7 @@ const TXT = {
     found: '{d} geluid, {n} klappen gevonden', few: 'Weinig duidelijke klappen gevonden; de drums worden uit het geluid zelf gevormd.', removed: 'Weggehaald', undo: 'Terug',
     micErr: 'Geen toegang tot de microfoon.', fileErr: 'Dit bestand kan ik niet lezen.', noRec: 'Opnemen werkt niet in deze browser; importeer een bestand.',
     step: '{i} van 16', fromHit: 'Van het moment op {t}', fromSel: 'Van je selectie op {t}', fromReg: 'Van het stuk op {t}', fromLoop: 'Gebouwd uit je drums',
-    done: 'Pack compleet', tapReplace: 'Dit is je huidige {s}. Tik nog eens op {s} om dit moment ervoor te gebruiken.', tapAlso: 'Dit moment is al je {a}. Tik nog eens op {b} om het ook als {b} te gebruiken.', usedAlso: 'Dit moment is al je {a}. Ook als {b} gebruiken?', replaceQ: '{s} staat vast met een ander geluid. Vervangen?', yes: 'Ja', no: 'Nee', lockedAs: 'Vastgezet als: {s}', guess: 'Klinkt als: {s}', moveTo: 'Verplaats naar', moved: 'Verplaatst naar {s}', guide: 'Luister en kies', prevM: 'Vorige', skipM: 'Volgende', fillRest: 'Vul de rest aan', moment: '{i} van {n}', guideHint: 'Luister naar een moment, tik wat het wordt en hoor het resultaat. Met Volgende ga je naar het volgende moment.', sMach: 'Machine', sTone: 'Toon', sAtt: 'Aanzet', sRel: 'Uitklink', loopT: 'Herhaal', recDl: 'Opname downloaden', burpH: 'Burp', burpHint: 'Eén tik maakt een complete track met jouw pack. Elke burp is anders. Of laad een MIDI uit je machines.', burpGen: 'Genre voor de burp', same: 'Zelfde als pack', loadMidi: 'MIDI laden', play: 'Speel', stopT: 'Stop', burping: 'Je track wordt geburpt', midiErr: 'Deze MIDI kan ik niet lezen.', midiFirst: 'Maak eerst een pack, laad dan je MIDI.', routedMidi: 'Dat was een MIDI bestand; hij speelt nu met je pack.', routedAudio: 'Dat was een geluidsbestand; het is nu je nieuwe opname.', mp3ing: 'MP3 wordt geschreven', secs: { intro: 'Intro', verse: 'Couplet', prechorus: 'Pre', chorus: 'Refrein', drop: 'Drop', build: 'Opbouw', break: 'Break', outro: 'Outro' }, files: '{n} bestanden, 24 bit WAV', choose: 'Kies eerst een stuk', assigned: 'Er is een {s} van gemaakt', selFirst: 'Tik eerst op een geluid in het pack'
+    done: 'Pack compleet', stTest: '{s}: aan het testen. Elk moment dat je nu kiest gaat in {s}. Tik nog eens op {s} om vast te zetten.', stLock: '{s} staat vast. Tik nog eens op {s} om los te maken en andere momenten te testen.', stEmpty: '{s} is actief. Kies een moment in je opname.', locked2: '{s} vastgezet', tapReplace: 'Dit is je huidige {s}. Tik nog eens op {s} om dit moment ervoor te gebruiken.', tapAlso: 'Dit moment is al je {a}. Tik nog eens op {b} om het ook als {b} te gebruiken.', usedAlso: 'Dit moment is al je {a}. Ook als {b} gebruiken?', replaceQ: '{s} staat vast met een ander geluid. Vervangen?', yes: 'Ja', no: 'Nee', lockedAs: 'Vastgezet als: {s}', guess: 'Klinkt als: {s}', moveTo: 'Verplaats naar', moved: 'Verplaatst naar {s}', guide: 'Luister en kies', prevM: 'Vorige', skipM: 'Volgende', fillRest: 'Vul de rest aan', moment: '{i} van {n}', guideHint: 'Luister naar een moment, tik wat het wordt en hoor het resultaat. Met Volgende ga je naar het volgende moment.', sMach: 'Machine', sTone: 'Toon', sAtt: 'Aanzet', sRel: 'Uitklink', loopT: 'Herhaal', recDl: 'Opname downloaden', burpH: 'Burp', burpHint: 'Eén tik maakt een complete track met jouw pack. Elke burp is anders. Of laad een MIDI uit je machines.', burpGen: 'Genre voor de burp', same: 'Zelfde als pack', loadMidi: 'MIDI laden', play: 'Speel', stopT: 'Stop', burping: 'Je track wordt geburpt', midiErr: 'Deze MIDI kan ik niet lezen.', midiFirst: 'Maak eerst een pack, laad dan je MIDI.', routedMidi: 'Dat was een MIDI bestand; hij speelt nu met je pack.', routedAudio: 'Dat was een geluidsbestand; het is nu je nieuwe opname.', mp3ing: 'MP3 wordt geschreven', secs: { intro: 'Intro', verse: 'Couplet', prechorus: 'Pre', chorus: 'Refrein', drop: 'Drop', build: 'Opbouw', break: 'Break', outro: 'Outro' }, files: '{n} bestanden, 24 bit WAV', choose: 'Kies eerst een stuk', assigned: 'Er is een {s} van gemaakt', selFirst: 'Tik eerst op een geluid in het pack'
   },
   de: {
     h1: '1. Klangquelle', rec: 'Aufnehmen', imp: 'Audio oder Video importieren', srcHint: 'Nimm so lange auf, wie du willst: einen Wald, deine Küche, einen Zug, deine eigene Stimme. Alles bleibt auf deinem Handy.',
@@ -546,7 +550,7 @@ const TXT = {
     found: '{d} Klang, {n} Schläge gefunden', few: 'Wenige klare Schläge gefunden; die Drums werden aus dem Klang selbst geformt.', removed: 'Entfernt', undo: 'Zurück',
     micErr: 'Kein Zugriff auf das Mikrofon.', fileErr: 'Diese Datei kann ich nicht lesen.', noRec: 'Aufnehmen geht in diesem Browser nicht; importiere eine Datei.',
     step: '{i} von 16', fromHit: 'Vom Moment bei {t}', fromSel: 'Von deiner Auswahl bei {t}', fromReg: 'Vom Abschnitt bei {t}', fromLoop: 'Aus deinen Drums gebaut',
-    done: 'Pack fertig', tapReplace: 'Das ist dein aktueller {s}. Tippe nochmal auf {s}, um stattdessen diesen Moment zu nehmen.', tapAlso: 'Dieser Moment ist schon dein {a}. Tippe nochmal auf {b}, um ihn auch als {b} zu nehmen.', usedAlso: 'Dieser Moment ist schon dein {a}. Auch als {b} nehmen?', replaceQ: '{s} ist mit einem anderen Klang festgelegt. Ersetzen?', yes: 'Ja', no: 'Nein', lockedAs: 'Festgelegt als: {s}', guess: 'Klingt wie: {s}', moveTo: 'Verschieben nach', moved: 'Verschoben nach {s}', guide: 'Hören und wählen', prevM: 'Zurück', skipM: 'Weiter', fillRest: 'Rest auffüllen', moment: '{i} von {n}', guideHint: 'Hör dir einen Moment an, tippe, was er wird, und hör das Ergebnis. Mit Weiter kommst du zum nächsten Moment.', sMach: 'Maschine', sTone: 'Ton', sAtt: 'Anschlag', sRel: 'Ausklang', loopT: 'Wiederholen', recDl: 'Aufnahme herunterladen', burpH: 'Burp', burpHint: 'Ein Tipp macht einen kompletten Track mit deinem Pack. Jeder Burp ist anders. Oder lade eine MIDI aus deinen Maschinen.', burpGen: 'Genre für den Burp', same: 'Wie das Pack', loadMidi: 'MIDI laden', play: 'Abspielen', stopT: 'Stopp', burping: 'Dein Track wird geburpt', midiErr: 'Diese MIDI kann ich nicht lesen.', midiFirst: 'Mach zuerst ein Pack, lade dann deine MIDI.', routedMidi: 'Das war eine MIDI Datei; sie spielt jetzt mit deinem Pack.', routedAudio: 'Das war eine Klangdatei; sie ist jetzt deine neue Aufnahme.', mp3ing: 'MP3 wird geschrieben', secs: { intro: 'Intro', verse: 'Strophe', prechorus: 'Pre', chorus: 'Refrain', drop: 'Drop', build: 'Aufbau', break: 'Break', outro: 'Outro' },
+    done: 'Pack fertig', stTest: '{s}: wird getestet. Jeder Moment, den du jetzt wählst, geht in {s}. Tippe nochmal auf {s}, um ihn festzulegen.', stLock: '{s} ist festgelegt. Tippe nochmal auf {s}, um ihn zu lösen und andere Momente zu testen.', stEmpty: '{s} ist aktiv. Wähle einen Moment in deiner Aufnahme.', locked2: '{s} festgelegt', tapReplace: 'Das ist dein aktueller {s}. Tippe nochmal auf {s}, um stattdessen diesen Moment zu nehmen.', tapAlso: 'Dieser Moment ist schon dein {a}. Tippe nochmal auf {b}, um ihn auch als {b} zu nehmen.', usedAlso: 'Dieser Moment ist schon dein {a}. Auch als {b} nehmen?', replaceQ: '{s} ist mit einem anderen Klang festgelegt. Ersetzen?', yes: 'Ja', no: 'Nein', lockedAs: 'Festgelegt als: {s}', guess: 'Klingt wie: {s}', moveTo: 'Verschieben nach', moved: 'Verschoben nach {s}', guide: 'Hören und wählen', prevM: 'Zurück', skipM: 'Weiter', fillRest: 'Rest auffüllen', moment: '{i} von {n}', guideHint: 'Hör dir einen Moment an, tippe, was er wird, und hör das Ergebnis. Mit Weiter kommst du zum nächsten Moment.', sMach: 'Maschine', sTone: 'Ton', sAtt: 'Anschlag', sRel: 'Ausklang', loopT: 'Wiederholen', recDl: 'Aufnahme herunterladen', burpH: 'Burp', burpHint: 'Ein Tipp macht einen kompletten Track mit deinem Pack. Jeder Burp ist anders. Oder lade eine MIDI aus deinen Maschinen.', burpGen: 'Genre für den Burp', same: 'Wie das Pack', loadMidi: 'MIDI laden', play: 'Abspielen', stopT: 'Stopp', burping: 'Dein Track wird geburpt', midiErr: 'Diese MIDI kann ich nicht lesen.', midiFirst: 'Mach zuerst ein Pack, lade dann deine MIDI.', routedMidi: 'Das war eine MIDI Datei; sie spielt jetzt mit deinem Pack.', routedAudio: 'Das war eine Klangdatei; sie ist jetzt deine neue Aufnahme.', mp3ing: 'MP3 wird geschrieben', secs: { intro: 'Intro', verse: 'Strophe', prechorus: 'Pre', chorus: 'Refrain', drop: 'Drop', build: 'Aufbau', break: 'Break', outro: 'Outro' },
     files: '{n} Dateien, 24 Bit WAV', choose: 'Wähle zuerst ein Stück', assigned: 'Daraus ist ein {s} geworden', selFirst: 'Tippe zuerst auf einen Klang im Pack'
   }
 };
@@ -1209,7 +1213,7 @@ function dirChanged() { if (!S.made) return; clearTimeout(dirT); dirT = setTimeo
 function renderGrid() {
   const g = $('#grid'), xg = $('#xgrid'); g.innerHTML = ''; xg.innerHTML = '';
   S.slots.forEach((s, i) => {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'tile' + (s.out ? ' full' : '') + (i === S.sel ? ' sel' : '') + (s.keep ? ' keep' : '') + (s.busy ? ' busy' : '');
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'tile' + (s.out ? (s.keep || !s.src || s.src.kind !== 'man' ? ' full' : ' tent') : '') + (i === S.sel ? ' sel' : '') + (s.keep ? ' keep' : '') + (s.busy ? ' busy' : '');
     b.innerHTML = '<span></span><small></small>'; b.firstChild.textContent = sName(s.id);
     b.lastChild.textContent = s.grp === 't' && s.out ? NOTE[kPc()] : s.id === 'loop' && s.out ? recipe().bpm + ' BPM' : '';
     b.onclick = () => tapTile(i);
@@ -1261,13 +1265,13 @@ const curS = () => S.slots[S.sel];
   el.onchange = () => { const s = curS(); if (!s) return; const v = +el.value, key = { Mach: 'mach', Tone: 'tone', Att: 'att', Rel: 'rel', Pitch: 'pitch', Len: 'len', Drive: 'drive', Verb: 'verb' }[n]; s.p[key] = v; if (s.src || s.id === 'loop') render1(s, true); };
 });
 $('#sRev').onchange = () => { const s = curS(); if (!s) return; s.p.rev = $('#sRev').checked; render1(s, true); };
-$('#sKeep').onchange = () => { const s = curS(); if (!s) return; s.keep = $('#sKeep').checked; renderGrid(); };
+$('#sKeep').onchange = () => { const s = curS(); if (!s) return; s.keep = $('#sKeep').checked; renderGrid(); renderAssign(); status(); };
 $('#bPlayMade').onclick = () => { const s = curS(); if (s && s.out) audition(s.out); };
 $('#bLoopT').onclick = () => { loopOn = !loopOn; $('#bLoopT').setAttribute('aria-pressed', String(loopOn)); const s = curS(); if (loopOn && s && s.out) playLoop(s.out.wet || s.out.dry); else stopPlay(); };
 $('#bPlayRaw').onclick = () => { const s = curS(); if (s && s.out && s.out.raw) play(s.out.raw); };
 $('#bVary').onclick = () => { const s = curS(); if (!s) return; s.seed = rnd32(); if (!s.src && s.id !== 'loop') s.src = { kind: 'c', i: 0 }; render1(s, true); };
 $('#bPick').onclick = () => {
-  const s = curS(); if (!s) return; S.assignTo = s.id; renderAssign();
+  const s = curS(); if (!s) return; S.active = s.id; renderAssign(); status();
   if (s.src) { let o = null; if (s.src.kind === 'man') o = s.src; else { const c = (S.rank[s.id] || [])[s.src.i]; if (c) o = c.k === 's' ? S.segs[c.i] : S.regs[c.i]; } if (o) { S.view.s = Math.max(0, o.s / S.sr - S.view.d * 0.25); S.selR = [o.s, o.e]; } }
   drawWave(); $('#cWave').scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
@@ -1360,7 +1364,7 @@ $('#zOut').onclick = () => { const i0 = ZOOM.findIndex((z) => z >= S.view.d - 1e
     S.selR = best ? [best.s, best.e] : [at, Math.min(S.x.length, at + Math.round(0.5 * S.sr))]; drawWave(); playSel();
   });
 })();
-function playSel() { if (!S.selR) return; pend = null; showGuess(); showLocked(); const x = fades(slice(S.selR[0], S.selR[1]), 0.002, 0.01); play([x, x]); }
+function playSel() { if (!S.selR) return; showGuess(); const a = S.active && slot(S.active); if (a && !a.keep) { tryAssign(a.id); return; } status(); const x = fades(slice(S.selR[0], S.selR[1]), 0.002, 0.01); play([x, x]); }
 $('#bPlaySel').onclick = playSel;
 // the machine's guess for a moment; only a hint, you decide
 function pct(arr, v) { if (!arr || !arr.length) return 0; let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] < v) lo = m + 1; else hi = m; } return lo / arr.length; }
@@ -1398,28 +1402,34 @@ function ask(msg) { return new Promise((res) => { const el = $('#confirm'); $('#
 const sameMoment = (a, b) => a && b && Math.abs(a.s - b[0]) < 64 && Math.abs(a.e - b[1]) < 64;
 function usedBy(selR) { return S.slots.filter((q) => q.src && q.src.kind === 'man' && sameMoment(q.src, selR)); }
 function showLocked() { const u = S.selR ? usedBy(S.selR) : []; $('#lockedAs').textContent = u.length ? t('lockedAs', { s: u.map((q) => sName(q.id)).join(', ') }) : ''; }
-let pend = null;
+// three states per sound: empty, testing (half colour) and locked (full colour); the active one has a white ring
+function stateOf(sl) { return !sl.src ? 'empty' : sl.keep ? 'lock' : 'test'; }
+function status() { const a = S.active && slot(S.active); if (!a) { showLocked(); return; } const k = { empty: 'stEmpty', test: 'stTest', lock: 'stLock' }[stateOf(a)]; $('#lockedAs').textContent = t(k, { s: sName(a.id) }); }
+async function tryAssign(id) {
+  if (!S.selR || S.selR[1] - S.selR[0] < 64) { toast(t('choose')); return; }
+  const sl = slot(id), o = selInfo(), [s, e] = S.selR, wasMan = sl.src && sl.src.kind === 'man';
+  sl.src = { kind: 'man', s, e, f0: o.f0, clar: o.clar, lowR: o.lowR, highR: o.highR, cen: o.cen || 2000, flat: o.flat == null ? 0.3 : o.flat, len: (e - s) / S.sr, pk: o.pk || 1 };
+  sl.keep = false; if (!wasMan) sl.p.mach = 0; sl.seed = sl.seed || rnd32(); S.sel = S.slots.indexOf(sl);
+  if (!S.ir) { const R = recipe(); S.ir = makeIR(Math.max(0.6, R.room), R.bright, S.seed); }
+  renderAssign(); status(); await render1(sl, true); drawWave(); renderAssign(); status();
+}
 function renderAssign() {
-  chipRow($('#assign'), SLOTS.filter((q) => q[0] !== 'loop').map((q) => [q[0], sName(q[0])]), S.assignTo, async (id) => {
-    if (!S.selR || S.selR[1] - S.selR[0] < 64) { toast(t('choose')); return; }
-    const tgt = slot(id), again = pend && pend.id === id && pend.sel === S.selR && performance.now() - pend.t < 6000; pend = null;
-    // a filled slot: first tap lets you hear what is in it, a second tap uses this moment
-    if (tgt.out && tgt.src && sameMoment(tgt.src, S.selR)) { S.assignTo = id; S.sel = S.slots.indexOf(tgt); renderAssign(); renderGrid(); renderEd(); showLocked(); audition(tgt.out); return; }
-    if (!again && tgt.out) { audition(tgt.out); S.sel = S.slots.indexOf(tgt); renderGrid(); renderEd(); $('#lockedAs').textContent = t('tapReplace', { s: sName(id) }); pend = { id, sel: S.selR, t: performance.now() }; return; }
-    const others = usedBy(S.selR).filter((q) => q.id !== id);
-    if (!again && others.length) { $('#lockedAs').textContent = t('tapAlso', { a: others.map((q) => sName(q.id)).join(', '), b: sName(id) }); pend = { id, sel: S.selR, t: performance.now() }; return; }
-    const o = selInfo(), [s, e] = S.selR;
-    const sl = slot(id); sl.src = { kind: 'man', s, e, f0: o.f0, clar: o.clar, lowR: o.lowR, highR: o.highR, cen: o.cen || 2000, flat: o.flat == null ? 0.3 : o.flat, len: (e - s) / S.sr, pk: o.pk || 1 };
-    sl.keep = true; sl.p.mach = 0; sl.seed = sl.seed || rnd32(); S.assignTo = id; S.sel = S.slots.indexOf(sl); renderAssign();
-    if (!S.ir) { const R = recipe(); S.ir = makeIR(Math.max(0.6, R.room), R.bright, S.seed); }
-    await render1(sl, true); toast(t('assigned', { s: sName(id) })); showLocked(); drawWave(); renderAssign();
-  }, GEN[S.genre].c);
-  [...$('#assign').children].forEach((b, k) => { const id = SLOTS.filter((q) => q[0] !== 'loop')[k][0]; if (slot(id).out) b.classList.add('has'); });
+  const el = $('#assign'); el.innerHTML = '';
+  for (const q of SLOTS) { if (q[0] === 'loop') continue; const id = q[0], sl = slot(id), st = stateOf(sl), b = document.createElement('button'); b.type = 'button';
+    b.className = 'chip st-' + st + (S.active === id ? ' act' : ''); b.textContent = sName(id); b.style.setProperty('--c', GEN[S.genre].c);
+    b.onclick = async () => {
+      if (S.active !== id) { S.active = id; S.sel = S.slots.indexOf(sl); renderAssign(); renderGrid(); renderEd(); status(); if (sl.out) audition(sl.out); else if (S.selR && !usedBy(S.selR).length) await tryAssign(id); return; }
+      if (st === 'test') { sl.keep = true; toast(t('locked2', { s: sName(id) })); }
+      else if (st === 'lock') { sl.keep = false; }
+      else if (S.selR) { await tryAssign(id); return; }
+      renderAssign(); renderGrid(); renderEd(); status(); drawWave();
+    };
+    el.append(b); }
 }
 
 // listen and choose: the best moments of your recording, one by one
 function moments() { const segs = S.segs.slice().sort((a, b) => b.pk - a.pk).filter((q) => q.len > 0.04 && !q.shaped), out = []; for (const q of segs) { if (out.length >= 24) break; if (out.every((o) => Math.abs(o.s - q.s) > 0.15 * S.sr)) out.push(q); } out.sort((a, b) => a.s - b.s); for (const r of S.regs.slice(0, 4)) out.push({ s: r.s, e: Math.min(r.e, r.s + Math.round(4 * S.sr)) }); return out; }
-function showMoment() { const q = S.moms[S.mi]; if (!q) return; S.assignTo = null; renderAssign(); S.selR = [q.s, q.e]; S.view.s = Math.max(0, q.s / S.sr - S.view.d * 0.3); viewClamp(); drawWave(); playSel(); $('#momInfo').textContent = t('moment', { i: S.mi + 1, n: S.moms.length }); }
+function showMoment() { const q = S.moms[S.mi]; if (!q) return; S.selR = [q.s, q.e]; S.view.s = Math.max(0, q.s / S.sr - S.view.d * 0.3); viewClamp(); drawWave(); playSel(); $('#momInfo').textContent = t('moment', { i: S.mi + 1, n: S.moms.length }); }
 function stepMoment(d) { if (!S.moms) return; S.mi = clamp(S.mi + d, 0, S.moms.length - 1); showMoment(); }
 async function fillRest() { const used = new Set(), r = rng32(S.seed ^ 0x5f); const ids = [];
   for (const s of S.slots) { if (s.src || s.id === 'loop') continue; const l = S.rank[s.id] || []; if (!l.length) continue; let k = Math.floor(r() * Math.min(3, l.length)); for (let j = 0; j < l.length; j++) { const c = l[(k + j) % l.length]; if (!used.has(c.k + c.i)) { k = (k + j) % l.length; break; } } used.add(l[k].k + l[k].i); s.src = { kind: 'c', i: k }; s.seed = rnd32(); ids.push(s.id); }
@@ -1449,7 +1459,7 @@ async function loadBlob(blob) {
   const n = buf.length, nc = buf.numberOfChannels, x = new Float32Array(n);
   for (let ch = 0; ch < nc; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < n; i++) x[i] += d[i] / nc; }
   let dc = 0; for (let i = 0; i < n; i++) dc += x[i]; dc /= n || 1; if (Math.abs(dc) > 1e-6) for (let i = 0; i < n; i++) x[i] -= dc;
-  newSlots(); S.x = x; S.sr = buf.sampleRate; S.dur = n / S.sr; S.made = false; S.sel = -1; S.selR = null; S.guided = false; ovPeaks = null; S.view = { s: 0, d: Math.min(4, Math.max(0.5, S.dur)) };
+  newSlots(); S.x = x; S.sr = buf.sampleRate; S.dur = n / S.sr; S.made = false; S.sel = -1; S.selR = null; S.guided = false; S.active = null; ovPeaks = null; S.view = { s: 0, d: Math.min(4, Math.max(0.5, S.dur)) };
   try { await analyse(); } catch (e) { console.error(e); }
   busy(null);
   S.seed = rnd32(); S.name = packName(); if (typeof BURP !== 'undefined') BURP.n = 0;
@@ -1541,7 +1551,7 @@ $('#bLoose').onclick = async () => {
 // ---------- clear and language ----------
 function clearAll() {
   stopPlay(); if (rec) { try { rec.mr.stop(); rec.stream.getTracks().forEach((q) => q.stop()); } catch (e) {} rec = null; }
-  S.x = null; S.dur = 0; S.segs = []; S.regs = []; S.rank = {}; S.made = false; S.sel = -1; S.selR = null; S.guided = false; S.ir = null; S.assignTo = null; ovPeaks = null;
+  S.x = null; S.dur = 0; S.segs = []; S.regs = []; S.rank = {}; S.made = false; S.sel = -1; S.selR = null; S.guided = false; S.active = null; S.ir = null; S.assignTo = null; ovPeaks = null;
   S.genre = 'free'; S.mood = 'none'; S.verb = 'little'; S.delay = true; S.keyMode = 'auto'; S.bpm = null; S.vars = 1; S.both = true; S.raw = true; S.clean = true;
   $('#delay').checked = true; $('#vars').value = '1'; $('#both').checked = true; $('#raw').checked = true; $('#clean').checked = true;
   burpReset(); newSlots(); ['#srcRec', '#srcDone', '#cDir', '#cPack', '#cEd', '#cWave', '#cExp', '#cBurp'].forEach((q) => ($(q).hidden = true)); $('#srcIdle').hidden = false; $('#expInfo').textContent = '';
