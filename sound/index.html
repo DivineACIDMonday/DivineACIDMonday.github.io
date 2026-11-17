@@ -39,6 +39,8 @@ button{font:inherit;cursor:pointer}
 .chip.st-test{background:color-mix(in srgb,var(--acc) 40%,transparent);border-color:var(--acc);color:var(--ink)}
 .chip.st-lock{background:var(--acc);border-color:var(--acc);color:#14151E}
 .chip.act{outline:2px solid #F3F1EA;outline-offset:2px}
+@keyframes lockflash{0%{box-shadow:0 0 0 0 rgba(94,200,192,.9);transform:scale(1)}30%{box-shadow:0 0 0 10px rgba(94,200,192,.35);transform:scale(1.12);background:#F3F1EA}100%{box-shadow:0 0 0 18px rgba(94,200,192,0);transform:scale(1)}}
+.chip.flash{animation:lockflash .8s ease-out}
 .chip.act.st-empty{background:color-mix(in srgb,var(--acc) 16%,transparent);color:var(--ink)}
 .tile.tent{background:color-mix(in srgb,var(--acc) 40%,#191A28);color:var(--ink);border-color:var(--acc)}
 .chip[aria-pressed=true]{background:var(--c,var(--acc));border-color:var(--c,var(--acc));color:#14151E}
@@ -1416,10 +1418,10 @@ async function tryAssign(id) {
 function renderAssign() {
   const el = $('#assign'); el.innerHTML = '';
   for (const q of SLOTS) { if (q[0] === 'loop') continue; const id = q[0], sl = slot(id), st = stateOf(sl), b = document.createElement('button'); b.type = 'button';
-    b.className = 'chip st-' + st + (S.active === id ? ' act' : ''); b.textContent = sName(id); b.style.setProperty('--c', GEN[S.genre].c);
+    b.className = 'chip st-' + st + (S.active === id ? ' act' : '') + (S.flash === id ? ' flash' : ''); b.textContent = sName(id); b.style.setProperty('--c', GEN[S.genre].c);
     b.onclick = async () => {
       if (S.active !== id) { S.active = id; S.sel = S.slots.indexOf(sl); renderAssign(); renderGrid(); renderEd(); status(); if (sl.out) audition(sl.out); else if (S.selR && !usedBy(S.selR).length) await tryAssign(id); return; }
-      if (st === 'test') { sl.keep = true; toast(t('locked2', { s: sName(id) })); }
+      if (st === 'test') { sl.keep = true; toast(t('locked2', { s: sName(id) })); S.flash = id; setTimeout(() => { S.flash = null; }, 900); }
       else if (st === 'lock') { sl.keep = false; }
       else if (S.selR) { await tryAssign(id); return; }
       renderAssign(); renderGrid(); renderEd(); status(); drawWave();
