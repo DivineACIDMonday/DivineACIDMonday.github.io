@@ -51,12 +51,14 @@ button{font:inherit;cursor:pointer}
 canvas{display:block;width:100%;border-radius:10px;background:#171826;touch-action:none}
 #ov{height:46px;margin-bottom:8px}#trk{height:64px;margin:10px 0}.btn.burp{background:var(--g);border-color:var(--g);color:#14151E;font-size:20px;letter-spacing:.08em}#det{height:140px}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.tile{position:relative;aspect-ratio:1/0.82;border-radius:12px;border:1px solid var(--line);background:#191A28;color:var(--soft);font-weight:700;font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px;user-select:none}
+.tile{position:relative;aspect-ratio:1/0.82;padding-top:14px !important;border-radius:12px;border:1px solid var(--line);background:#191A28;color:var(--soft);font-weight:700;font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px;user-select:none}
 .tile small{font-weight:500;font-size:11px;opacity:.8}
 .tile.full{background:var(--g);color:#14151E;border-color:var(--g)}
 .tile.sel{outline:3px solid var(--ink);outline-offset:1px}
 .tile.keep::after{content:"";position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#14151E}
 .tile.busy{opacity:.55}
+.tile .dl{position:absolute;right:3px;top:3px;width:24px;height:24px;border-radius:7px;opacity:.75;display:flex;align-items:center;justify-content:center;background:rgba(20,21,30,.18);color:#14151E}
+.tile.tent .dl{color:var(--ink);background:rgba(20,21,30,.35)}
 .sub{font-size:12px;color:var(--soft);margin:10px 0 6px}
 .slider{display:grid;grid-template-columns:84px 1fr 48px;gap:8px;align-items:center;margin:6px 0}
 .slider span{font-size:14px;color:var(--soft)}.slider output{font:600 13px ui-monospace,monospace;text-align:right}
@@ -155,7 +157,7 @@ footer{color:var(--soft);font-size:13px;text-align:center;padding:24px 0 96px}
   <div class="slider"><span data-t="sDrive"></span><input type="range" id="sDrive" min="-1" max="1" step="0.05" value="0"><output id="oDrive">0</output></div>
   <div class="slider"><span data-t="sVerb"></span><input type="range" id="sVerb" min="0" max="1" step="0.05" value="0.5"><output id="oVerb">0.50</output></div>
   <div class="row" style="margin:8px 0"><label class="row"><input type="checkbox" id="sRev"> <span data-t="sRev"></span></label><span class="sp"></span><label class="row"><input type="checkbox" id="sKeep"> <span data-t="keep"></span></label></div>
-  <div class="row"><button class="btn" id="bVary" type="button" data-t="vary"></button><button class="btn" id="bPick" type="button" data-t="pick"></button><span class="sp"></span><select id="moveTo" aria-label="move"></select><button class="btn acc" id="bNext" type="button" data-t="next" hidden></button></div>
+  <div class="row"><button class="btn" id="bDlOne" type="button">WAV</button><button class="btn" id="bVary" type="button" data-t="vary"></button><button class="btn" id="bPick" type="button" data-t="pick"></button><span class="sp"></span><select id="moveTo" aria-label="move"></select><button class="btn acc" id="bNext" type="button" data-t="next" hidden></button></div>
 </section>
 
 <section class="card" id="cBurp" hidden>
@@ -1243,11 +1245,14 @@ function renderGrid() {
     b.innerHTML = '<span></span><small></small>'; b.firstChild.textContent = sName(s.id);
     b.lastChild.textContent = s.grp === 't' && s.out ? NOTE[kPc()] : s.id === 'loop' && s.out ? recipe().bpm + ' BPM' : '';
     b.onclick = () => tapTile(i);
+    if (s.out) { const d = document.createElement('span'); d.className = 'dl'; d.setAttribute('role', 'button'); d.setAttribute('aria-label', 'WAV'); d.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>'; d.onclick = (ev) => { ev.stopPropagation(); dlOne(s); }; b.append(d); }
     (s.grp === 'x' ? xg : g).append(b);
   });
   const R = recipe(); $('#pInfo').textContent = (S.x ? world()[lang] + ' · ' : '') + GEN[S.genre][lang] + (S.mood !== 'none' ? ' · ' + MOOD[S.mood][lang] : '') + ' · ' + keyName() + ' · ' + R.bpm + ' BPM';
   $('#pName').textContent = S.name;
 }
+// one sound as its own WAV: the version you hear when you tap it
+function dlOne(s) { if (!s || !s.out) return; const R = recipe(); let label = fName(s.id); if (s.grp === 't' || s.id === 'drone') label += ' ' + keyName(); if (s.id === 'loop') label += ' ' + R.bpm + ' BPM'; dl(new Blob([wav24(s.out.wet || s.out.dry)], { type: 'audio/wav' }), safe((S.name || 'Divine Sound') + ' ' + label) + '.wav'); }
 let lastTap = { i: -1, t: 0 };
 function tapTile(i) {
   const now = performance.now(), s = S.slots[i];
@@ -1295,6 +1300,7 @@ $('#sKeep').onchange = () => { const s = curS(); if (!s) return; s.keep = $('#sK
 $('#bPlayMade').onclick = () => { const s = curS(); if (s && s.out) audition(s.out); };
 $('#bLoopT').onclick = () => { loopOn = !loopOn; $('#bLoopT').setAttribute('aria-pressed', String(loopOn)); const s = curS(); if (loopOn && s && s.out) playLoop(s.out.wet || s.out.dry); else stopPlay(); };
 $('#bPlayRaw').onclick = () => { const s = curS(); if (s && s.out && s.out.raw) play(s.out.raw); };
+$('#bDlOne').onclick = () => dlOne(curS());
 $('#bVary').onclick = () => { const s = curS(); if (!s) return; s.seed = rnd32(); if (!s.src && s.id !== 'loop') s.src = { kind: 'c', i: 0 }; render1(s, true); };
 $('#bPick').onclick = () => {
   const s = curS(); if (!s) return; S.active = s.id; renderAssign(); status();
