@@ -1319,6 +1319,7 @@ function showPack() { const on = S.made && S.slots.some((s) => s.out); $('#cPack
 const ZOOM = [0.5, 1, 2, 4, 8, 16, 30];
 function canvasPx(cv) { const r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1; const w = Math.max(10, Math.round(r.width * d)), h = Math.max(10, Math.round(r.height * d)); if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; } return [w, h, d]; }
 let ovPeaks = null;
+const GCOL = { kick: '#E5675A', tom: '#F2994A', snare: '#F2C14E', clap: '#F2C14E', chat: '#7FB2F0', ohat: '#7FB2F0', shaker: '#7FB2F0', rim: '#A9A8B8', perc: '#A9A8B8', bass: '#C792EA', keys: '#C792EA', pluck: '#C792EA', lead: '#C792EA', pad: '#5EC8C0', drone: '#5EC8C0', texture: '#5EC8C0', riser: '#5EC8C0' };
 function dotColor(s) { if (s.clar > 0.7) return '#C792EA'; if (s.lowR > 0.45) return '#E5675A'; if (s.highR > 0.35) return '#7FB2F0'; if (s.flat > 0.3) return '#F2C14E'; return '#A9A8B8'; }
 function drawWave() {
   if (!S.x || $('#cWave').hidden) return;
@@ -1331,8 +1332,11 @@ function drawWave() {
   if (S.selR) { const a = (S.selR[0] - s0) / per, b = (S.selR[1] - s0) / per; g.fillStyle = 'rgba(243,241,234,.13)'; g.fillRect(a, 0, b - a, Hh); }
   g.fillStyle = '#8C8FA8';
   for (let i = 0; i < W; i++) { let mn = 0, mx = 0; const a = s0 + Math.floor(i * per), b = Math.min(x.length, s0 + Math.floor((i + 1) * per)); const stp = Math.max(1, Math.floor((b - a) / 64)); for (let j = a; j < b; j += stp) { const v = x[j]; if (v < mn) mn = v; if (v > mx) mx = v; } g.fillRect(i, Hh / 2 - mx * Hh * 0.45, 1, Math.max(1, (mx - mn) * Hh * 0.45)); }
-  for (const s of S.segs) { if (s.s < s0 || s.s > s0 + n) continue; const px = (s.s - s0) / per; g.fillStyle = dotColor(s); g.beginPath(); g.arc(px, 9 * d, 5 * d, 0, Math.PI * 2); g.fill(); }
-  for (const q of S.slots) { if (!q.src || q.src.kind !== 'man' || q.src.e < s0 || q.src.s > s0 + n) continue; const a = (q.src.s - s0) / per, b2 = (q.src.e - s0) / per; g.fillStyle = GEN[S.genre].c; g.fillRect(a, Hh - 6 * d, Math.max(3, b2 - a), 4 * d); g.font = '600 ' + 10 * d + 'px system-ui'; g.fillText(sName(q.id), a + 2 * d, Hh - 10 * d); }
+  // the machine's guess at every hit, in colour; what you made of it, in white below
+  g.font = '600 ' + 10 * d + 'px system-ui'; let lastX = -1e9; const vis = S.segs.filter((q) => q.s >= s0 && q.s <= s0 + n).sort((a, b) => a.s - b.s);
+  for (const q of vis) { if (q.guess === undefined) q.guess = guessOf(Object.assign({}, q)) || null; const px = (q.s - s0) / per, col = GCOL[q.guess] || '#A9A8B8'; g.fillStyle = col; g.beginPath(); g.arc(px, 9 * d, 5 * d, 0, Math.PI * 2); g.fill();
+    if (q.guess) { const txt = sName(q.guess), tw = g.measureText(txt).width; if (px - 4 * d > lastX) { g.fillText(txt, px - 4 * d, 26 * d); lastX = px - 4 * d + tw + 6 * d; } } }
+  for (const q of S.slots) { if (!q.src || q.src.kind !== 'man' || q.src.e < s0 || q.src.s > s0 + n) continue; const a = (q.src.s - s0) / per, b2 = (q.src.e - s0) / per; g.fillStyle = '#F3F1EA'; g.fillRect(a, Hh - 6 * d, Math.max(3, b2 - a), 4 * d); g.font = '700 ' + 11 * d + 'px system-ui'; const lab = usedBy([q.src.s, q.src.e]).map((z) => sName(z.id)).join(', '); g.fillText(lab, a + 2 * d, Hh - 10 * d); }
   $('#zInfo').textContent = S.view.d + ' s · ' + fmt(S.view.s);
 }
 function viewClamp() { S.view.d = Math.min(S.view.d, Math.max(0.5, S.dur)); S.view.s = clamp(S.view.s, 0, Math.max(0, S.dur - S.view.d)); }
