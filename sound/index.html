@@ -122,9 +122,13 @@ footer{color:var(--soft);font-size:13px;text-align:center;padding:24px 0 96px}
 <section class="card" id="cEd" hidden>
   <div class="row"><h2 id="edTitle" style="margin:0;text-transform:none;color:var(--ink);font-size:17px"></h2><span class="sp"></span><span class="muted" id="edStep"></span></div>
   <p class="muted" id="edSrc" style="margin:6px 0 10px"></p>
-  <div class="row"><button class="btn big acc" id="bPlayMade" type="button" data-t="playMade"></button><button class="btn big" id="bPlayRaw" type="button" data-t="playRaw"></button></div>
+  <div class="row"><button class="btn big acc" id="bPlayMade" type="button" data-t="playMade"></button><button class="btn big" id="bPlayRaw" type="button" data-t="playRaw"></button><button class="btn big chip" id="bLoopT" type="button" data-t="loopT" aria-pressed="false" style="border-radius:12px"></button></div>
+  <div class="slider" style="margin-top:12px"><span data-t="sMach"></span><input type="range" id="sMach" min="0" max="1" step="0.05" value="0.5"><output id="oMach">50%</output></div>
   <div class="lbl" data-t="cands" style="margin-top:12px"></div>
   <div class="chips" id="cands"></div>
+  <div class="slider"><span data-t="sTone"></span><input type="range" id="sTone" min="-1" max="1" step="0.05" value="0"><output id="oTone">0</output></div>
+  <div class="slider"><span data-t="sAtt"></span><input type="range" id="sAtt" min="0" max="1" step="0.05" value="0"><output id="oAtt">0</output></div>
+  <div class="slider"><span data-t="sRel"></span><input type="range" id="sRel" min="0" max="1" step="0.05" value="0"><output id="oRel">0</output></div>
   <div class="slider"><span data-t="sPitch"></span><input type="range" id="sPitch" min="-12" max="12" step="1" value="0"><output id="oPitch">0</output></div>
   <div class="slider"><span data-t="sLen"></span><input type="range" id="sLen" min="0.5" max="2" step="0.05" value="1"><output id="oLen">1.00</output></div>
   <div class="slider"><span data-t="sDrive"></span><input type="range" id="sDrive" min="-1" max="1" step="0.05" value="0"><output id="oDrive">0</output></div>
@@ -503,7 +507,7 @@ const TXT = {
     found: '{d} of sound, {n} hits found', few: 'Few clear hits found; the drums are shaped from the sound itself.', removed: 'Removed', undo: 'Undo',
     micErr: 'No access to the microphone.', fileErr: 'This file cannot be read.', noRec: 'Recording is not supported in this browser; import a file instead.',
     step: '{i} of 16', fromHit: 'From the moment at {t}', fromSel: 'From your selection at {t}', fromReg: 'From the stretch at {t}', fromLoop: 'Built from your drums',
-    done: 'Pack complete', recDl: 'Download recording', burpH: 'Burp', burpHint: 'One tap makes a complete track with your pack. Every burp is different. Or load a MIDI from your machines.', burpGen: 'Genre for the burp', same: 'Same as pack', loadMidi: 'Load MIDI', play: 'Play', stopT: 'Stop', burping: 'Burping your track', midiErr: 'This MIDI cannot be read.', midiFirst: 'Make a pack first, then load your MIDI.', routedMidi: 'That was a MIDI file; it now plays with your pack.', routedAudio: 'That was a sound file; it is now your new recording.', mp3ing: 'Writing the MP3', secs: { intro: 'Intro', verse: 'Verse', prechorus: 'Pre', chorus: 'Chorus', drop: 'Drop', build: 'Build', break: 'Break', outro: 'Outro' }, files: '{n} files, 24 bit WAV', choose: 'Select a piece first', assigned: 'Made it a {s}', selFirst: 'Tap a sound in the pack first'
+    done: 'Pack complete', sMach: 'Machine', sTone: 'Tone', sAtt: 'Attack', sRel: 'Release', loopT: 'Repeat', recDl: 'Download recording', burpH: 'Burp', burpHint: 'One tap makes a complete track with your pack. Every burp is different. Or load a MIDI from your machines.', burpGen: 'Genre for the burp', same: 'Same as pack', loadMidi: 'Load MIDI', play: 'Play', stopT: 'Stop', burping: 'Burping your track', midiErr: 'This MIDI cannot be read.', midiFirst: 'Make a pack first, then load your MIDI.', routedMidi: 'That was a MIDI file; it now plays with your pack.', routedAudio: 'That was a sound file; it is now your new recording.', mp3ing: 'Writing the MP3', secs: { intro: 'Intro', verse: 'Verse', prechorus: 'Pre', chorus: 'Chorus', drop: 'Drop', build: 'Build', break: 'Break', outro: 'Outro' }, files: '{n} files, 24 bit WAV', choose: 'Select a piece first', assigned: 'Made it a {s}', selFirst: 'Tap a sound in the pack first'
   },
   nl: {
     h1: '1. Geluidsbron', rec: 'Opnemen', imp: 'Audio of video importeren', srcHint: 'Neem zo lang op als je wilt: een bos, je keuken, een trein, je eigen stem. Alles blijft op je telefoon.',
@@ -519,7 +523,7 @@ const TXT = {
     found: '{d} geluid, {n} klappen gevonden', few: 'Weinig duidelijke klappen gevonden; de drums worden uit het geluid zelf gevormd.', removed: 'Weggehaald', undo: 'Terug',
     micErr: 'Geen toegang tot de microfoon.', fileErr: 'Dit bestand kan ik niet lezen.', noRec: 'Opnemen werkt niet in deze browser; importeer een bestand.',
     step: '{i} van 16', fromHit: 'Van het moment op {t}', fromSel: 'Van je selectie op {t}', fromReg: 'Van het stuk op {t}', fromLoop: 'Gebouwd uit je drums',
-    done: 'Pack compleet', recDl: 'Opname downloaden', burpH: 'Burp', burpHint: 'Eén tik maakt een complete track met jouw pack. Elke burp is anders. Of laad een MIDI uit je machines.', burpGen: 'Genre voor de burp', same: 'Zelfde als pack', loadMidi: 'MIDI laden', play: 'Speel', stopT: 'Stop', burping: 'Je track wordt geburpt', midiErr: 'Deze MIDI kan ik niet lezen.', midiFirst: 'Maak eerst een pack, laad dan je MIDI.', routedMidi: 'Dat was een MIDI bestand; hij speelt nu met je pack.', routedAudio: 'Dat was een geluidsbestand; het is nu je nieuwe opname.', mp3ing: 'MP3 wordt geschreven', secs: { intro: 'Intro', verse: 'Couplet', prechorus: 'Pre', chorus: 'Refrein', drop: 'Drop', build: 'Opbouw', break: 'Break', outro: 'Outro' }, files: '{n} bestanden, 24 bit WAV', choose: 'Kies eerst een stuk', assigned: 'Er is een {s} van gemaakt', selFirst: 'Tik eerst op een geluid in het pack'
+    done: 'Pack compleet', sMach: 'Machine', sTone: 'Toon', sAtt: 'Aanzet', sRel: 'Uitklink', loopT: 'Herhaal', recDl: 'Opname downloaden', burpH: 'Burp', burpHint: 'Eén tik maakt een complete track met jouw pack. Elke burp is anders. Of laad een MIDI uit je machines.', burpGen: 'Genre voor de burp', same: 'Zelfde als pack', loadMidi: 'MIDI laden', play: 'Speel', stopT: 'Stop', burping: 'Je track wordt geburpt', midiErr: 'Deze MIDI kan ik niet lezen.', midiFirst: 'Maak eerst een pack, laad dan je MIDI.', routedMidi: 'Dat was een MIDI bestand; hij speelt nu met je pack.', routedAudio: 'Dat was een geluidsbestand; het is nu je nieuwe opname.', mp3ing: 'MP3 wordt geschreven', secs: { intro: 'Intro', verse: 'Couplet', prechorus: 'Pre', chorus: 'Refrein', drop: 'Drop', build: 'Opbouw', break: 'Break', outro: 'Outro' }, files: '{n} bestanden, 24 bit WAV', choose: 'Kies eerst een stuk', assigned: 'Er is een {s} van gemaakt', selFirst: 'Tik eerst op een geluid in het pack'
   },
   de: {
     h1: '1. Klangquelle', rec: 'Aufnehmen', imp: 'Audio oder Video importieren', srcHint: 'Nimm so lange auf, wie du willst: einen Wald, deine Küche, einen Zug, deine eigene Stimme. Alles bleibt auf deinem Handy.',
@@ -535,7 +539,7 @@ const TXT = {
     found: '{d} Klang, {n} Schläge gefunden', few: 'Wenige klare Schläge gefunden; die Drums werden aus dem Klang selbst geformt.', removed: 'Entfernt', undo: 'Zurück',
     micErr: 'Kein Zugriff auf das Mikrofon.', fileErr: 'Diese Datei kann ich nicht lesen.', noRec: 'Aufnehmen geht in diesem Browser nicht; importiere eine Datei.',
     step: '{i} von 16', fromHit: 'Vom Moment bei {t}', fromSel: 'Von deiner Auswahl bei {t}', fromReg: 'Vom Abschnitt bei {t}', fromLoop: 'Aus deinen Drums gebaut',
-    done: 'Pack fertig', recDl: 'Aufnahme herunterladen', burpH: 'Burp', burpHint: 'Ein Tipp macht einen kompletten Track mit deinem Pack. Jeder Burp ist anders. Oder lade eine MIDI aus deinen Maschinen.', burpGen: 'Genre für den Burp', same: 'Wie das Pack', loadMidi: 'MIDI laden', play: 'Abspielen', stopT: 'Stopp', burping: 'Dein Track wird geburpt', midiErr: 'Diese MIDI kann ich nicht lesen.', midiFirst: 'Mach zuerst ein Pack, lade dann deine MIDI.', routedMidi: 'Das war eine MIDI Datei; sie spielt jetzt mit deinem Pack.', routedAudio: 'Das war eine Klangdatei; sie ist jetzt deine neue Aufnahme.', mp3ing: 'MP3 wird geschrieben', secs: { intro: 'Intro', verse: 'Strophe', prechorus: 'Pre', chorus: 'Refrain', drop: 'Drop', build: 'Aufbau', break: 'Break', outro: 'Outro' },
+    done: 'Pack fertig', sMach: 'Maschine', sTone: 'Ton', sAtt: 'Anschlag', sRel: 'Ausklang', loopT: 'Wiederholen', recDl: 'Aufnahme herunterladen', burpH: 'Burp', burpHint: 'Ein Tipp macht einen kompletten Track mit deinem Pack. Jeder Burp ist anders. Oder lade eine MIDI aus deinen Maschinen.', burpGen: 'Genre für den Burp', same: 'Wie das Pack', loadMidi: 'MIDI laden', play: 'Abspielen', stopT: 'Stopp', burping: 'Dein Track wird geburpt', midiErr: 'Diese MIDI kann ich nicht lesen.', midiFirst: 'Mach zuerst ein Pack, lade dann deine MIDI.', routedMidi: 'Das war eine MIDI Datei; sie spielt jetzt mit deinem Pack.', routedAudio: 'Das war eine Klangdatei; sie ist jetzt deine neue Aufnahme.', mp3ing: 'MP3 wird geschrieben', secs: { intro: 'Intro', verse: 'Strophe', prechorus: 'Pre', chorus: 'Refrain', drop: 'Drop', build: 'Aufbau', break: 'Break', outro: 'Outro' },
     files: '{n} Dateien, 24 Bit WAV', choose: 'Wähle zuerst ein Stück', assigned: 'Daraus ist ein {s} geworden', selFirst: 'Tippe zuerst auf einen Klang im Pack'
   }
 };
@@ -584,7 +588,7 @@ const S = {
   bpm: null, vars: 1, both: true, raw: true, clean: true, name: '', seed: 1, ir: null, slots: [], sel: -1, guided: false,
   view: { s: 0, d: 4 }, selR: null, made: false
 };
-function newSlots() { S.slots = SLOTS.map((q) => ({ id: q[0], grp: q[3], src: null, seed: 1, p: { pitch: 0, len: 1, drive: 0, verb: null, rev: false }, keep: false, out: null, busy: false })); }
+function newSlots() { S.slots = SLOTS.map((q) => ({ id: q[0], grp: q[3], src: null, seed: 1, p: { pitch: 0, len: 1, drive: 0, verb: null, rev: false, mach: null, tone: 0, att: 0, rel: 0 }, keep: false, out: null, busy: false })); }
 newSlots();
 const slot = (id) => S.slots.find((s) => s.id === id);
 
@@ -606,6 +610,9 @@ function packName() {
 // ---------- audio ----------
 let AC = null, cur = null;
 function ac() { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); return AC; }
+let loopOn = false;
+function playLoop(ch) { if (!ch) return; const c = ac(); stopPlay(); const L = ch[0].length, gap = Math.round(0.25 * S.sr), b = c.createBuffer(2, L + gap, S.sr); b.copyToChannel(ch[0], 0); b.copyToChannel(ch[1] || ch[0], 1); const s = c.createBufferSource(); s.buffer = b; s.loop = true; s.connect(c.destination); s.start(); cur = s; }
+function audition(o) { if (!o) return; const ch = o.wet || o.dry; if (loopOn) playLoop(ch); else play(ch); }
 function stopPlay() { if (cur) { try { cur.stop(); } catch (e) {} cur = null; } }
 function play(ch) {
   if (!ch) return; const c = ac(); stopPlay(); const L = ch[0], R = ch[1] || ch[0];
@@ -933,7 +940,7 @@ const B = {
     x = biq(biq(biq(x, 'hp', 800), 'bp', ppk('clapf', 1100, 2000), 0.9), 'lp', 7000);
     const nh = Math.round(ppk('clapn', 2, 4.9)), gap = ppk('clapg', 0.006, 0.012); let y = new Float32Array(0);
     for (let k = 0; k < nh; k++) y = add(y, decay(x, 0.02 * sr, 0.006), 0.5 + 0.3 * k / nh, Math.round(k * gap * sr));
-    y = add(y, decay(x, 0.25 * sr * p.len, 0.06 * p.len), 0.8, Math.round(nh * gap * sr));
+    y = add(y, decay(x, 0.3 * sr * p.len, ppk('claprt', 0.03, 0.1) * p.len), 0.8, Math.round(nh * gap * sr));
     return { ch: y, o: { hp: 400, lp: Math.min(R.lp, 8000), drive: R.drive * 0.3, comp: true } };
   },
   chat(src, R, r, p) {
@@ -973,7 +980,14 @@ const B = {
     return { ch: add(norm([tone], 0.7)[0], norm([att], 0.35)[0], 1), o: { hp: 400, lp: Math.min(R.lp, 9000), drive: 0 } };
   },
   shaker(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 0.2 * sr); x = biq(biq(x, 'hp', 3200), 'lp', 11000); x = resample(x, semi(R.pitch + p.pitch)); const g = decay(x, sr * 0.2 * p.len, 0.06 * p.len, 0.022); return { ch: add(g, g, 0.55, Math.round((0.03 + r() * 0.04) * sr)), o: { hp: 2500, lp: Math.min(R.lp * 1.2, 12000), drive: R.drive * 0.2 } }; },
-  fx(src, R, r, p) { const sr = S.sr; let x = cut(src.x, 1.2 * sr * p.len); if (R.glitch || r() < 0.5) x = stutter(x, r); x = rev(x); x = resample(x, semi(-5 + R.pitch + p.pitch + (r() - 0.5) * 6)); x = crush(x, 8, 2); return { ch: env(x, 0.15, 0.03), o: { hp: 100, lp: R.lp, drive: R.drive } }; },
+  fx(src, R, r, p) {
+    const sr = S.sr, how = vpick('fxm', ['stutter', 'cloud', 'dive', 'chop']); let x = cut(src.x, 1.2 * sr * p.len);
+    if (how === 'stutter') { x = rev(stutter(x, r)); x = crush(x, 8, 2); }
+    else if (how === 'cloud') x = env(stretch(x, Math.round(1.6 * sr * p.len), r, 0.03, 0.3), 0.2, 0.5);
+    else if (how === 'dive') x = bend(x, 1.8, 0.3, 0.4);
+    else { const ch = Math.round(ppk('chop', 0.03, 0.09) * sr), y = new Float32Array(x.length); for (let i = 0; i < x.length; i++) y[i] = (Math.floor(i / ch) % 2 ? 0.15 : 1) * x[i]; x = y; }
+    x = resample(x, semi(R.pitch + p.pitch + Math.round(ppk('fxp', -9, 5)))); return { ch: env(x, 0.05, 0.08), o: { hp: 100, lp: Math.min(R.lp, 10000), drive: R.drive * 0.6 } };
+  },
   bass(src, R, r, p) { // a real bass: full low cycle, a filter that opens on each note, tight end
     const sr = S.sr, how = vpick('bass', ['round', 'pluck', 'growl', 'glide', 'deep']), oct = vpick('bassoct', [0, 0, -12]), f = mf(notes().bass + oct + p.pitch), L = Math.round(sr * 1.1 * p.len);
     const c = cyc('bass', src, 60, 160, 32, how === 'growl' ? 0.7 : how === 'deep' ? 1.6 : 1.1, 1);
@@ -1019,14 +1033,19 @@ const B = {
   },
   texture(src, R, r, p) { const sr = S.sr, L = Math.round(sr * 6 * p.len), r2 = rng32((r() * 4294967296) >>> 0), side = (rr) => biq(biq(stretch(resample(src.x, semi(R.pitch + p.pitch + Math.round(ppk('texp', -7, 5)))), L, rr, ppk('texg', 0.03, 0.25), ppk('texj', 0.05, 0.4)), 'hp', ppk('texh', 120, 900)), 'lp', ppk('texl', 1800, 7000)); return { ch: [env(side(r), 0.5, 1), env(side(r2), 0.5, 1)], o: { hp: 100, lp: R.lp, drive: R.drive * 0.3 } }; },
   riser(src, R, r, p) {
-    const sr = S.sr, L = Math.round(sr * 4 * p.len), base = stretch(src.x, L, r, 0.1, 0.05), y = new Float32Array(L); let pos = 0, hpY = 0, hpX = 0;
-    for (let i = 0; i < L; i++) {
-      const q = i / L, rate = ppk('rs0', 0.35, 0.8) * Math.pow(ppk('rs1', 2.5, 6), q) * semi(p.pitch); pos += rate; const k = Math.floor(pos) % L, v = base[k] * q * q;
-      const fc = 80 * Math.pow(60, q), a = Math.exp(-2 * Math.PI * fc / sr); hpY = a * (hpY + v - hpX); hpX = v; y[i] = hpY;
-    }
-    return { ch: env(y, 0.05, 0.02), o: { hp: 60, lp: R.lp, drive: R.drive * 0.5 } };
+    const sr = S.sr, how = vpick('riserm', ['speed', 'noise', 'tone']), L = Math.round(sr * 4 * p.len), base = stretch(src.x, L, r, 0.1, 0.05), y = new Float32Array(L);
+    if (how === 'tone') { const c = cyc('riser', src, 100, 300, 16, 1.2, 1), f = mf(notes().keys - 12); const t = mul(osc(c, L, (i) => f * Math.pow(4, i / L), f * 4), adsr(L, 0.5, 9, 1, 0.02)); for (let i = 0; i < L; i++) y[i] = t[i] * Math.pow(i / L, 1.5) + base[i] * 0.3 * (i / L); return { ch: biq(y, 'lp', 7000), o: { hp: 80, lp: R.lp, drive: R.drive * 0.4 } }; }
+    let pos = 0, hpY = 0, hpX = 0; const s0 = ppk('rs0', 0.35, 0.8), s1 = ppk('rs1', 2.5, 6);
+    for (let i = 0; i < L; i++) { const q = i / L, rate = how === 'noise' ? 1 : s0 * Math.pow(s1, q) * semi(p.pitch); pos += rate; const k = Math.floor(pos) % L, v = base[k] * q * q; const fc = 80 * Math.pow(60, q), a = Math.exp(-2 * Math.PI * fc / sr); hpY = a * (hpY + v - hpX); hpX = v; y[i] = hpY; }
+    return { ch: env(biq(y, 'lp', 9000), 0.05, 0.02), o: { hp: 60, lp: R.lp, drive: R.drive * 0.5 } };
   },
-  down(src, R, r, p) { const b = B.riser(src, R, r, p); return { ch: env(rev(b.ch), 0.01, 0.4), o: b.o }; },
+  down(src, R, r, p) {
+    const sr = S.sr, how = vpick('downm', ['rev', 'fall', 'close']), L = Math.round(sr * 4 * p.len);
+    if (how === 'rev') { const b = B.riser(src, R, r, p); return { ch: env(rev(b.ch), 0.01, 0.4), o: b.o }; }
+    const st = stretch(src.x, L, r, 0.1, 0.06);
+    if (how === 'fall') return { ch: env(biq(bend(st, 1.4, 0.35, 1.3), 'lp', 8000), 0.01, 1.2), o: { hp: 50, lp: R.lp, drive: R.drive * 0.4 } };
+    const y = svfLP(st, (i) => 9000 * Math.pow(0.02, i / L), 1.4); for (let i = 0; i < L; i++) y[i] *= 1 - i / L; return { ch: env(y, 0.01, 0.2), o: { hp: 50, lp: R.lp, drive: R.drive * 0.3 } };
+  },
   impact(src, R, r, p) { // a real impact: a huge low boom that falls, your hit as the crack, lots of room
     const sr = S.sr, L = Math.round(sr * 3 * p.len), f = 42 * semi(p.pitch), c = cyc('impact', src, 40, 90, 6, 2, 1);
     const boom = mul(osc(c, L, (i) => f * (1 + 1.5 * Math.exp(-i / sr / 0.1)), f * 2.5), adsr(L, 0.002, 0.9 * p.len, 0, 0.3));
@@ -1097,27 +1116,58 @@ async function fx(ch, o) {
 }
 function verbFor(sl, R) { const base = VERB[S.verb][0] * R.verbMul * SEND[sl.id][0]; return sl.p.verb != null ? sl.p.verb : clamp(base, 0, 1); }
 const LVL = { kick: 0.89, snare: 0.8, clap: 0.5, chat: 0.45, ohat: 0.45, perc: 0.55, rim: 0.45, shaker: 0.4, tom: 0.75, fx: 0.6, bass: 0.85, sub: 0.85, keys: 0.7, pluck: 0.7, pad: 0.6, lead: 0.7, drone: 0.6, texture: 0.55, riser: 0.65, down: 0.65, impact: 0.85, loop: 0.89 };
+const TONAL = new Set(['bass', 'sub', 'keys', 'pluck', 'lead', 'pad', 'drone']);
+const LOUD = { kick: -9, snare: -12, clap: -17, chat: -20, ohat: -20, perc: -16, rim: -19, shaker: -21, tom: -12, fx: -16, bass: -13, sub: -13, keys: -15, pluck: -15, pad: -17, lead: -15, drone: -17, texture: -19, riser: -17, down: -17, impact: -11, loop: -10 };
+// loudness, not peak: a long bass and a short kick now sound equally strong
+function loudNorm(chs, db) { const pk = peak(chs); if (pk < 1e-9) return chs; let e = 0, n = 0; for (const c of chs) for (let i = 0; i < c.length; i++) { const a = Math.abs(c[i]); if (a > pk * 0.03) { e += c[i] * c[i]; n++; } } const rms = Math.sqrt(e / Math.max(1, n)), g = Math.min(Math.pow(10, db / 20) / Math.max(rms, 1e-9), 0.95 / pk); return chs.map((c) => { const y = new Float32Array(c.length); for (let i = 0; i < c.length; i++) y[i] = c[i] * g; return y; }); }
+function srcInfo(sl) { if (!sl.src) return null; if (sl.src.kind === 'man') return sl.src; const c = (S.rank[sl.id] || [])[sl.src.i]; return c ? (c.k === 's' ? S.segs[c.i] : S.regs[c.i]) : null; }
+// how much the machine does: your own pick stays yours (0), an automatic pack starts halfway
+function machOf(sl) { if (sl.id === 'loop') return 1; if (sl.p.mach != null) return sl.p.mach; const o = srcInfo(sl); if (!o) return 0.5; if (sl.src.kind === 'man') return 0; return TONAL.has(sl.id) && !(o.clar > 0.5 && o.f0 > 40) ? 0.85 : 0.5; }
+// your sound, only put on the note and trimmed
+function pureBuild(sl, src, p) {
+  const sr = S.sr, max = sl.grp === 'd' ? 1.5 : (sl.id === 'pad' || sl.id === 'drone' || sl.grp === 'x') ? 8 : 4; let x = rawTrim(src.x.slice(0, Math.round(Math.min(src.x.length, max * sr))));
+  if (TONAL.has(sl.id) && src.clar > 0.5 && src.f0 > 40) x = resample(x, fitRatio(src.f0, mf(rootOf(sl.id))) * semi(p.pitch)); else if (p.pitch) x = resample(x, semi(p.pitch));
+  if (p.len !== 1) { const n = Math.max(64, Math.round(x.length * p.len)); x = p.len < 1 ? fades(x.slice(0, n), 0, 0.02) : stretch(x, n, rng32(7), 0.06, 0.01); }
+  return fades(x, 0.002, 0.01);
+}
+function msWidth(ch, w) { const L = ch[0], R = ch[1], a = new Float32Array(L.length), b = new Float32Array(L.length); for (let i = 0; i < L.length; i++) { const m = (L[i] + R[i]) / 2, sd = (L[i] - R[i]) / 2 * w; a[i] = m + sd; b[i] = m - sd; } return [a, b]; }
+const WID = { keys: 0.45, pluck: 0.45, lead: 0.4, pad: 0.8 };
 async function make(sl, v = 0) {
-  const R = recipe(), r = rng32((S.seed ^ hashStr(sl.id)) + sl.seed * 31 + v * 7919);
-  let b, src = null;
+  const R = recipe(), r = rng32((S.seed ^ hashStr(sl.id)) + sl.seed * 31 + v * 7919), m = machOf(sl);
+  let b, src = null, chM = null, chP = null;
   if (sl.id === 'loop') b = await buildLoop(sl, r);
-  else { src = srcOf(sl, v); if (!src || !src.x || src.x.length < 64) return null; const pv = Object.assign({}, sl.p, { len: sl.p.len * ppk(sl.id + 'len', 0.7, 1.45) }); b = B[sl.id](src, R, r, pv, v); }
-  let ch = Array.isArray(b.ch) ? b.ch : [b.ch, b.ch];
-  if (!b.loop) {
-    if (R.crush) ch = norm(ch, 0.8).map((c) => crush(c, R.crush, R.crush < 9 ? 3 : 1));
-    if (sl.p.rev) ch = ch.map(rev);
-    if (R.hp) b.o.hp = Math.max(b.o.hp || 20, R.hp);
+  else {
+    src = srcOf(sl, v); if (!src || !src.x || src.x.length < 64) return null;
+    if (m > 0.001) { const pv = Object.assign({}, sl.p, { len: sl.p.len * ppk(sl.id + 'len', 0.7, 1.45) }); b = B[sl.id](src, R, r, pv, v); } else b = { ch: null, o: { hp: 30, lp: 20000, drive: 0 } };
+    if (m < 0.999) { const pu = pureBuild(sl, src, sl.p); chP = [pu, pu]; }
   }
-  if (!b.loop && sl.grp === 'd' && sl.id !== 'kick') { const tn = semi(ppk(sl.id + 'tune', -4, 4)); ch = ch.map((c) => resample(c, tn)); }
-  if (!b.loop && b.o) { b.o.lp = Math.min(b.o.lp || 20000, (b.o.lp || 12000) * ppk(sl.id + 'lp', 0.55, 1)); }
-  ch = norm(ch, 0.8);
-  const o = Object.assign({}, b.o); o.drive = clamp((o.drive || 0) + sl.p.drive * 0.5, 0, 1);
-  if (!b.loop && world().wow && sl.grp !== 'd') ch = ch.map((c) => wow(c, rng32(S.seed ^ 0x3a)));
-  let d0 = await fx(ch, o); const fsW = b.loop || sl.grp === 't' || sl.id === 'drone' ? [] : whistles(d0[0], 15); d0 = applyF(d0, fsW); const fsT0 = b.loop ? [] : tameFilters(d0, ['chat', 'ohat', 'shaker'].includes(sl.id) ? 0.33 : 0.28), fsT = fsW.concat(fsT0); d0 = applyF(d0, fsT0);
-  const lv = LVL[sl.id] || 0.8, dry = norm(b.loop ? d0 : trimTail(d0), lv);
+  if (b.ch) {
+    chM = Array.isArray(b.ch) ? b.ch : [b.ch, b.ch];
+    if (!b.loop) {
+      if (R.crush) chM = norm(chM, 0.8).map((c) => crush(c, R.crush, R.crush < 9 ? 3 : 1));
+      if (sl.grp === 'd' && sl.id !== 'kick') { const tn = semi(ppk(sl.id + 'tune', -4, 4)); chM = chM.map((c) => resample(c, tn)); }
+      if (world().wow && sl.grp !== 'd') chM = chM.map((c) => wow(c, rng32(S.seed ^ 0x3a)));
+      if (WID[sl.id]) chM = msWidth(chM, WID[sl.id]);
+    }
+  }
+  let ch;
+  if (chM && chP) { const a = norm(chM, 0.8), q = norm(chP, 0.8), n = Math.max(a[0].length, q[0].length); ch = [0, 1].map((c) => { const y = new Float32Array(n); for (let i = 0; i < n; i++) y[i] = m * (a[c][i] || 0) + (1 - m) * (q[c][i] || 0); return y; }); }
+  else ch = chM || chP;
+  const o = Object.assign({}, b.o);
+  if (!b.loop) {
+    if (m < 0.999) { o.hp = Math.min(o.hp || 30, 30 + 400 * m); o.lp = Math.max(o.lp || 20000, 20000 - 8000 * m); o.drive = (o.drive || 0) * m; }
+    if (R.hp) o.hp = Math.max(o.hp || 20, R.hp);
+    if (b.ch) o.lp = Math.min(o.lp || 20000, (o.lp || 12000) * (1 - m + m * ppk(sl.id + 'lp', 0.55, 1)));
+    if (sl.p.tone < 0) o.lp = Math.min(o.lp || 20000, 18000 * Math.pow(0.045, -sl.p.tone)); if (sl.p.tone > 0) o.hp = Math.max(o.hp || 20, 30 * Math.pow(25, sl.p.tone));
+    if (sl.p.rev) ch = ch.map(rev);
+    if (sl.p.att > 0 || sl.p.rel > 0) { const dur = ch[0].length / S.sr; ch = ch.map((c) => env(c, Math.min(dur * 0.6, sl.p.att * sl.p.att * 0.6), Math.min(dur * 0.8, sl.p.rel * 1.5))); }
+  }
+  ch = norm(ch, 0.8); o.drive = clamp((o.drive || 0) + sl.p.drive * 0.5, 0, 1);
+  let d0 = await fx(ch, o); const guard = !b.loop && m >= 0.3, fsW = !guard || sl.grp === 't' || sl.id === 'drone' ? [] : whistles(d0[0], 15); d0 = applyF(d0, fsW); const fsT0 = guard ? tameFilters(d0, ['chat', 'ohat', 'shaker'].includes(sl.id) ? 0.33 : 0.28) : [], fsT = fsW.concat(fsT0); d0 = applyF(d0, fsT0);
+  const lv = LOUD[sl.id] || -14, dry = loudNorm(b.loop ? d0 : trimTail(d0), lv);
   const vA = verbFor(sl, R), dl = S.delay && SEND[sl.id][1] > 0 ? { t: (60 / R.bpm) * R.div, fb: R.fb, mix: 0.3 * SEND[sl.id][1] } : null;
   let wet = null;
-  if (vA > 0.005 || dl) { const w = await fx(ch, Object.assign({}, o, { verb: vA, delay: dl, tail: (vA > 0.005 ? Math.min(R.room * 1.1, 6) : 0) + (dl ? 1.6 : 0) })); wet = norm(b.loop ? w.map((c) => c.slice(0, ch[0].length)) : trimTail(applyF(w, fsT)), lv); }
+  if (vA > 0.005 || dl) { const w = await fx(ch, Object.assign({}, o, { verb: vA, delay: dl, tail: (vA > 0.005 ? Math.min(R.room * 1.1, 6) : 0) + (dl ? 1.6 : 0) })); wet = loudNorm(b.loop ? w.map((c) => c.slice(0, ch[0].length)) : trimTail(applyF(w, fsT)), lv); }
   let raw = null;
   if (src && !b.loop) { const x = rawTrim(src.x.slice(0, Math.round(Math.min(src.x.length, 12 * S.sr)))); raw = norm([x, x], 0.891); }
   return { dry, wet, raw, src };
@@ -1170,7 +1220,7 @@ function tapTile(i) {
     toast(t('removed') + ': ' + sName(s.id), () => { Object.assign(s, keep); renderGrid(); renderEd(); }); return;
   }
   lastTap = { i, t: now }; S.sel = i;
-  if (s.out) play(s.out.wet || s.out.dry);
+  if (s.out) audition(s.out);
   else if (S.x && s.id === 'loop') { s.seed = rnd32(); render1(s, true); }
   else if (S.x && (S.rank[s.id] || []).length) { s.src = { kind: 'c', i: 0 }; s.seed = rnd32(); render1(s, true); }
   renderGrid(); renderEd();
@@ -1190,20 +1240,22 @@ function renderEd() {
   (S.rank[s.id] || []).slice(0, 6).forEach((c, k) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip cand'; b.textContent = String(k + 1); b.setAttribute('aria-pressed', String(!!(s.src && s.src.kind === 'c' && s.src.i === k))); b.style.setProperty('--c', GEN[S.genre].c); b.onclick = () => { s.src = { kind: 'c', i: k }; render1(s, true); }; cs.append(b); });
   $('#cands').previousElementSibling.hidden = !cs.children.length;
   const R = recipe();
+  const mc = machOf(s); setSl('Mach', mc, Math.round(mc * 100) + '%'); setSl('Tone', s.p.tone, s.p.tone.toFixed(2)); setSl('Att', s.p.att, s.p.att.toFixed(2)); setSl('Rel', s.p.rel, s.p.rel.toFixed(2)); $('#sMach').disabled = s.id === 'loop';
   setSl('Pitch', s.p.pitch, String(s.p.pitch)); setSl('Len', s.p.len, s.p.len.toFixed(2)); setSl('Drive', s.p.drive, s.p.drive.toFixed(2)); const va = verbFor(s, R); setSl('Verb', va, va.toFixed(2));
   $('#sRev').checked = s.p.rev; $('#sKeep').checked = s.keep;
   $('#bPlayRaw').disabled = !(s.out && s.out.raw); $('#bPlayMade').disabled = !s.out; $('#bPick').hidden = s.id === 'loop';
 }
 function setSl(n, v, txt) { $('#s' + n).value = v; $('#o' + n).textContent = txt; }
 const curS = () => S.slots[S.sel];
-['Pitch', 'Len', 'Drive', 'Verb'].forEach((n) => {
+['Mach', 'Tone', 'Att', 'Rel', 'Pitch', 'Len', 'Drive', 'Verb'].forEach((n) => {
   const el = $('#s' + n);
-  el.oninput = () => { $('#o' + n).textContent = n === 'Pitch' ? el.value : (+el.value).toFixed(2); };
-  el.onchange = () => { const s = curS(); if (!s) return; const v = +el.value; if (n === 'Pitch') s.p.pitch = v; if (n === 'Len') s.p.len = v; if (n === 'Drive') s.p.drive = v; if (n === 'Verb') s.p.verb = v; if (s.src || s.id === 'loop') render1(s, true); };
+  el.oninput = () => { $('#o' + n).textContent = n === 'Pitch' ? el.value : n === 'Mach' ? Math.round(el.value * 100) + '%' : (+el.value).toFixed(2); };
+  el.onchange = () => { const s = curS(); if (!s) return; const v = +el.value, key = { Mach: 'mach', Tone: 'tone', Att: 'att', Rel: 'rel', Pitch: 'pitch', Len: 'len', Drive: 'drive', Verb: 'verb' }[n]; s.p[key] = v; if (s.src || s.id === 'loop') render1(s, true); };
 });
 $('#sRev').onchange = () => { const s = curS(); if (!s) return; s.p.rev = $('#sRev').checked; render1(s, true); };
 $('#sKeep').onchange = () => { const s = curS(); if (!s) return; s.keep = $('#sKeep').checked; renderGrid(); };
-$('#bPlayMade').onclick = () => { const s = curS(); if (s && s.out) play(s.out.wet || s.out.dry); };
+$('#bPlayMade').onclick = () => { const s = curS(); if (s && s.out) audition(s.out); };
+$('#bLoopT').onclick = () => { loopOn = !loopOn; $('#bLoopT').setAttribute('aria-pressed', String(loopOn)); const s = curS(); if (loopOn && s && s.out) playLoop(s.out.wet || s.out.dry); else stopPlay(); };
 $('#bPlayRaw').onclick = () => { const s = curS(); if (s && s.out && s.out.raw) play(s.out.raw); };
 $('#bVary').onclick = () => { const s = curS(); if (!s) return; s.seed = rnd32(); if (!s.src && s.id !== 'loop') s.src = { kind: 'c', i: 0 }; render1(s, true); };
 $('#bPick').onclick = () => {
@@ -1219,7 +1271,7 @@ $('#bNext').onclick = async () => {
 let renderQ = Promise.resolve();
 function render1(s, andPlay) {
   s.busy = true; renderGrid();
-  renderQ = renderQ.then(async () => { try { s.out = await make(s, 0); } catch (e) { console.error(e); s.out = null; } s.busy = false; S.made = true; renderGrid(); if (S.slots[S.sel] === s) renderEd(); if (andPlay && s.out) play(s.out.wet || s.out.dry); showPack(); });
+  renderQ = renderQ.then(async () => { try { s.out = await make(s, 0); } catch (e) { console.error(e); s.out = null; } s.busy = false; S.made = true; renderGrid(); if (S.slots[S.sel] === s) renderEd(); if (andPlay && s.out) audition(s.out); showPack(); });
   return renderQ;
 }
 async function rebuild(ids, fresh) {
@@ -1295,7 +1347,7 @@ function renderAssign() {
     const [s, e] = S.selR, q = yin(s + Math.min(Math.round(0.03 * S.sr), (e - s) >> 2));
     const sub = S.x.subarray(s, e); let lo = 0, hi = 0, tot = 1e-9; const lpY = biq(sub, 'lp', 150), hpY = biq(sub, 'hp', 5000); for (let i = 0; i < sub.length; i++) { tot += sub[i] * sub[i]; lo += lpY[i] * lpY[i]; hi += hpY[i] * hpY[i]; }
     const sl = slot(id); sl.src = { kind: 'man', s, e, f0: q.f0, clar: q.clar, lowR: lo / tot, highR: hi / tot, cen: 2000, flat: 0.3, len: (e - s) / S.sr, pk: 1 };
-    sl.keep = true; sl.seed = sl.seed || rnd32(); S.assignTo = id; S.sel = S.slots.indexOf(sl); renderAssign();
+    sl.keep = true; sl.p.mach = 0; sl.seed = sl.seed || rnd32(); S.assignTo = id; S.sel = S.slots.indexOf(sl); renderAssign();
     if (!S.ir) { const R = recipe(); S.ir = makeIR(Math.max(0.6, R.room), R.bright, S.seed); }
     await render1(sl, true); toast(t('assigned', { s: sName(id) }));
   }, GEN[S.genre].c);
@@ -1492,7 +1544,8 @@ const LAY2 = {
   chorus: { drums: 'more', bass: 1, mel: 'B', pad: 1, fx: 1 }, drop: { drums: 'more', bass: 1, mel: 'B', pad: 0, fx: 1 }, build: { drums: 'build', bass: 1, mel: 0, pad: 1 },
   break: { drums: 0, bass: 0, mel: 'C', pad: 1, drone: 1, tex: 1 }, outro: { drums: 'thin', bass: 1, mel: 0, pad: 1, tex: 1 }
 };
-const DG = { kick: 1, snare: 0.8, clap: 0.75, chat: 0.42, ohat: 0.45, perc: 0.5, rim: 0.5, shaker: 0.38, tom: 0.7 };
+const DG = { kick: 1, snare: 0.9, clap: 0.85, chat: 0.75, ohat: 0.7, perc: 0.7, rim: 0.7, shaker: 0.65, tom: 0.8 };
+const SECG = { intro: 0.68, verse: 0.78, prechorus: 0.85, chorus: 1, drop: 1, build: 0.85, break: 0.62, outro: 0.68 };
 const BR2 = { free: [[0, 8], [0, 6, 8], [0, 10], [0, 3, 8, 11]], triphop: [[0, 10], [0, 7, 10], [0, 3, 10]], techno: [OFF, [2, 6, 10, 14, 15], [2, 5, 10, 13], [1, 2, 6, 9, 10, 14]], ambient: [[0], [0, 8]], cinema: [[0, 6], [0], [0, 8, 12]], exp: null };
 function mutate(p, r, amt) {
   const o = {}; for (const id in p) {
@@ -1528,7 +1581,7 @@ function burpTrack() {
   secs.forEach((sc, si) => {
     const L = Object.assign({}, LAY2[sc.k] || LAY2.verse), key = sc.k, nxt = secs[si + 1], x = sc.s / at;
     if (g === 'ambient' && L.drums === 'more') L.drums = 'full';
-    const ag = arc === 'grow' ? 0.85 + 0.2 * x : arc === 'big' ? (key === 'intro' || key === 'outro' ? 0.85 : key === 'drop' || key === 'chorus' ? 1.05 : 0.95) : 1;
+    const ag = (arc === 'grow' ? 0.85 + 0.2 * x : arc === 'big' ? (key === 'intro' || key === 'outro' ? 0.85 : key === 'drop' || key === 'chorus' ? 1.05 : 0.95) : 1) * (SECG[key] || 0.8);
     if ((key === 'chorus' || key === 'drop') && si > 0 && secs[si - 1].k !== key) put(M, outOf('impact', true), sc.s, 0.55 * ag);
     if (key === 'break') put(M, outOf('down', true), sc.s, 0.5);
     if (nxt && (nxt.k === 'chorus' || nxt.k === 'drop') && (key === 'build' || key === 'break' || key === 'intro')) { const rs = outOf('riser', true); if (rs) put(M, rs, Math.max(sc.s, nxt.s - rs[0].length / sr), 0.55); }
@@ -1553,16 +1606,16 @@ function burpTrack() {
       }
       if (L.bass) {
         const br = rootOf('bass'), bm = degMidi(br, chord), stp = fold(bm - br, -5, 6);
-        bassPat.forEach((q, i) => { const nx = i + 1 < bassPat.length ? bassPat[i + 1] : 16; put(M, pitched('bass', false, stp), t0 + q * step, 0.7 * ag, (nx - q) * step * 0.95); });
-        if (g === 'triphop' || g === 'cinema' || g === 'ambient') put(M, pitched('sub', false, fold(degMidi(n.sub, chord) - n.sub, -5, 6)), t0, 0.6 * ag, bar * 0.9);
+        bassPat.forEach((q, i) => { const nx = i + 1 < bassPat.length ? bassPat[i + 1] : 16; put(M, pitched('bass', false, stp), t0 + q * step, 0.5 * ag, (nx - q) * step * 0.95); });
+        if (g === 'triphop' || g === 'cinema' || g === 'ambient') put(M, pitched('sub', false, fold(degMidi(n.sub, chord) - n.sub, -5, 6)), t0, 0.38 * ag, bar * 0.9);
       }
-      if (L.pad && b % 2 === 0) put(M, pitched('pad', true, fold(degMidi(n.pad, chord) - n.pad, -5, 6)), t0, (key === 'break' || key === 'intro' ? 0.5 : 0.38) * ag, bar * 2 + 0.6);
+      if (L.pad && b % 2 === 0) put(M, pitched('pad', true, fold(degMidi(n.pad, chord) - n.pad, -5, 6)), t0, (key === 'break' || key === 'intro' ? 0.6 : 0.48) * ag, bar * 2 + 0.6);
       if (L.mel) {
         const mo = mot[L.mel], ins = insts[L.mel], off = mo.two ? (b % 2) * 16 : 0;
         mo.m.forEach(([q, d, ln], j) => {
           if (mo.two ? q < off || q >= off + 16 : false) return; if (key === 'break' && j > 3) return; if (last && j > 0 && r() < 0.3) return;
           const dd = d + (b % 4 === 2 && j === mo.m.length - 1 ? pk(r, [1, -1]) : 0);
-          ins.forEach((id, ii) => { const root = rootOf(id), mm = degMidi(root, chord + dd), stp = fold(mm - root, -7, 12); put(M, pitched(id, true, stp), t0 + (q - off) * step + ((q - off) % 2 ? swing : 0), ag * (id === 'lead' ? 0.45 : 0.5) * (ii ? 0.6 : 1), id === 'lead' ? ln * step * 1.4 : 0, ii ? 0.25 : 0); });
+          ins.forEach((id, ii) => { const root = rootOf(id), mm = degMidi(root, chord + dd), stp = fold(mm - root, -7, 12); put(M, pitched(id, true, stp), t0 + (q - off) * step + ((q - off) % 2 ? swing : 0), ag * (id === 'lead' ? 0.62 : 0.68) * (ii ? 0.6 : 1), id === 'lead' ? ln * step * 1.4 : 0, ii ? 0.25 : 0); });
         });
       }
     }
@@ -1571,7 +1624,7 @@ function burpTrack() {
   return { ch: M, secs: secs.map((s) => ({ k: s.k, s: s.s, e: s.s + s.bars * bar })), bpm, g, total };
 }
 function masterIn(M) { // in place, so long tracks fit in a phone's memory
-  const m = peak(M); if (m < 1e-9) return; const k = 1.6, th = Math.tanh(k), n = M[0].length, fo = Math.min(n, Math.round(2.5 * S.sr)); let pk2 = 0;
+  const m = peak(M); if (m < 1e-9) return; const k = 1.0, th = Math.tanh(k), n = M[0].length, fo = Math.min(n, Math.round(2.5 * S.sr)); let pk2 = 0;
   for (const c of M) { for (let i = 0; i < n; i++) c[i] = Math.tanh(k * c[i] / m) / th; for (let i = 0; i < fo; i++) c[n - 1 - i] *= i / fo; for (let i = 0; i < n; i++) pk2 = Math.max(pk2, Math.abs(c[i])); }
   const gg = 0.891 / (pk2 || 1); for (const c of M) for (let i = 0; i < n; i++) c[i] *= gg;
 }
