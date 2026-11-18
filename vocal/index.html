@@ -8,13 +8,7 @@
 <meta property="og:description" content="Words in, a sung vocal line out: clean MusicXML and MIDI for Synthesizer V that fits your beat. By Divine Monday.">
 <meta property="og:url" content="https://divineacidmonday.github.io/vocal/">
 <meta name="theme-color" content="#0B0E14">
-<link rel="icon" type="image/svg+xml" href="/vocal/icon.svg">
-<link rel="icon" type="image/png" sizes="192x192" href="/vocal/icon-192.png">
-<link rel="apple-touch-icon" href="/vocal/icon-180.png">
-<meta property="og:image" content="https://divineacidmonday.github.io/vocal/og.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg">
 <style>
 :root{color-scheme:dark;--bg:#0B0E14;--card:#131824;--card2:#1A2030;--line:#263044;--tx:#EDE6D8;--mu:#9AA3B2;--gold:#E7B65C}
 *{box-sizing:border-box}
@@ -128,7 +122,7 @@ footer{color:var(--mu);font-size:13px;text-align:center;padding:10px 0 30px}
   <div class="player" id="player" hidden><button class="btn" id="play">Listen</button><button class="chip" id="beatOn" aria-pressed="true">with a click</button><span class="muted small">A quick sketch in the browser. Synthesizer V does the singing.</span></div>
   <div class="out" id="out" hidden>
     <div class="row"><span class="lbl">Character</span><div class="seg" id="charSeg"><button data-k="0.6" aria-pressed="false">Subtle</button><button data-k="1" aria-pressed="true">Expressive</button><button data-k="1.5" aria-pressed="false">Bold</button></div></div>
-    <div class="row"><button class="btn big" id="dlSvp">Synthesizer V project</button><button class="btn" id="dlXml">MusicXML</button><button class="btn" id="dlMid">MIDI with lyrics</button></div>
+    <div class="row"><button class="btn big" id="dlSvp">Synthesizer V project</button><button class="btn" id="dlXml">MusicXML</button><button class="btn" id="dlMid">MIDI with lyrics</button><button class="btn" id="dlRoom" hidden title="Your song again, the melody rests in the bars where you sing and answers in between">Song with room for the voice</button></div>
     <span class="muted small">Synthesizer V project: File, Open. The feeling is already in it: slides into and out of the notes, vibrato on the long notes, soft verses and full choruses, a breath at the end of a line. Choose the voice and render, no tweaking needed. MusicXML: File, Import, drop it on bar 1.</span></div>
 </section>
 
@@ -347,7 +341,7 @@ function writeVocal(secs, opt) {
   // the song's form first: lyric parts of the same kind in a row are one block (verse + verse is the song's verse part); every block
   // takes the next part of the song that fits it, so the lyrics and the song share one form; a block that is too long sings tighter
   const natural = (sec, tight) => { const nd = tight ? Math.max(...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18)) : Math.max(median(sec.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18)); return ([2, 4, 8, 16].find((b) => b * BAR >= nd) || 16) * BAR * sec.lines.length; };
-  const blockAt = {}, tightSec = {}, assign = parts.length && !opt.packed && !opt.spread;
+  const blockAt = {}, tightSec = {}, assign = parts.length && !opt.packed && !opt.spread, roomy = [];
   if (assign) { let j = 0, i = 0;
     while (i < secs.length) { let k2 = i; while (k2 + 1 < secs.length && secs[k2 + 1].role === secs[i].role) k2++;
       const role = secs[i].role, usable = (x) => !/intro/i.test(x.text) && (role === 'outro' || !/outro/i.test(x.text) || j >= parts.length - 1);
@@ -355,8 +349,10 @@ function writeVocal(secs, opt) {
       if (k < 0) for (let q = j; q < parts.length; q++) if (usable(parts[q])) { k = q; break; }
       if (k >= 0) { // after a chorus the band gets its moment: a chorus part of 12 bars or more keeps its last 4 bars for the instruments
         const full = parts[k].z - parts[k].a, len = role === 'chorus' && full >= 12 * BAR && k < parts.length - 1 ? full - 4 * BAR : full, nat = secs.slice(i, k2 + 1).reduce((a2, x) => a2 + natural(x, opt.tight), 0); blockAt[i] = parts[k].a;
+        if (role === 'chorus' && !opt.repeated && nat * 2 <= len + 2 * TB) roomy.push(k2); // a long drop for a short chorus: sing it twice
         if (nat > len + 2 * TB) for (let x = i; x <= k2; x++) tightSec[x] = true; j = k + 1; }
       i = k2 + 1; } }
+  if (roomy.length) { const s2 = []; secs.forEach((x, q) => { s2.push(x); if (roomy.includes(q)) s2.push(Object.assign({}, x, { again: true })); }); return writeVocal(s2, Object.assign({}, opt, { repeated: true })); }
   // too much text for the roomy and the tight way: spread every lyric part over the whole song, each on the start of a part of the
   // song near its share of the song (the fitting part when it is close), so she never crams the first half and leaves the rest empty
   opt.report.roomy = secs.reduce((a2, x) => a2 + x.lines.length * ([2, 4, 8, 16].find((b) => b * BAR >= Math.max(median(x.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...x.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18))) || 16) * BAR, 0);
@@ -608,6 +604,7 @@ function make() {
   notes.sort((a, b) => a.t - b.t); notes.forEach((n, i) => { const nx = notes[i + 1]; if (nx && n.t + n.d > nx.t) n.d = Math.max(1, nx.t - n.t); });
   const title = $('#title').value.trim() || 'Untitled';
   S.result = { notes, bpm, key, title };
+  { const b = document.getElementById('dlRoom'); if (b) b.hidden = !(S.song && S.song.raw); }
   const bars = Math.ceil((notes[notes.length - 1].t + notes[notes.length - 1].d) / BAR), syl = notes.filter((n) => n.lyr !== '-').length;
   $('#facts').innerHTML = '<b>' + keyName(key) + '</b> · <b>' + Math.round(bpm * 100) / 100 + '</b> bpm · <b>' + bars + '</b> bars · <b>' + syl + '</b> syllables · starts bar <b>' + (Math.floor(notes[0].t / BAR) + 1) + '</b>';
   drawRoll(); ['#rollWrap', '#player', '#out'].forEach((s) => { $(s).hidden = false; }); $('#rollWrap').scrollLeft = Math.max(0, 10 + Math.floor(notes[0].t / BAR) * BAR * PX - 10); $('#empty').hidden = true; $('#make').textContent = 'Sing it again';
@@ -843,6 +840,17 @@ function writeSmf(m) {
     body.push(0, 0xFF, 0x2F, 0); const L = body.length; out.push(0x4D, 0x54, 0x72, 0x6B, L >>> 24, L >> 16 & 255, L >> 8 & 255, L & 255, ...body); });
   return new Uint8Array(out);
 }
+// the song again, with room for the voice: the melody, its answer and the lead rest in every bar where the voice sings, and play in the gaps
+function roomSong(buf, notes) {
+  const m = parseSmf(buf), BT = m.ppq * 4, k = m.ppq / TB, busy = new Set();
+  notes.forEach((n) => { for (let b = Math.floor(n.t * k / BT); b <= Math.floor(((n.t + n.d) * k - 1) / BT); b++) busy.add(b); });
+  const nameOf = (ev) => { const e = ev.find((x) => x.meta === 0x03); return e ? String.fromCharCode(...e.data) : ''; };
+  m.tracks = m.tracks.map((ev) => { if (!/melody|lead|answer|hook|riff/i.test(nameOf(ev))) return ev;
+    const dropped = {}; return ev.filter((e) => { if (e.meta != null) return true; const ty = e.st & 0xF0, key = (e.st & 15) * 128 + e.data[0];
+      if (ty === 0x90 && e.data[1] > 0) { if (busy.has(Math.floor(e.tick / BT))) { dropped[key] = (dropped[key] || 0) + 1; return false; } return true; }
+      if ((ty === 0x80 || ty === 0x90) && dropped[key]) { dropped[key]--; return false; } return true; }); });
+  return writeSmf(m);
+}
 function lengthen(buf, markers, endBar, extra) {
   const m = parseSmf(buf), BT = m.ppq * 4, out = markers.find((x) => /outro|end/i.test(x.text) && x.bar > 0), at = out ? out.bar : endBar;
   const src = markers.filter((x) => x.bar < at && /chorus|drop|peak|refrain|hook/i.test(x.text)).pop() || markers.filter((x) => x.bar < at && !/intro/i.test(x.text)).pop();
@@ -868,6 +876,7 @@ $('#extend').onclick = () => {
     if (!S.need) break; }
   S.extending = false; $('#longer').hidden = false; $('#extend').hidden = !S.need; $('#dlSong').hidden = false;
 };
+$('#dlRoom').onclick = () => { if (!S.song || !S.song.raw || !S.result) return; save(new Blob([roomSong(S.song.raw, S.result.notes)], { type: 'audio/midi' }), (S.song.fname || 'Song').replace(/\.midi?$/i, '') + '_room_for_voice.mid'); };
 $('#dlSong').onclick = () => { if (S.longer) save(new Blob([S.longer.data], { type: 'audio/midi' }), S.longer.name); };
 $('#songOff').onclick = () => { S.song = null; $('#songOff').hidden = true; $('#songInfo').textContent = 'optional: the chords or the whole song, so the vocal follows its tempo, key and chords'; $('#bpm').value = GENRES[S.genre].bpm; renderMatch(); };
 $('#melFile').onchange = async () => {
