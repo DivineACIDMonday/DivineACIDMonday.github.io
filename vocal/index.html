@@ -335,7 +335,7 @@ function writeVocal(secs, opt) {
   const GRID = opt.genre === 'blues' ? 4 : 3, MIN = Math.max(opt.genre === 'blues' ? 4 : 6, Math.ceil(0.21 * (opt.bpm || 120) / 5 / GRID) * GRID), POOL = G.pool.filter((x) => x >= MIN).length ? G.pool.filter((x) => x >= MIN) : [MIN];
   const roomX = (sec, tight) => (sec.role === 'chorus' && !tight && !sec.single ? 2 : 1); secs.forEach((x) => { delete x.single; }); // a chorus line gets double room, so she can hold and glide its ending
   const avg = POOL.reduce((a, b) => a + b, 0) / POOL.length;
-  const notes = [], rhythms = {}, melodies = {}; let t0 = opt.startBar0 * BAR, prevIdx = mid;
+  const notes = [], rhythms = {}, melodies = {}, motifs = {}, dares = {}, shapes = {}, lastChorus = secs.map((x) => x.role).lastIndexOf('chorus'); let t0 = opt.startBar0 * BAR, prevIdx = mid;
   // the song's own parts (markers from a Studio or the Structure file): every lyric part lands on the next part of the song that fits it
   const FIT = { verse: /verse|couplet|strophe|build|part/i, pre: /pre|build|rise/i, chorus: /chorus|refrain|hook|drop|peak/i, bridge: /bridge|break|middle/i, outro: /outro|end/i };
   const marks = (opt.markers || []).filter((m) => m.bar >= opt.startBar0);
@@ -396,7 +396,7 @@ function writeVocal(secs, opt) {
     const centre = { verse: -3, pre: 0, chorus: 2, bridge: 0, outro: -3 }[sec.role]; // verses low and close, choruses up high: the contrast is the passion
     const arc = sec.role === 'pre' ? 'rise' : sec.role === 'chorus' && G.arc === 'chant' ? 'hook' : sec.role === 'chorus' ? 'arch' : sec.role === 'bridge' ? 'sigh' : G.arc;
     sec.lines.forEach((ln, li) => {
-      const start = t0 + li * slot, n = ln.syl.length, mkey = sec.role + '|' + ln.text.toLowerCase();
+      const start = t0 + li * slot, n = ln.syl.length, mkey = sec.role + (si === lastChorus && sec.role === 'chorus' ? '|last' : '') + '|' + ln.text.toLowerCase(); // the last chorus sings its own take, with the climax
       let line = melodies[mkey];
       if (!line) {
         // rhythm: the same section and syllable count share a rhythm
@@ -415,51 +415,65 @@ function writeVocal(secs, opt) {
           const lastT = sum() - ds[n - 1]; ds[n - 1] = Math.max(ds[n - 1], Math.min(24, maxEnd - lastT));
           rh = rhythms[rk] = { st, ds };
         }
-        // pitch
-        // a long vowel (rise, high, cry, way, free, you) never gets the shortest note when a little word next to it can give its time
-        const ds = rh.ds.slice(), LONGV = /(i.e|igh|y$|ay|ee|ea|oo|ou|ow|oa|ai|a.e|o.e|u.e)/i, LITTLE = /^(a|an|the|is|of|to|in|on|and|we|my|it|at|by|i|so|or|be|me)$/i;
-        ln.syl.forEach((x, i) => { if (ds[i] >= 12 || !LONGV.test(x.text)) return; for (const j of [i - 1, i + 1, i - 2]) { if (j < 0 || j >= n || ds[j] <= ds[i] || !LITTLE.test(ln.syl[j].text)) continue; const tmp = ds[i]; ds[i] = ds[j]; ds[j] = tmp; break; }
-          if (ds[i] < 12) for (const j of [i + 1, i - 1]) { if (j >= 0 && j < n && ds[j] >= 12 && ds[j] - 6 >= ds[i] - 3) { const g = ds[i] % 6 ? 3 : 6; ds[j] -= g; ds[i] += g; if (ds[i] >= 12) break; } } });
-        // which syllable of each word carries the weight: most English words lean on the first, words with a prefix (re-write, be-long, un-bound, a-scen-ding) on the second, -ity words three from the end, -ion words on the one before last
-        const wLen = [], wPos = []; { let b = 0; ln.syl.forEach((x, i) => { if (x.syllabic === 'single' || x.syllabic === 'begin' || i === 0) b = i; wPos.push(i - b); }); for (let i = 0; i < n; i++) { let e = i; while (e + 1 < n && wPos[e + 1] > 0) e++; wLen.push(e - i + wPos[i] + 1); } }
+        // the words decide the rhythm: a strong syllable gets time, a small word or a weak syllable runs quick in between, so every word is clear
+        const LITTLE = /^(a|an|the|is|of|to|in|on|and|we|my|it|at|by|i|so|or|be|me|our|your|are|as|from|that)$/i;
+        const wLen = [], wPos = []; { let b0 = 0; ln.syl.forEach((x, i) => { if (x.syllabic === 'single' || x.syllabic === 'begin' || i === 0) b0 = i; wPos.push(i - b0); }); for (let i = 0; i < n; i++) { let e = i; while (e + 1 < n && wPos[e + 1] > 0) e++; wLen.push(e - i + wPos[i] + 1); } }
+        // which syllable carries the word: most English words lean on the first, words with a prefix (re-write, be-long, un-bound, a-scen-ding) on the second, -ity words three from the end, -ion words the one before last
         const PRE = /^(re|be|un|a|e|de|ex|ma|to|trans|em|en|im|in|con|com|pro|per|for|ap|ac|ad|at|al|o|u)[^aeiou]/i;
         const stress = ln.syl.map((x, i) => { if (wLen[i] === 1) return LITTLE.test(x.text) ? 0 : 1; const w = (x.word || '').toLowerCase();
-          const s = /ity$/.test(w) ? wLen[i] - 3 : /ion$|ions$/.test(w) ? wLen[i] - 2 : PRE.test(w) && wLen[i] <= 3 ? 1 : 0; return wPos[i] === Math.max(0, s) ? 2 : 0; });
-        for (let i = 0; i < n - 1; i++) if (stress[i]) for (const j of [i + 1, i - 1]) { if (j < 0 || j >= n - 1 || stress[j] || ds[j] <= ds[i]) continue; const tmp = ds[i]; ds[i] = ds[j]; ds[j] = tmp; break; }
+          const st0 = /ity$/.test(w) ? wLen[i] - 3 : /ions?$/.test(w) ? wLen[i] - 2 : PRE.test(w) && wLen[i] <= 3 ? 1 : 0; return wPos[i] === Math.max(0, st0) ? 2 : 0; });
+        const U = opt.genre === 'blues' ? 8 : Math.max(6, MIN), needR = stress.reduce((a2, v) => a2 + (v ? 2 * U : U), 0) + 2 * U;
+        const br2 = needR > breath - 6 - rh.st ? Math.max(breath, slot - 6) : breath; // the words come first: when they need it, the line may use the room the band would get
+        const room = Math.max(n * U + 6, br2 - 6) - rh.st, rk2 = sec.label + '|' + stress.join('') + '|' + breath;
+        let ds = rhythms[rk2] ? rhythms[rk2].slice() : null; // lines with the same word rhythm in one part share it: that is the part's groove
+        if (!ds) { ds = ln.syl.map((x, i) => (stress[i] ? (chance(0.3) ? 3 * U : 2 * U) : U)); let sum = ds.reduce((a2, b2) => a2 + b2, 0);
+          const giveOrder = ds.map((d, i) => i).filter((i) => i < n - 1).sort((a2, b2) => Math.abs(b2 - 0.55 * n) - Math.abs(a2 - 0.55 * n)); // too long: the strong syllables far from the heart of the line give back first, the key word keeps its time
+          for (const i of giveOrder) { if (sum <= room - 2 * U) break; if (ds[i] > U) { sum -= ds[i] - U; ds[i] = U; } }
+          for (let i = 0; sum < room * 0.55 && i < n - 1; i++) if (stress[i] && ds[i] < 3 * U) { ds[i] += U; sum += U; } // lots of room: strong syllables take it
+          rhythms[rk2] = ds.slice(); }
         for (let i = 0; i < n; i++) while (ds[i] < MIN) { let j = -1; ds.forEach((x, k) => { if (k !== i && x - GRID >= MIN && (j < 0 || x > ds[j])) j = k; }); if (j < 0) { ds[i] = MIN; break; } ds[j] -= GRID; ds[i] += GRID; }
         // every line ends its own way, so it never becomes one trick: she holds it, glides it over two or three notes, or stops short
         const ENDS = { chorus: ['glide', 'hold', 'stop', 'hold'], verse: ['hold', 'stop', 'glide', 'hold'], pre: ['stop', 'hold'], bridge: ['hold', 'glide', 'hold', 'hold'], outro: ['glide', 'hold'] }[sec.role] || ['hold'];
-        const ending = n < 2 ? 'hold' : ENDS[li % ENDS.length], used = rh.st + ds.slice(0, -1).reduce((a, b) => a + b, 0), space = Math.max(n * MIN + 6, breath - 6) - used;
+        const ending = n < 2 ? 'hold' : ENDS[li % ENDS.length], used = rh.st + ds.slice(0, -1).reduce((a, b) => a + b, 0), space = Math.max(n * MIN + 6, br2 - 6) - used;
         if (ending === 'stop') ds[n - 1] = Math.max(MIN, Math.min(ds[n - 1], 12)); else ds[n - 1] = Math.max(ds[n - 1], Math.min(sec.role === 'chorus' || sec.role === 'bridge' ? 48 : 30, space));
         // Tinkerbell: when the line before left room, she starts an eighth before the beat
         const pick = rh.st === 0 && li > 0 && (slot >= 4 * BAR || (slot === 2 * BAR && li % 2 === 0)) && chance(0.6) ? (opt.genre === 'blues' ? 8 : 6) : 0;
-        // the melody: every line is a small journey. It climbs to a peak on its strongest word and comes down again; strong syllables
-        // sit higher, small words lower, and never three of the same note in a row. A line that comes out flat is written again.
-        const stressed = stress.map((v, i) => [v, i]).filter((v) => v[0] > 0).map((v) => v[1]);
-        const aim = { chorus: 0.4, pre: 1, bridge: 0.7, verse: 0.65, outro: 0.5 }[sec.role] || 0.6, AMP = { chorus: 4, bridge: 3.5, pre: 3, verse: 2.5, outro: 2 }[sec.role] || 3, END = { verse: -1.2, outro: -1.5, chorus: 0, bridge: 0.5, pre: 1.5 }[sec.role] || 0;
-        const sing = () => {
-          const peak = stressed.length ? stressed.reduce((bst, i) => (Math.abs(i - aim * (n - 1)) < Math.abs(bst - aim * (n - 1)) ? i : bst), stressed[0]) : Math.round(aim * (n - 1));
-          const amp = AMP + R([-0.7, 0, 0.6]), out = []; let tt = rh.st - pick, ix = prevIdx;
+        // the melody is composed: every part has its own motif (a little idea of a few steps) that keeps coming back, changed each time;
+        // a line that opens a pair asks (it ends open, up), the next answers (it comes home); one dare per part; the highest note waits for the last chorus
+        const CELLS = [[1, 1, -2], [2, -1, -1], [-1, -1, 3], [1, 2, -1, -1], [3, -1, -1], [-2, 1, 1], [1, -1, 2], [0, 1, 1, -2], [-1, 2, -1]];
+        const mot = motifs[sec.label] || (motifs[sec.label] = R(CELLS)), top = A.length - 1 - (si === lastChorus ? 0 : 1), base = Math.max(0, Math.min(top, mid + centre));
+        let home = -1; for (let c = 0; c < A.length; c++) if (A[c] % 12 === opt.key.root && (home < 0 || Math.abs(c - base) < Math.abs(home - base))) home = c; if (home < 0) home = base;
+        const ask = li % 2 === 0 && li < sec.lines.length - 1, endT = Math.max(0, Math.min(top, ask ? home + (sec.role === 'chorus' ? 4 : 1) : sec.role === 'pre' ? base + 2 : home));
+        const dare = dares[si] || (dares[si] = { line: Math.min(sec.lines.length - 1, sec.lines.length > 1 ? 1 + Math.floor(rng() * (sec.lines.length - 1)) : 0), kind: si === lastChorus ? 'hold' : R(['leap', 'hold', 'silence']) });
+        const strongIdx = stress.map((v, i) => [v, i]).filter((v) => v[0]).map((v) => v[1]);
+        const compose = () => {
+          const out = [], variant = R([0, 1, 2]); let tt = rh.st - pick, k = Math.max(0, Math.min(top, base + R([-1, 0, 0, 1]))), step = 0;
+          const dareAt = dare.line === li && n > 2 ? (strongIdx.filter((i) => i < n - 1).length ? strongIdx.filter((i) => i < n - 1)[Math.floor(strongIdx.filter((i) => i < n - 1).length * 0.6)] : Math.floor(n * 0.6)) : -1;
           for (let i = 0; i < n; i++) {
-            const up = peak > 0 ? Math.pow(Math.min(1, i / peak), 0.8) : 1, down = i > peak && n - 1 > peak ? (i - peak) / (n - 1 - peak) : 0;
-            const level = i <= peak ? -1 + (amp + 1) * up : amp - (amp - END) * down, lift = stress[i] === 2 ? 0.8 : stress[i] === 1 ? 0.3 : -0.4;
-            const target = Math.max(0, Math.min(A.length - 1, mid + centre + Math.round(level + lift)));
-            let k = i === 0 ? target : Math.max(ix - (G.leap + 1), Math.min(ix + (G.leap + 1), target));
-            const abs = start + tt, strong = stress[i] > 0 && abs % (2 * TB) === 0, lastN = i === n - 1;
-            const q1 = out.length ? A.indexOf(out[out.length - 1].m) : -9;
-            if (strong || lastN) { // a strong syllable on a strong beat lands on a chord tone close to where the line wants to go, preferably a new note
-              const ct = new Set(chordAt(abs)), wantRoot = lastN && (sec.role === 'chorus' && li === sec.lines.length - 1 || sec.role === 'outro');
-              let bst = -1; for (let c = 0; c < A.length; c++) { if (!ct.has(A[c] % 12) || Math.abs(c - k) > 1) continue; if (wantRoot && A[c] % 12 !== opt.key.root) continue; const cost = (x) => Math.abs(x - k) + (x === q1 ? 1.5 : 0); if (bst < 0 || cost(c) < cost(bst)) bst = c; }
-              if (bst >= 0) k = bst;
+            const left = n - 1 - i;
+            if (i > 0) {
+              if (left <= 1) { const dir = Math.sign(endT - k); k += left === 0 ? endT - k : dir * Math.min(Math.abs(endT - k), 2); } // the last two syllables walk to where the line ends
+              else if (stress[i] || chance(0.35)) { let iv = mot[step % mot.length]; if (variant === 2) iv = -iv; if (variant === 1 && step === 0) iv += 1; step++; k += iv; } // the motif moves on the strong syllables
+              else k += chance(0.5) ? 0 : (endT > k ? 1 : -1); // small words pass by, one step at a time
             }
-            const p1 = out.length ? A.indexOf(out[out.length - 1].m) : -1, p2 = out.length > 1 ? A.indexOf(out[out.length - 2].m) : -2;
-            if (k === p1 && (k === p2 || chance(0.7))) k = Math.max(0, Math.min(A.length - 1, k + (target > k ? 1 : target < k ? -1 : (i <= peak ? 1 : -1)))); // a repeated note is rare, never three in a row
-            out.push({ t: tt, d: ds[i], m: A[k], lyr: ln.syl[i].text, word: ln.syl[i].word, syllabic: ln.syl[i].syllabic }); tt += ds[i]; ix = k;
+            if (i === dareAt && dare.kind !== 'silence') k += dare.kind === 'leap' ? 3 + (chance(0.5) ? 1 : 0) : 2;
+            if (i === dareAt && si === lastChorus) k = top; // the climax: only the last chorus reaches the highest note
+            k = Math.max(0, Math.min(top, k));
+            const p1 = out.length ? A.indexOf(out[out.length - 1].m) : -9, p2 = out.length > 1 ? A.indexOf(out[out.length - 2].m) : -8;
+            if (k === p1 && (k === p2 || chance(0.6))) k = Math.max(0, Math.min(top, k + (k >= top ? -1 : k <= 0 ? 1 : endT > k ? 1 : -1))); // a repeated note is rare, never three in a row
+            const abs = start + tt;
+            if (stress[i] && abs % BAR === 0 && left > 1) { const ct = new Set(chordAt(abs)); let bst = -1; for (let c = Math.max(0, k - 1); c <= Math.min(top, k + 1); c++) if (ct.has(A[c] % 12) && c !== p1 && (bst < 0 || Math.abs(c - k) < Math.abs(bst - k))) bst = c; if (bst >= 0) k = bst; } // the downbeat sits on the chord
+            out.push({ t: tt, d: ds[i], m: A[k], lyr: ln.syl[i].text, word: ln.syl[i].word, syllabic: ln.syl[i].syllabic }); tt += ds[i];
           }
+          if (dareAt > 0) { const x = out[dareAt], pv = out[dareAt - 1], nx = out[dareAt + 1];
+            if (dare.kind === 'hold' && nx && nx.d > U && dareAt + 1 < n - 1) { x.d += U; nx.t += U; nx.d -= U; } // she holds the high note
+            if (dare.kind === 'silence' && pv.d >= 2 * U) pv.d -= U; } // a sudden silence just before the strong word
           const ms2 = out.map((x) => x.m), same = ms2.slice(1).filter((m, i) => m === ms2[i]).length / Math.max(1, n - 1), span = A.indexOf(Math.max(...ms2)) - A.indexOf(Math.min(...ms2));
-          return { out, ix, score: same * 3 - Math.min(span, 5) * 0.3 };
+          const shape = ms2.slice(1).map((m, i) => Math.sign(m - ms2[i])).join(','), dup = (shapes[sec.label] || []).includes(shape) ? 1 : 0;
+          return { out, ix: A.indexOf(ms2[n - 1]), shape, score: same * 3 + dup - Math.min(span, 5) * 0.25 };
         };
-        let best = null; for (let tr = 0; tr < 10; tr++) { const r = sing(); if (!best || r.score < best.score) best = r; if (r.score <= 0.6 - Math.min(n, 6) * 0.1) break; }
+        let best = null; for (let tr = 0; tr < 10; tr++) { const r = compose(); if (!best || r.score < best.score) best = r; if (r.score <= -0.5) break; } // a flat line, or one shaped just like the line before, is written again
+        (shapes[sec.label] = shapes[sec.label] || []).push(best.shape);
         line = best.out; let idx = best.ix;
         // a small run on the last syllable
         const last = line[line.length - 1];
