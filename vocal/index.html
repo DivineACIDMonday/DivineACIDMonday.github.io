@@ -660,6 +660,10 @@ function make() {
   notes.sort((a, b) => a.t - b.t); notes.forEach((n, i) => { const nx = notes[i + 1]; if (nx && n.t + n.d > nx.t) n.d = Math.max(1, nx.t - n.t); });
   { const mt = Math.ceil(0.2 * bpm / 5); for (let i = 0; i < notes.length - 1; i++) { const n = notes[i], nx = notes[i + 1], z = nx.t + nx.d; if (n.d < mt && z - (n.t + mt) >= mt) { n.d = mt; nx.t = n.t + mt; nx.d = z - nx.t; } } } // a squeezed note borrows from the next, never below 0.2 s
   const title = $('#title').value.trim() || 'Untitled';
+  // she swings with the song: every off beat moves to where the song's own off beats fall, so she sits in its groove instead of on a straight grid
+  if (S.song && S.song.swing > 0.55) { const sT = Math.min(TB - 3, Math.max(TB / 2 + 1, Math.round(S.song.swing * TB - 0.01))), half = TB / 2;
+    const sw = (t) => { const b = Math.floor(t / TB) * TB, f = t - b; return b + Math.round(f <= half ? f * sT / half : sT + (f - half) * (TB - sT) / half); };
+    notes.forEach((n) => { const a = sw(n.t), z = sw(n.t + n.d); n.t = a; n.d = Math.max(1, z - a); }); }
   S.result = { notes, bpm, key, title };
   { const b = document.getElementById('dlRoom'); if (b) b.hidden = !(S.song && S.song.raw); }
   const bars = Math.ceil((notes[notes.length - 1].t + notes[notes.length - 1].d) / BAR), syl = notes.filter((n) => n.lyr !== '-').length;
@@ -870,7 +874,10 @@ function loadSong(buf, fname) {
       const first = M.markers.find((m) => /verse|couplet|strophe/i.test(m.text)) || M.markers.find((m) => !/intro/i.test(m.text) && m.bar > 0); if (first) $('#startBar').value = first.bar + 1;
       $('#songInfo').textContent = f.name + ' · ' + Math.round(M.bpm) + ' bpm. The vocal sings its parts on the parts of the song: ' + M.markers.map((m) => m.text + ' ' + (m.bar + 1)).join(', ') + '. Load the Chords or Pad too, for the chords.'; $('#songOff').hidden = false; S.song.raw = buf; S.song.fname = fname; S.song.end = M.endBar || 0; return; }
     const key = detectKey(h), chords = bars.map((v) => v && v.map((x, pc) => [x, pc]).sort((a, b) => b[0] - a[0]).slice(0, 3).filter((x) => x[0] > 0).map((x) => x[1]));
-    S.song = { key, chords, h, bpm: M.bpm, bars: bars.length, markers: M.markers.length ? M.markers : (S.song && S.song.markers) || [] }; $('#bpm').value = Math.round(M.bpm); renderMatch();
+    // the groove of the song: where its off beats fall. A swung trip hop beat puts them late (around 70% of the beat); she swings with it
+    const offs = []; let straight = 0; M.tracks.forEach((t) => t.notes.forEach((n) => { const fr = (n.tick % M.ppq) / M.ppq; if (fr > 0.45 && fr < 0.55) straight++; else if (fr >= 0.58 && fr <= 0.78) offs.push(fr); }));
+    offs.sort((a2, b2) => a2 - b2); const swing = offs.length >= 16 && offs.length > straight * 1.5 ? Math.max(0.55, Math.min(0.75, offs[offs.length >> 1])) : 0.5;
+    S.song = { key, chords, h, swing, bpm: M.bpm, bars: bars.length, markers: M.markers.length ? M.markers : (S.song && S.song.markers) || [] }; $('#bpm').value = Math.round(M.bpm); renderMatch();
     const first = M.markers.find((m) => /verse|couplet|strophe/i.test(m.text)) || M.markers.find((m) => !/intro/i.test(m.text) && m.bar > 0);
     if (first) $('#startBar').value = first.bar + 1;
     $('#songInfo').textContent = f.name + ' · ' + Math.round(M.bpm) + ' bpm · ' + keyName(key) + ' · ' + bars.length + ' bars. The vocal follows its chords' + (M.markers.length ? ' and sings its parts on the parts of the song: ' + M.markers.map((m) => m.text + ' ' + (m.bar + 1)).join(', ') + '.' : '.'); $('#songOff').hidden = false;
