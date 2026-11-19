@@ -332,7 +332,8 @@ function writeVocal(secs, opt) {
   const chordAt = (abs) => { const bar = Math.floor(abs / BAR); if (opt.chords) { for (let b = bar; b >= 0; b--) if (opt.chords[b]) return opt.chords[b]; } return impliedChord(opt.genre, opt.key, bar - opt.startBar0); };
   const nearestIdx = (m) => { let bi = 0; A.forEach((x, i) => { if (Math.abs(x - m) < Math.abs(A[bi] - m)) bi = i; }); return bi; };
   // never a syllable much shorter than an eighth at 133 bpm (0.21 s) at any tempo: shorter and she swallows it or skips like a CD
-  const GRID = opt.genre === 'blues' ? 4 : 3, MIN = Math.max(opt.genre === 'blues' ? 4 : 6, Math.ceil(0.21 * (opt.bpm || 120) / 5 / GRID) * GRID), POOL = G.pool.filter((x) => x >= MIN).length ? G.pool.filter((x) => x >= MIN) : [MIN];
+  // and on a fast beat she does not race the drums: from about 100 bpm she floats over it at half speed, every syllable at least a quarter note, her own rhythm against theirs
+  const GRID = opt.genre === 'blues' ? 4 : 3, STEP = opt.genre === 'blues' ? 4 : 6, MIN = Math.max(STEP, Math.ceil(0.3 * (opt.bpm || 120) / 5 / STEP - 1e-9) * STEP), POOL = G.pool.filter((x) => x >= MIN).length ? G.pool.filter((x) => x >= MIN) : [MIN];
   const roomX = (sec, tight) => (sec.role === 'chorus' && !tight && !sec.single ? 2 : 1); secs.forEach((x) => { delete x.single; }); // a chorus line gets double room, so she can hold and glide its ending
   const avg = POOL.reduce((a, b) => a + b, 0) / POOL.length;
   const notes = [], rhythms = {}, melodies = {}, motifs = {}, dares = {}, shapes = {}, lastChorus = secs.map((x) => x.role).lastIndexOf('chorus'); let t0 = opt.startBar0 * BAR, prevIdx = mid;
