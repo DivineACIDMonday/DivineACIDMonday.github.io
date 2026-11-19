@@ -776,7 +776,11 @@ $('#beatOn').onclick = () => { const b = $('#beatOn'); b.setAttribute('aria-pres
 function toSvp(notes, bpm, title, voice, K) {
   const BL = 705600000, PT = BL / TB, q = (t) => Math.round(t * PT), sec = (t) => t / TB * 60 / bpm, ms = (s) => Math.round(s * bpm / 60 * BL);
   const uid = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3) | 8).toString(16); });
-  const ns = notes.slice().sort((a, b) => a.t - b.t), EN = { verse: 0.35, pre: 0.6, chorus: 1, bridge: 0.6, outro: 0.4 };
+  // a glide (a held vowel that moves to a new note) is one held note with a pitch slide inside it: separate glide notes make Synthesizer V render silence
+  const ns = [], bends = []; notes.slice().sort((a, b) => a.t - b.t).forEach((n) => { const p = ns[ns.length - 1];
+    if ((n.lyr === '-' || n.syllabic === 'cont') && p && Math.abs(n.t - (p.t + p.d)) <= 1) { const prev = p.bend || 0, c = (n.m - p.m) * 100; bends.push([q(n.t), prev, Math.min(q(n.t) + ms(0.15), q(n.t + n.d) - 2), c, q(n.t + n.d) - 1, c]); p.bend = c; p.d = n.t + n.d - p.t; }
+    else ns.push(Object.assign({}, n, { bend: 0 })); });
+  const EN = { verse: 0.35, pre: 0.6, chorus: 1, bridge: 0.6, outro: 0.4 };
   const ph = []; ns.forEach((n, i) => { const p = ns[i - 1]; if (!p || n.t - (p.t + p.d) >= TB / 2) ph.push([n]); else ph[ph.length - 1].push(n); });
   const L = [], T = [], B = [], V = [], P = [], cv = (arr) => { const pr = []; for (let i = 0; i < arr.length; i += 2) pr.push([arr[i], arr[i + 1]]); pr.sort((a, b) => a[0] - b[0]); const out = []; let last = -1;
     pr.forEach(([t, v]) => { if (t <= last) t = last + 1; out.push(t, Math.round(v * 1000) / 1000); last = t; }); return { mode: 'cubic', points: out }; };
@@ -789,7 +793,8 @@ function toSvp(notes, bpm, title, voice, K) {
       if (s >= 1) V.push(t, 0.3, t + ms(0.35), 0.6, t + d, 1 + 0.6 * K); else if (s >= 0.5) V.push(t, 0.5, t + d, 0.8 + 0.3 * K); else V.push(t, 0.2, t + d, 0.25);
       const p = F[i - 1]; if (i && Math.abs(n.m - p.m) >= 3 && s >= 0.3) P.push(t - 1, 0, t, (n.m > p.m ? -45 : 35) * K, t + ms(0.09), 0); });  // a leap is sung, not jumped
     const l = F[F.length - 1], ld = sec(l.d); L.push(z, base - 1.5 * kL); B.push(q(l.t), 0.05, z, (ld >= 0.5 ? 0.5 : 0.3) * K, z + ms(0.3), 0.05);
-    if (ld >= 0.4) P.push(z - ms(Math.min(0.25, ld / 2)), 0, z, -(ld >= 1 ? 160 : 90) * K); });     // and lets the end of a line fall away
+    if (ld >= 0.4 && !l.bend) P.push(z - ms(Math.min(0.25, ld / 2)), 0, z, -(ld >= 1 ? 160 : 90) * K); else if (l.bend) P.push(z + ms(0.05), 0); });
+  bends.forEach((b) => P.push(...b));     // and lets the end of a line fall away
   const out = []; let word = '';
   ns.forEach((n) => { let ly; if (n.lyr === '-' || n.syllabic === 'cont') ly = '-'; else if (n.syllabic === 'middle' || n.syllabic === 'end') ly = '+'; else ly = n.syllabic === 'begin' ? (n.word || n.lyr) : n.lyr;
     out.push({ uuid: uid().replace(/-/g, '').slice(0, 16), musicalType: 'singing', lyrics: ly, phonemes: '', accent: '', onset: q(n.t), duration: q(n.d), pitch: n.m, detune: 0,
