@@ -161,7 +161,7 @@ const GENRES = {
 };
 const MODES = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], dorian: [0, 2, 3, 5, 7, 9, 10], phrygian: [0, 1, 3, 5, 7, 8, 10], blues: [0, 3, 5, 6, 7, 10] };
 const NN = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
-const VOICES = { nyl: [54, 66], moxu: [58, 68], any: [52, 71] }; // NYL II F#3 to F#4, Mo Xu A#3 to G#4
+const VOICES = { nyl: [51, 68], moxu: [55, 70], any: [50, 72] }; // sweet spots NYL II F#3 to F#4, Mo Xu A#3 to G#4, plus a few notes below for the whispers and above for the peaks: a singer who stays in one octave sounds flat
 const ROLE_COL = { verse: '#4FB3A9', pre: '#9B87E0', chorus: '#E7B65C', bridge: '#D9668A', outro: '#6FA8DC' };
 
 /* ---------- the oracle (from the Divine Lyric Oracle) ---------- */
@@ -331,7 +331,10 @@ function writeVocal(secs, opt) {
   const G = GENRES[opt.genre], range = VOICES[opt.voice], A = allowed(opt.key, range), mid = Math.floor(A.length / 2);
   const chordAt = (abs) => { const bar = Math.floor(abs / BAR); if (opt.chords) { for (let b = bar; b >= 0; b--) if (opt.chords[b]) return opt.chords[b]; } return impliedChord(opt.genre, opt.key, bar - opt.startBar0); };
   const nearestIdx = (m) => { let bi = 0; A.forEach((x, i) => { if (Math.abs(x - m) < Math.abs(A[bi] - m)) bi = i; }); return bi; };
-  const avg = G.pool.reduce((a, b) => a + b, 0) / G.pool.length;
+  // never a syllable much shorter than an eighth at 133 bpm (0.21 s) at any tempo: shorter and she swallows it or skips like a CD
+  const GRID = opt.genre === 'blues' ? 4 : 3, MIN = Math.max(opt.genre === 'blues' ? 4 : 6, Math.ceil(0.21 * (opt.bpm || 120) / 5 / GRID) * GRID), POOL = G.pool.filter((x) => x >= MIN).length ? G.pool.filter((x) => x >= MIN) : [MIN];
+  const roomX = (sec, tight) => (sec.role === 'chorus' && !tight && !sec.single ? 2 : 1); secs.forEach((x) => { delete x.single; }); // a chorus line gets double room, so she can hold and glide its ending
+  const avg = POOL.reduce((a, b) => a + b, 0) / POOL.length;
   const notes = [], rhythms = {}, melodies = {}; let t0 = opt.startBar0 * BAR, prevIdx = mid;
   // the song's own parts (markers from a Studio or the Structure file): every lyric part lands on the next part of the song that fits it
   const FIT = { verse: /verse|couplet|strophe|build|part/i, pre: /pre|build|rise/i, chorus: /chorus|refrain|hook|drop|peak/i, bridge: /bridge|break|middle/i, outro: /outro|end/i };
@@ -340,7 +343,7 @@ function writeVocal(secs, opt) {
   opt.report = { left: 0 };
   // the song's form first: lyric parts of the same kind in a row are one block (verse + verse is the song's verse part); every block
   // takes the next part of the song that fits it, so the lyrics and the song share one form; a block that is too long sings tighter
-  const natural = (sec, tight) => { const nd = tight ? Math.max(...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18)) : Math.max(median(sec.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18)); return ([2, 4, 8, 16].find((b) => b * BAR >= nd) || 16) * BAR * sec.lines.length; };
+  const natural = (sec, tight) => { const nd = roomX(sec, tight) * (tight ? Math.max(...sec.lines.map((l) => l.syl.length * MIN + 18)) : Math.max(median(sec.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...sec.lines.map((l) => l.syl.length * MIN + 18))); return ([2, 4, 8, 16].find((b) => b * BAR >= nd) || 16) * BAR * sec.lines.length; };
   const blockAt = {}, tightSec = {}, assign = parts.length && !opt.packed && !opt.spread, roomy = [];
   if (assign) { let j = 0, i = 0;
     while (i < secs.length) { let k2 = i; while (k2 + 1 < secs.length && secs[k2 + 1].role === secs[i].role) k2++;
@@ -348,7 +351,10 @@ function writeVocal(secs, opt) {
       let k = -1; for (let q = j; q < Math.min(parts.length, j + 3); q++) if (usable(parts[q]) && FIT[role].test(parts[q].text)) { k = q; break; }
       if (k < 0) for (let q = j; q < parts.length; q++) if (usable(parts[q])) { k = q; break; }
       if (k >= 0) { // after a chorus the band gets its moment: a chorus part of 12 bars or more keeps its last 4 bars for the instruments
-        const full = parts[k].z - parts[k].a, len = role === 'chorus' && full >= 12 * BAR && k < parts.length - 1 ? full - 4 * BAR : full, nat = secs.slice(i, k2 + 1).reduce((a2, x) => a2 + natural(x, opt.tight), 0); blockAt[i] = parts[k].a;
+        const full = parts[k].z - parts[k].a; let len = role === 'chorus' && full >= 12 * BAR && k < parts.length - 1 ? full - 4 * BAR : full, nat = secs.slice(i, k2 + 1).reduce((a2, x) => a2 + natural(x, opt.tight), 0); blockAt[i] = parts[k].a;
+        // the chorus with double room may take the whole drop; when even that is too short it sings with normal room, and only then tighter
+        if (role === 'chorus' && nat > len + 2 * TB && nat <= full + 2 * TB) len = full;
+        else if (role === 'chorus' && nat > len + 2 * TB) { secs.slice(i, k2 + 1).forEach((x) => { x.single = true; }); nat = secs.slice(i, k2 + 1).reduce((a2, x) => a2 + natural(x, opt.tight), 0); }
         if (role === 'chorus' && !opt.repeated && nat * 2 <= len + 2 * TB) roomy.push(k2); // a long drop for a short chorus: sing it twice
         if (nat > len + 2 * TB) for (let x = i; x <= k2; x++) tightSec[x] = true; j = k + 1; }
       i = k2 + 1; } }
@@ -375,7 +381,7 @@ function writeVocal(secs, opt) {
     else opt.report.left = 1; }
   secs.forEach((sec, si) => {
     if (opt.spread && spreadAt[si] == null) return;
-    const need = opt.tight || opt.spread || tightSec[si] ? Math.max(...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18)) : Math.max(median(sec.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...sec.lines.map((l) => l.syl.length * (opt.genre === 'blues' ? 4 : 6) + 18));
+    const isTight = opt.tight || opt.spread || tightSec[si], need = roomX(sec, isTight) * (isTight ? Math.max(...sec.lines.map((l) => l.syl.length * MIN + 18)) : Math.max(median(sec.lines.map((l) => l.syl.length * avg * 0.72 + 18)), ...sec.lines.map((l) => l.syl.length * MIN + 18)));
     const slot = [2, 4, 8, 16].find((b) => b * BAR >= need) * BAR || 16 * BAR;
     if (opt.spread) t0 = spreadAt[si];
     else if (assign) { if (blockAt[si] != null) t0 = Math.max(t0, blockAt[si]); if (end && t0 + sec.lines.length * slot > end + 2 * TB && !opt.runOn) { opt.report.left += sec.lines.length; return; } }
@@ -387,7 +393,7 @@ function writeVocal(secs, opt) {
       const q = opt.packed ? free[0] : free.slice(0, 2).find((x) => FIT[sec.role].test(x.text)) || free[0]; // the nearest part with room, the fitting one when it is right behind it
       if (q) t0 = Math.max(t0, q.a); else if (end && t0 + L > end && !opt.runOn) { opt.report.left += sec.lines.length; return; }
     }
-    const centre = { verse: -2, pre: 0, chorus: 2, bridge: 0, outro: -2 }[sec.role];
+    const centre = { verse: -3, pre: 0, chorus: 2, bridge: 0, outro: -3 }[sec.role]; // verses low and close, choruses up high: the contrast is the passion
     const arc = sec.role === 'pre' ? 'rise' : sec.role === 'chorus' && G.arc === 'chant' ? 'hook' : sec.role === 'chorus' ? 'arch' : sec.role === 'bridge' ? 'sigh' : G.arc;
     sec.lines.forEach((ln, li) => {
       const start = t0 + li * slot, n = ln.syl.length, mkey = sec.role + '|' + ln.text.toLowerCase();
@@ -398,7 +404,7 @@ function writeVocal(secs, opt) {
         const breath = slot === 2 * BAR ? (li % 2 ? BAR + 2 * TB : slot) : slot === 4 * BAR ? 3 * BAR + 2 * TB : slot - 2 * TB;
         const rk = sec.label + '|' + n + '|' + breath; let rh = rhythms[rk];
         if (!rh) {
-          let st = R(G.starts); const ds = Array.from({ length: n }, () => R(G.pool)), maxEnd = Math.max(n * (opt.genre === 'blues' ? 4 : 6) + 6, breath - 6), minD = opt.genre === 'blues' ? 4 : 6;
+          let st = R(G.starts); const ds = Array.from({ length: n }, () => R(POOL)), maxEnd = Math.max(n * MIN + 6, breath - 6), minD = MIN;
           const sum = () => st + ds.reduce((a, b) => a + b, 0);
           if (sum() > maxEnd) { st = sum() - st <= maxEnd - 6 ? Math.min(st, maxEnd - (sum() - st)) : 0; } // first lose the late start
           if (sum() > maxEnd) { // too many words for the pool: spread them evenly, never shorter than an eighth, and give the rest back to the long words
@@ -414,7 +420,14 @@ function writeVocal(secs, opt) {
         const ds = rh.ds.slice(), LONGV = /(i.e|igh|y$|ay|ee|ea|oo|ou|ow|oa|ai|a.e|o.e|u.e)/i, LITTLE = /^(a|an|the|is|of|to|in|on|and|we|my|it|at|by|i|so|or|be|me)$/i;
         ln.syl.forEach((x, i) => { if (ds[i] >= 12 || !LONGV.test(x.text)) return; for (const j of [i - 1, i + 1, i - 2]) { if (j < 0 || j >= n || ds[j] <= ds[i] || !LITTLE.test(ln.syl[j].text)) continue; const tmp = ds[i]; ds[i] = ds[j]; ds[j] = tmp; break; }
           if (ds[i] < 12) for (const j of [i + 1, i - 1]) { if (j >= 0 && j < n && ds[j] >= 12 && ds[j] - 6 >= ds[i] - 3) { const g = ds[i] % 6 ? 3 : 6; ds[j] -= g; ds[i] += g; if (ds[i] >= 12) break; } } });
-        line = []; let t = rh.st, idx = prevIdx;
+        for (let i = 0; i < n; i++) while (ds[i] < MIN) { let j = -1; ds.forEach((x, k) => { if (k !== i && x - GRID >= MIN && (j < 0 || x > ds[j])) j = k; }); if (j < 0) { ds[i] = MIN; break; } ds[j] -= GRID; ds[i] += GRID; }
+        // every line ends its own way, so it never becomes one trick: she holds it, glides it over two or three notes, or stops short
+        const ENDS = { chorus: ['glide', 'hold', 'stop', 'hold'], verse: ['hold', 'stop', 'glide', 'hold'], pre: ['stop', 'hold'], bridge: ['hold', 'glide', 'hold', 'hold'], outro: ['glide', 'hold'] }[sec.role] || ['hold'];
+        const ending = n < 2 ? 'hold' : ENDS[li % ENDS.length], used = rh.st + ds.slice(0, -1).reduce((a, b) => a + b, 0), space = Math.max(n * MIN + 6, breath - 6) - used;
+        if (ending === 'stop') ds[n - 1] = Math.max(MIN, Math.min(ds[n - 1], 12)); else ds[n - 1] = Math.max(ds[n - 1], Math.min(sec.role === 'chorus' || sec.role === 'bridge' ? 48 : 30, space));
+        // Tinkerbell: when the line before left room, she starts an eighth before the beat
+        const pick = rh.st === 0 && li > 0 && (slot >= 4 * BAR || (slot === 2 * BAR && li % 2 === 0)) && chance(0.6) ? (opt.genre === 'blues' ? 8 : 6) : 0;
+        line = []; let t = rh.st - pick, idx = prevIdx;
         for (let i = 0; i < n; i++) {
           const x = n > 1 ? i / (n - 1) : 0, amp = G.arc === 'chant' && sec.role !== 'chorus' ? 1 : 2.6;
           const shape = { sigh: 2.5 * (1 - x) - 0.8, arch: 3 * Math.sin(Math.PI * x), chant: (i % 2) * 0.6, rise: 3.2 * x - 1, hook: i === 0 ? 3 : 2 * Math.cos(Math.PI * x) }[arc];
@@ -432,11 +445,12 @@ function writeVocal(secs, opt) {
         }
         // a small run on the last syllable
         const last = line[line.length - 1];
-        if (last.d >= 24 && chance(G.mel)) { const k = last.d >= 36 ? 3 : 2, d1 = Math.max(12, Math.floor(last.d / k / 3) * 3); let li2 = A.indexOf(last.m); const tot = last.d; last.d = d1;
-          for (let j = 1; j < k; j++) { li2 = Math.max(0, li2 - 1); line.push({ t: last.t + d1 * j, d: j === k - 1 ? tot - d1 * j : d1, m: A[li2], lyr: '-', syllabic: 'cont' }); } }
+        if (last.d >= 24 && (ending === 'glide' || chance(G.mel))) { const k = last.d >= 36 ? 3 : 2, d1 = Math.max(12, Math.floor(last.d / k / 3) * 3); let li2 = A.indexOf(last.m); const tot = last.d; last.d = d1; // glides only on long notes: every part a beat or more
+          for (let j = 1; j < k; j++) { li2 = Math.max(0, Math.min(A.length - 1, li2 + (sec.role === 'bridge' ? 1 : -1))); line.push({ t: last.t + d1 * j, d: j === k - 1 ? tot - d1 * j : d1, m: A[li2], lyr: '-', syllabic: 'cont' }); } }
         melodies[mkey] = line; prevIdx = idx;
       }
-      line.forEach((nt) => notes.push(Object.assign({}, nt, { t: start + nt.t, role: sec.role, sec: si })));
+      const prevEnd = notes.length ? Math.max(...notes.slice(-4).map((x) => x.t + x.d)) : -1e9, shift = Math.max(0, prevEnd + 6 - (start + line[0].t));
+      line.forEach((nt) => notes.push(Object.assign({}, nt, { t: start + nt.t + shift, role: sec.role, sec: si })));
     });
     t0 = marks.length ? t0 + sec.lines.length * slot : Math.ceil((t0 + sec.lines.length * slot) / (4 * BAR)) * 4 * BAR + (si < secs.length - 1 ? opt.pause * BAR : 0);
   });
@@ -585,8 +599,10 @@ function make() {
   } else {
     const g = GENRES[S.genre]; bpm = Math.max(50, Math.min(200, +$('#bpm').value || g.bpm));
     key = S.song && S.song.key && $('#key').value === 'auto' ? S.song.key : { root: $('#key').value === 'auto' ? R([9, 4, 2, 7, 0, 5, 11]) : +$('#key').value, mode: g.mode };
-    if (S.song && S.song.key && $('#key').value === 'auto') key = { root: S.song.key.root, mode: S.song.key.mode === 'major' ? 'major' : g.mode === 'blues' ? 'blues' : g.mode };
-    const wopt = { genre: S.genre, voice: S.voice, key, chords: S.song && S.song.chords, startBar0: Math.max(0, (+$('#startBar').value || 1) - 1), pause: +$('#pause').value, markers: S.song && S.song.markers, songEnd: S.song && (S.song.end || S.song.bars) ? (S.song.end || S.song.bars) * BAR : 0, report: null };
+    if (S.song && S.song.key && $('#key').value === 'auto') { key = { root: S.song.key.root, mode: S.song.key.mode === 'major' ? 'major' : g.mode === 'blues' ? 'blues' : g.mode };
+      if (S.song.h && key.mode !== 'blues') { const out = (md) => { const sc = new Set(MODES[md].map((x) => (x + key.root) % 12)); return S.song.h.reduce((a, w, pc) => a + (sc.has(pc) ? 0 : w), 0); };
+        const plain = S.song.key.mode === 'major' ? 'major' : 'minor'; if (out(plain) < out(key.mode)) key.mode = plain; } } // the song's own notes decide: never a note that clashes with its bass
+    const wopt = { genre: S.genre, voice: S.voice, bpm, key, chords: S.song && S.song.chords, startBar0: Math.max(0, (+$('#startBar').value || 1) - 1), pause: +$('#pause').value, markers: S.song && S.song.markers, songEnd: S.song && (S.song.end || S.song.bars) ? (S.song.end || S.song.bars) * BAR : 0, report: null };
     // every line is sung: first the roomy way, then tighter (shorter phrases, every free part of the song), and only when the song is
     // really too short the last lines run on past its end, with the number of bars the song needs
     notes = writeVocal(secs, wopt);
@@ -601,7 +617,9 @@ function make() {
       if (wopt.songEnd && last * BAR > wopt.songEnd) { warn.textContent = 'All lines are sung. The song is ' + (last - wopt.songEnd / BAR) + ' bars too short: the last lines run on to bar ' + last + '. Make the song ' + last + ' bars long in the Studio, or it ends while she still sings.'; warn.hidden = false; } }
   }
   if (!notes.length) { warn.textContent = 'Nothing fits: the song has no room for these lyrics.'; warn.hidden = false; return; }
+  if (S.mode !== 'sing' && !(S.song && S.song.key) && $('#key').value === 'auto' && warn.hidden) { warn.textContent = 'No song loaded, so she sings in ' + keyName(key) + '. Load your song MIDI or choose its key, and she sings in the key of your track.'; warn.hidden = false; }
   notes.sort((a, b) => a.t - b.t); notes.forEach((n, i) => { const nx = notes[i + 1]; if (nx && n.t + n.d > nx.t) n.d = Math.max(1, nx.t - n.t); });
+  { const mt = Math.ceil(0.2 * bpm / 5); for (let i = 0; i < notes.length - 1; i++) { const n = notes[i], nx = notes[i + 1], z = nx.t + nx.d; if (n.d < mt && z - (n.t + mt) >= mt) { n.d = mt; nx.t = n.t + mt; nx.d = z - nx.t; } } } // a squeezed note borrows from the next, never below 0.2 s
   const title = $('#title').value.trim() || 'Untitled';
   S.result = { notes, bpm, key, title };
   { const b = document.getElementById('dlRoom'); if (b) b.hidden = !(S.song && S.song.raw); }
@@ -808,7 +826,7 @@ function loadSong(buf, fname) {
       const first = M.markers.find((m) => /verse|couplet|strophe/i.test(m.text)) || M.markers.find((m) => !/intro/i.test(m.text) && m.bar > 0); if (first) $('#startBar').value = first.bar + 1;
       $('#songInfo').textContent = f.name + ' · ' + Math.round(M.bpm) + ' bpm. The vocal sings its parts on the parts of the song: ' + M.markers.map((m) => m.text + ' ' + (m.bar + 1)).join(', ') + '. Load the Chords or Pad too, for the chords.'; $('#songOff').hidden = false; S.song.raw = buf; S.song.fname = fname; S.song.end = M.endBar || 0; return; }
     const key = detectKey(h), chords = bars.map((v) => v && v.map((x, pc) => [x, pc]).sort((a, b) => b[0] - a[0]).slice(0, 3).filter((x) => x[0] > 0).map((x) => x[1]));
-    S.song = { key, chords, bpm: M.bpm, bars: bars.length, markers: M.markers.length ? M.markers : (S.song && S.song.markers) || [] }; $('#bpm').value = Math.round(M.bpm); renderMatch();
+    S.song = { key, chords, h, bpm: M.bpm, bars: bars.length, markers: M.markers.length ? M.markers : (S.song && S.song.markers) || [] }; $('#bpm').value = Math.round(M.bpm); renderMatch();
     const first = M.markers.find((m) => /verse|couplet|strophe/i.test(m.text)) || M.markers.find((m) => !/intro/i.test(m.text) && m.bar > 0);
     if (first) $('#startBar').value = first.bar + 1;
     $('#songInfo').textContent = f.name + ' · ' + Math.round(M.bpm) + ' bpm · ' + keyName(key) + ' · ' + bars.length + ' bars. The vocal follows its chords' + (M.markers.length ? ' and sings its parts on the parts of the song: ' + M.markers.map((m) => m.text + ' ' + (m.bar + 1)).join(', ') + '.' : '.'); $('#songOff').hidden = false;
