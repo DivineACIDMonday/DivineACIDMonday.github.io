@@ -354,7 +354,7 @@ function writeVocal(secs, opt) {
         const full = parts[k].z - parts[k].a; let len = role === 'chorus' && full >= 12 * BAR && k < parts.length - 1 ? full - 4 * BAR : full, nat = secs.slice(i, k2 + 1).reduce((a2, x) => a2 + natural(x, opt.tight), 0); blockAt[i] = parts[k].a;
         // the chorus with double room may take the whole drop; when even that is too short it sings with normal room, and only then tighter
         if (role === 'chorus' && nat > len + 2 * TB && nat <= full + 2 * TB) len = full;
-        else if (role === 'chorus' && nat > len + 2 * TB) { secs.slice(i, k2 + 1).forEach((x) => { x.single = true; }); nat = secs.slice(i, k2 + 1).reduce((a2, x) => a2 + natural(x, opt.tight), 0); }
+        else if (role === 'chorus' && nat > len + 2 * TB) { secs.slice(i, k2 + 1).forEach((x) => { x.single = true; }); nat = secs.slice(i, k2 + 1).reduce((a2, x) => a2 + natural(x, opt.tight), 0); if (nat > len + 2 * TB && nat <= full + 2 * TB) len = full; } // still too long for the drop minus the band's moment: the chorus takes the whole drop, never a crammed chorus
         if (role === 'chorus' && !opt.repeated && nat * 2 <= len + 2 * TB) roomy.push(k2); // a long drop for a short chorus: sing it twice
         if (nat > len + 2 * TB) for (let x = i; x <= k2; x++) tightSec[x] = true; j = k + 1; }
       i = k2 + 1; } }
@@ -430,6 +430,12 @@ function writeVocal(secs, opt) {
           const giveOrder = ds.map((d, i) => i).filter((i) => i < n - 1).sort((a2, b2) => Math.abs(b2 - 0.55 * n) - Math.abs(a2 - 0.55 * n)); // too long: the strong syllables far from the heart of the line give back first, the key word keeps its time
           for (const i of giveOrder) { if (sum <= room - 2 * U) break; if (ds[i] > U) { sum -= ds[i] - U; ds[i] = U; } }
           for (let i = 0; sum < room * 0.55 && i < n - 1; i++) if (stress[i] && ds[i] < 3 * U) { ds[i] += U; sum += U; } // lots of room: strong syllables take it
+          // never a long run of quick notes: after four short ones a strong syllable gets time, so she never rushes through a line
+          const hard = slot - 6 - rh.st;
+          for (let guard = 0; guard < n; guard++) { let run = 0, hit = -1; for (let i = 0; i < n - 1; i++) { run = ds[i] <= U ? run + 1 : 0; if (run >= 5) { hit = i; break; } } if (hit < 0) break;
+            let pk = -1; for (let i = hit; i > hit - 5; i--) if (stress[i] && (pk < 0 || Math.abs(i - (hit - 2)) < Math.abs(pk - (hit - 2)))) pk = i; if (pk < 0) pk = hit - 2;
+            let j = -1; if (sum + U > room) ds.forEach((d, i) => { if (i !== pk && d > 2 * U && (j < 0 || d > ds[j])) j = i; });
+            if (sum + U > room && j < 0 && sum + U > hard) break; ds[pk] += U; sum += U; if (j >= 0) { ds[j] -= U; sum -= U; } }
           rhythms[rk2] = ds.slice(); }
         for (let i = 0; i < n; i++) while (ds[i] < MIN) { let j = -1; ds.forEach((x, k) => { if (k !== i && x - GRID >= MIN && (j < 0 || x > ds[j])) j = k; }); if (j < 0) { ds[i] = MIN; break; } ds[j] -= GRID; ds[i] += GRID; }
         // every line ends its own way, so it never becomes one trick: she holds it, glides it over two or three notes, or stops short
