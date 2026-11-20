@@ -94,6 +94,7 @@ footer{color:var(--mu);font-size:13px;text-align:center;padding:10px 0 30px}
   <div class="seg" id="mode"><button data-m="write" aria-pressed="true">Write a melody</button><button data-m="sing" aria-pressed="false">Sing my melody</button></div>
 
   <div id="writeBox" class="card" style="background:transparent;border:0;padding:0">
+    <div class="row"><span class="lbl">Sound</span><div class="seg" id="sound"><button data-s="words" aria-pressed="true">Words</button><button data-s="yodel" aria-pressed="false">Yodel</button><button data-s="siren" aria-pressed="false">Siren</button></div><span class="muted small" id="soundInfo">she sings your lyrics</span></div>
     <div class="row"><span class="lbl">Genre</span><div class="chips" id="genres"></div></div>
     <div class="row"><span class="lbl">Tempo</span><input class="pk num4" id="bpm" type="number" min="50" max="200" aria-label="Tempo in bpm"><span class="muted small">bpm</span>
       <span class="match" id="match"></span></div>
@@ -132,6 +133,7 @@ footer{color:var(--mu);font-size:13px;text-align:center;padding:10px 0 30px}
   <li>Your tempo decides the beat. Under the tempo you see which genres fit it.</li>
   <li>Load your song MIDI, for example the Chords file from a Studio, and the vocal follows its tempo, its key and its chords bar by bar.</li>
   <li>Sing my melody: load a MIDI melody. Every syllable gets a note. Extra notes stretch a syllable, extra syllables split a note. The timing stays exactly on your beat.</li>
+  <li>Sound: Words sings your lyrics. Yodel and Siren need no lyric: she composes a wordless line on your song, new every press, and the same kind of part comes back the same. Mo Xu gets her own Chinese syllables.</li>
   <li>Choose the voice you will sing with: the melody stays inside its range. NYL II sings English. Mo Xu sings English too when you set the language of the notes to English in Synthesizer V.</li>
   <li>Download the MusicXML, import it in Synthesizer V on bar 1, choose that voice. Vibrato, slides and tone you set in Synthesizer V itself.</li>
 </ol></details>
@@ -322,9 +324,9 @@ function monoLine(tr, ppq) { // one note at a time, on the 16th or triplet grid
 const median = (a) => { const s = a.slice().sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
 
 /* ---------- state ---------- */
-const S = { mode: 'write', genre: 'triphop', voice: 'nyl', key: 'auto', song: null, mel: null, result: null };
-try { const o = JSON.parse(localStorage.getItem('dvm-state') || '{}'); Object.assign(S, { genre: o.genre || S.genre, voice: VOICES[o.voice] ? o.voice : S.voice }); if (o.lyrics) $('#lyrics').value = o.lyrics; if (o.title) $('#title').value = o.title; } catch (e) { /* fresh start */ }
-function keep() { try { localStorage.setItem('dvm-state', JSON.stringify({ genre: S.genre, voice: S.voice, lyrics: $('#lyrics').value, title: $('#title').value })); } catch (e) { /* no storage here */ } }
+const S = { sound: 'words', mode: 'write', genre: 'triphop', voice: 'nyl', key: 'auto', song: null, mel: null, result: null };
+try { const o = JSON.parse(localStorage.getItem('dvm-state') || '{}'); Object.assign(S, { sound: ['words', 'yodel', 'siren'].includes(o.sound) ? o.sound : 'words', genre: o.genre || S.genre, voice: VOICES[o.voice] ? o.voice : S.voice }); if (o.lyrics) $('#lyrics').value = o.lyrics; if (o.title) $('#title').value = o.title; } catch (e) { /* fresh start */ }
+function keep() { try { localStorage.setItem('dvm-state', JSON.stringify({ sound: S.sound, genre: S.genre, voice: S.voice, lyrics: $('#lyrics').value, title: $('#title').value })); } catch (e) { /* no storage here */ } }
 
 /* ---------- write a melody ---------- */
 function writeVocal(secs, opt) {
@@ -595,6 +597,8 @@ function renderMatch() {
 }
 function setGenre(k, keepBpm) { S.genre = k; renderGenres(); if (!keepBpm && !S.song) $('#bpm').value = GENRES[k].bpm; fillKeys(); renderMatch(); keep(); }
 function seg(id, attr, val) { $$(id + ' button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset[attr] === val))); }
+const SOUND_INFO = { words: 'she sings your lyrics', yodel: 'no lyric needed: an alpine yodel on your song, new every press', siren: 'no lyric needed: a mystic siren, long travelling tones, new every press' };
+function setSound(v) { S.sound = v; seg('#sound', 's', v); $('#soundInfo').textContent = SOUND_INFO[v]; keep(); }
 function setVoice(v) { S.voice = v; seg('#voice', 'v', v); seg('#voice2', 'v', v); keep(); }
 function setMode(m) { S.mode = m; seg('#mode', 'm', m); $('#writeBox').hidden = m !== 'write'; $('#singBox').hidden = m !== 'sing'; }
 /* ---------- the singability check: plain counting, no AI; it never changes your words, it only gives tips ---------- */
@@ -626,8 +630,8 @@ function countWords() { const secs = parseLyrics($('#lyrics').value), n = secs.r
   $('#count').textContent = n ? secs.length + ' parts · ' + ln + ' lines · ' + n + ' syllables. Type beau-ti-ful to choose the syllables yourself.' : 'Put [Verse], [Chorus] or [Bridge] on a line of its own. Type beau-ti-ful to choose the syllables yourself.'; }
 
 function make() {
-  stop(); if (!S.extending) $('#longer').hidden = true; const secs = parseLyrics($('#lyrics').value), warn = $('#warn'); warn.hidden = true;
-  if (!secs.length) { warn.textContent = 'First the words: type them, paste them, or press Oracle.'; warn.hidden = false; return; }
+  stop(); if (!S.extending) $('#longer').hidden = true; const secs = parseLyrics($('#lyrics').value), warn = $('#warn'); warn.hidden = true; const snd = S.mode === 'write' && S.sound !== 'words';
+  if (!secs.length && !snd) { warn.textContent = 'First the words: type them, paste them, or press Oracle.'; warn.hidden = false; return; }
   rng = seeded((Math.random() * 2 ** 32) >>> 0);
   let notes, bpm, key;
   if (S.mode === 'sing') {
@@ -644,7 +648,7 @@ function make() {
     const wopt = { genre: S.genre, voice: S.voice, bpm, key, chords: S.song && S.song.chords, startBar0: Math.max(0, (+$('#startBar').value || 1) - 1), pause: +$('#pause').value, markers: S.song && S.song.markers, songEnd: S.song && (S.song.end || S.song.bars) ? (S.song.end || S.song.bars) * BAR : 0, report: null };
     // every line is sung: first the roomy way, then tighter (shorter phrases, every free part of the song), and only when the song is
     // really too short the last lines run on past its end, with the number of bars the song needs
-    notes = writeVocal(secs, wopt);
+    if (snd) { notes = writeSound(S.sound, wopt); wopt.report = null; } else notes = writeVocal(secs, wopt);
     if (wopt.report && wopt.report.left) { wopt.tight = true; notes = writeVocal(secs, wopt); }
     if (wopt.report && wopt.report.left) { wopt.spread = true; notes = writeVocal(secs, wopt); // over the whole song, each part on its own part of the song
       if (!wopt.report.left && wopt.songEnd && S.song && S.song.raw) { const from = wopt.startBar0 * BAR, short = Math.ceil((wopt.report.roomy - (wopt.songEnd - from)) / BAR);
@@ -664,7 +668,7 @@ function make() {
   if (S.song && S.song.swing > 0.55) { const sT = Math.min(TB - 3, Math.max(TB / 2 + 1, Math.round(S.song.swing * TB - 0.01))), half = TB / 2;
     const sw = (t) => { const b = Math.floor(t / TB) * TB, f = t - b; return b + Math.round(f <= half ? f * sT / half : sT + (f - half) * (TB - sT) / half); };
     notes.forEach((n) => { const a = sw(n.t), z = sw(n.t + n.d); n.t = a; n.d = Math.max(1, z - a); }); }
-  S.result = { notes, bpm, key, title };
+  S.result = { notes, bpm, key, title, sound: snd ? S.sound : 'words' };
   { const b = document.getElementById('dlRoom'); if (b) b.hidden = !(S.song && S.song.raw); }
   const bars = Math.ceil((notes[notes.length - 1].t + notes[notes.length - 1].d) / BAR), syl = notes.filter((n) => n.lyr !== '-').length;
   $('#facts').innerHTML = '<b>' + keyName(key) + '</b> · <b>' + Math.round(bpm * 100) / 100 + '</b> bpm · <b>' + bars + '</b> bars · <b>' + syl + '</b> syllables · starts bar <b>' + (Math.floor(notes[0].t / BAR) + 1) + '</b>';
@@ -797,15 +801,16 @@ function play() {
 
 /* ---------- files ---------- */
 function save(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); }
-function base() { const r = S.result, g = S.mode === 'sing' ? 'MyMelody' : GENRES[S.genre].name.replace(/\s/g, ''); return 'DM_' + (r.title.replace(/[^A-Za-z0-9]+/g, '') || 'Untitled') + '_' + g + '_Vocal_' + Math.round(r.bpm) + 'bpm_' + keyName(r.key).replace(/\s/g, ''); }
+function base() { const r = S.result, g = S.mode === 'sing' ? 'MyMelody' : GENRES[S.genre].name.replace(/\s/g, '') + (r.sound && r.sound !== 'words' ? '_' + r.sound[0].toUpperCase() + r.sound.slice(1) : ''); return 'DM_' + (r.title.replace(/[^A-Za-z0-9]+/g, '') || 'Untitled') + '_' + g + '_Vocal_' + Math.round(r.bpm) + 'bpm_' + keyName(r.key).replace(/\s/g, ''); }
 
 /* ---------- wiring ---------- */
-renderGenres(); fillKeys(); setVoice(S.voice); $('#bpm').value = GENRES[S.genre].bpm; renderMatch(); countWords();
+renderGenres(); fillKeys(); setVoice(S.voice); setSound(S.sound); $('#bpm').value = GENRES[S.genre].bpm; renderMatch(); countWords();
 $('#genres').onclick = (e) => { const b = e.target.closest('[data-g]'); if (b) setGenre(b.dataset.g); };
 $('#match').onclick = (e) => { const b = e.target.closest('[data-g]'); if (b) setGenre(b.dataset.g, true); };
 $('#bpm').oninput = () => { renderMatch(); checkLyrics(); };
 $('#key').onchange = () => { S.key = $('#key').value; };
 $('#voice').onclick = $('#voice2').onclick = (e) => { const b = e.target.closest('[data-v]'); if (b) setVoice(b.dataset.v); };
+$('#sound').onclick = (e) => { const b = e.target.closest('[data-s]'); if (b) setSound(b.dataset.s); };
 $('#mode').onclick = (e) => { const b = e.target.closest('[data-m]'); if (b) setMode(b.dataset.m); };
 let chkT = 0; $('#lyrics').oninput = () => { countWords(); keep(); clearTimeout(chkT); chkT = setTimeout(checkLyrics, 250); };
 $('#title').oninput = keep;
@@ -816,6 +821,126 @@ $('#beatOn').onclick = () => { const b = $('#beatOn'); b.setAttribute('aria-pres
 /* ---------- a Synthesizer V 2 project with the feeling already in it ----------
    only curves (loudness, tension, breathiness, vibrato, pitch), nothing that makes Synthesizer V think hard before the render;
    built like a project Synthesizer V 2 saves itself (version 203), so it opens without a conversion */
+/* ---------- wordless sounds: yodel and siren ---------- */
+// no lyric needed: she composes her own line on the song's key, tempo, chords and parts, new every press; parts of the same kind come back the same
+const SOUND_RANGE = { nyl: [50, 72], moxu: [53, 75], any: [50, 74] };
+const SOUND_SYL = { // chest syllables dark (o, u), head syllables bright (ee, i); the bare vowel switch o > EE is the yodel crack
+  nyl: { yo: ['yo', 'y ow'], ho: ['ho', 'hh ow'], lo: ['lo', 'l ow'], du: ['du', 'd uw'], o: ['o', 'ow'], u: ['oo', 'uw'], ee: ['ee', 'iy'], di: ['dee', 'd iy'], ri: ['ree', 'dx iy'], lay: ['lay', 'l ey'], A: ['aah', 'aa'], U: ['ooh', 'uw'] },
+  moxu: { yo: ['yo', ''], ho: ['hou', ''], lo: ['lou', ''], du: ['du', ''], o: ['ou', ''], u: ['wu', ''], ee: ['yi', ''], di: ['di', ''], ri: ['li', ''], lay: ['lei', ''], A: ['a', ''], U: ['wu', ''] } };
+SOUND_SYL.any = Object.fromEntries(Object.entries(SOUND_SYL.nyl).map(([k, v]) => [k, [v[0], '']]));
+const SOUND_HEAD = ['ee', 'di', 'ri', 'lay'];
+function writeSound(kind, opt) {
+  const sp = 60 / opt.bpm / TB, sec = (t) => t * sp, [lo, hi] = SOUND_RANGE[opt.voice] || SOUND_RANGE.any, sc = allowed(opt.key, [lo, hi]);
+  const chordAt = (abs) => { const bar = Math.floor(abs / BAR); if (opt.chords) { for (let b = bar; b >= 0; b--) if (opt.chords[b]) return opt.chords[b]; } return impliedChord(opt.genre, opt.key, bar - opt.startBar0); };
+  const inChord = (m, abs) => chordAt(abs).includes(m % 12);
+  const pickNear = (pool, target, abs, strong) => { const c = pool.filter((m) => inChord(m, abs)), P = strong && c.length ? c : pool; return P.reduce((a, m) => (Math.abs(m - target) < Math.abs(a - target) ? m : a), P[0]); };
+  const SY = SOUND_SYL[opt.voice] || SOUND_SYL.any;
+  const mk = (key, m, t, d, extra) => Object.assign({ t, d, m, lyr: SY[key][0], ph: SY[key][1], key, head: SOUND_HEAD.includes(key), sound: kind, syllabic: 'single', fl: [] }, extra || {});
+  // the parts: the song's own markers, or a form of its own
+  const marks = (opt.markers || []).filter((m) => m.bar >= opt.startBar0), end = opt.songEnd || 0;
+  let parts = marks.map((m, k) => ({ a: m.bar * BAR, z: k < marks.length - 1 ? marks[k + 1].bar * BAR : end || m.bar * BAR + 8 * BAR, text: m.text }));
+  if (!parts.length) { let a = opt.startBar0 * BAR; ['Verse', 'Chorus', 'Verse', 'Chorus', 'Bridge', 'Chorus'].forEach((x) => { parts.push({ a, z: a + 8 * BAR, text: x }); a += 8 * BAR + (x === 'Chorus' ? (opt.pause || 0) * BAR : 0); }); }
+  const notes = [], cache = {};
+  // YODEL: a chest pickup, a crack up to the head voice (mostly an octave, then sixths and tenths, now and then a daring two octave leap),
+  // a walk down the chord or a pulsing repeated note up high, a crack back down, and a long held note to end the phrase
+  const chest = sc.filter((m) => m <= lo + 10), headP = sc.filter((m) => m >= lo + 12), quick = [6, 6, 6, 9, 12].filter((d) => sec(d) >= 0.17);
+  function yodelPhrase(a, slot) {
+    const out = []; let t = a + R([0, 0, 6, 12]), cur = pickNear(chest, R(chest), t, true), isHead = false; const holdT = Math.round(R([1.3, 1.7, 2.2]) / sp / 6) * 6, stopAt = a + slot - Math.max(TB, holdT) - TB;
+    out.push(mk(R(['yo', 'ho', 'lo']), cur, t, R(quick.length ? quick : [6]))); t += out[0].d;
+    while (t < stopAt) {
+      if (!isHead) { // the crack up
+        const r = rng(), up = r < 0.5 ? 12 : r < 0.75 ? R([8, 9]) : r < 0.9 ? R([15, 16]) : R([19, 24]);
+        const tgt = headP.filter((m) => m >= cur + 5); if (!tgt.length) break; const m = pickNear(tgt, cur + up, t, true);
+        out.push(mk('ee', m, t, R([9, 12, 6].filter((d) => sec(d) >= 0.17).concat([12])))); t += out[out.length - 1].d; cur = m; isHead = true;
+        const act = rng();
+        if (act < 0.45) { const k = 1 + Math.floor(rng() * 3); for (let i = 0; i < k && t < stopAt; i++) { const down = headP.filter((x) => x < cur && x >= cur - 5); if (!down.length) break; const nx = pickNear(down, cur - 4, t, true); out.push(mk(R(['di', 'ri', 'lay']), nx, t, R(quick.length ? quick : [6]))); t += out[out.length - 1].d; cur = nx; } }
+        else if (act < 0.8) { const k = 2 + Math.floor(rng() * 2); for (let i = 0; i < k && t < stopAt; i++) { out.push(mk(i % 2 ? 'ri' : 'di', cur, t, quick.length ? 6 : 12)); t += out[out.length - 1].d; } }
+        else { const upn = headP.filter((x) => x > cur && x <= cur + 5); if (upn.length) { const nx = pickNear(upn, cur + 3, t, false); out.push(mk('lay', nx, t, R(quick.length ? quick : [6]))); t += out[out.length - 1].d; cur = nx; } }
+      } else { // the crack down
+        const dn = chest.filter((m) => m <= cur - 5); if (!dn.length) break; const m = pickNear(dn, cur - R([12, 12, 7, 9]), t, true);
+        out.push(mk(R(['o', 'o', 'u']), m, t, R(quick.length ? quick : [6]))); t += out[out.length - 1].d; cur = m; isHead = false;
+      }
+    }
+    // the long held ending: up in the head voice most of the time, sometimes home in the chest
+    const endHead = isHead ? chance(0.5) : chance(0.65), pool = endHead ? headP.filter((m) => !isHead ? m >= cur + 5 : true) : chest.filter((m) => isHead ? m <= cur - 5 : true);
+    const m = pickNear(pool.length ? pool : (endHead ? headP : chest), endHead ? cur + (isHead ? R([-3, 0, 4]) : 12) : cur - (isHead ? 12 : 0), t, true);
+    const d = Math.max(TB, Math.min(holdT, a + slot - TB - t)); out.push(mk(endHead ? (isHead ? R(['di', 'lay']) : 'ee') : (isHead ? 'o' : 'ho'), m, t, d));
+    return out;
+  }
+  // SIREN: long travelling tones out of silence, wide leaps carried by slow glides, the vowel melting from ooh to aah,
+  // every second phrase her answer from far away (higher, softer), now and then the devil's interval, and every phrase dies in a long fall
+  function sirenPhrase(a, slot, far) {
+    const out = [], beat = TB, len = slot - Math.max(beat, Math.round(1.4 / sp)), n = 3 + Math.floor(rng() * 3), lastS = Math.max(3.5, Math.min(6, sec(len) * 0.35));
+    let lastD = Math.round(lastS / sp / beat) * beat; const rest = len - lastD; let ds = [];
+    for (let i = 0; i < n - 1; i++) ds.push(0.6 + rng()); const sum = ds.reduce((x, y) => x + y, 0); ds = ds.map((x) => Math.max(beat, Math.round(x / sum * rest / beat) * beat));
+    while (ds.length && ds.some((d) => sec(d) < 1.8) && ds.length > 1) { const i = ds.indexOf(Math.min(...ds)); const v = ds.splice(i, 1)[0]; ds[Math.max(0, i - 1)] += v; }
+    ds.push(len - ds.reduce((x, y) => x + y, 0)); const reg = far ? sc.filter((m) => m >= lo + 7) : sc.filter((m) => m <= hi - 5);
+    let t = a, cur = pickNear(reg, far ? lo + 12 : lo + 5 + Math.floor(rng() * 5), t, true); const eerieAt = chance(0.4) && ds.length > 3 ? 1 + Math.floor(rng() * (ds.length - 2)) : -1;
+    ds.forEach((d, i) => {
+      if (i) { const r = rng(), dir = i < ds.length / 2 ? 1 : -1, iv = r < 0.45 ? R([5, 7, 8, 12]) : r < 0.75 ? R([3, 4]) : R([1, 2]), tgt = cur + (chance(0.75) ? dir : -dir) * iv;
+        cur = i === eerieAt ? (() => { const tri = (opt.key.root + 6) % 12; let x = pickNear(reg, tgt, t, false); for (let k = 0; k < 12; k++) { if ((tgt + k) % 12 === tri && tgt + k <= hi && tgt + k >= lo) { x = tgt + k; break; } if ((tgt - k + 1200) % 12 === tri && tgt - k >= lo && tgt - k <= hi) { x = tgt - k; break; } } return x; })() : pickNear(reg, tgt, t, chance(0.6)); }
+      const fl = []; if (i === 0) fl.push('in'); if (i === ds.length - 1) fl.push('fall'); else if (i && chance(0.5)) fl.push('morph'); if (far) fl.push('far'); if (i === eerieAt) fl.push('eerie');
+      out.push(mk(i === 0 || i === ds.length - 1 ? 'U' : 'A', cur, t, d, { fl })); t += d; });
+    return out;
+  }
+  // the same kind of part sings the same line; a repeated line bends each note onto the chord it now meets
+  const refit = (ns, shift) => ns.map((n) => { const x = Object.assign({}, n, { t: n.t + shift, fl: n.fl.slice() }); if (!x.fl.includes('eerie') && !inChord(x.m, x.t) && sec(x.d) >= 0.3) { const pool = (kind === 'yodel' ? (x.head ? headP : chest) : sc); x.m = pickNear(pool, x.m, x.t, true); } return x; });
+  parts.forEach((p) => {
+    const role = roleOf(p.text), intro = /intro/i.test(p.text); if (kind === 'yodel' && intro) return;
+    let len = p.z - p.a; if (len >= 12 * BAR && role === 'chorus') len -= 4 * BAR; // the band gets its moment at the end of a long drop
+    const ck = role + (intro ? 'i' : '') + ':' + Math.round(len / BAR);
+    if (cache[ck]) { notes.push(...refit(cache[ck], p.a)); return; }
+    const slot = kind === 'yodel' ? (sec(2 * BAR) >= 3.2 ? 2 : 4) * BAR : (sec(4 * BAR) >= 10 ? 4 : 8) * BAR, mine = [];
+    const A = [], B = []; let k = 0; const form = R(['ABAC', 'AABA', 'ABAB', 'ABCA']);
+    for (let a = p.a; a + slot <= p.a + len; a += slot, k++) {
+      const letter = form[k % 4]; let ph;
+      if (letter === 'A' && A.length) ph = refit(A[0], a - A[0].a0); else if (letter === 'B' && B.length) ph = refit(B[0], a - B[0].a0);
+      else { ph = kind === 'yodel' ? yodelPhrase(a, slot) : sirenPhrase(a, slot, intro || role === 'outro' || k % 2 === 1); if (letter === 'A') { ph.a0 = a; A.push(ph); } if (letter === 'B') { ph.a0 = a; B.push(ph); } }
+      mine.push(...ph);
+    }
+    notes.push(...mine); cache[ck] = mine.map((n) => Object.assign({}, n, { t: n.t - p.a }));
+  });
+  return notes;
+}
+function toSvpSound(notes, bpm, title, voice) {
+  const BL = 705600000, PT = BL / TB, q = (t) => Math.round(t * PT), ms = (s) => Math.round(s * bpm / 60 * BL);
+  const uid = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3) | 8).toString(16); });
+  const L = [], T = [], B = [], V = [], P = [], G = [], cv = (arr) => { const pr = []; for (let i = 0; i < arr.length; i += 2) pr.push([arr[i], arr[i + 1]]); pr.sort((a, b) => a[0] - b[0]); const out = []; let last = -1;
+    pr.forEach(([t, v]) => { t = Math.round(t); if (t <= last) t = last + 1; out.push(t, Math.round(v * 1000) / 1000); last = t; }); return { mode: 'cubic', points: out }; };
+  const ns = notes.slice().sort((a, b) => a.t - b.t).map((n) => Object.assign({}, n, { T: q(n.t), D: q(n.d) }));
+  ns.forEach((n, i) => { const t0 = n.T, d = n.D, z = t0 + d, p = ns[i - 1], x = ns[i + 1], prev = p && p.T + p.D >= t0 - ms(0.05) ? p : null, nxt = x && x.T <= z + ms(0.05) ? x : null, has = (f) => (n.fl || []).includes(f);
+    if (n.sound === 'yodel') {
+      if (n.head) { L.push(t0, -1.5); T.push(t0, -0.3); B.push(t0, 0.15); G.push(t0, -0.3); } else { L.push(t0, 1.5); T.push(t0, 0.45); B.push(t0, 0); G.push(t0, 0.2); } // head light and bright, chest full and dark
+      if (nxt && nxt.head !== n.head) L.push(z - ms(0.04), n.head ? -3 : 0);
+      if (prev && prev.head !== n.head) { L.push(t0 + ms(0.03), n.head ? -1.5 : 1); P.push(t0 - 1, 0, t0, n.m > prev.m ? -25 : 25, t0 + ms(0.06), 0); } // a soft snap into the new register
+      if (d < ms(1)) V.push(t0, 0, z - 1, 0); else V.push(t0, 0, t0 + ms(0.45), 0, z, 0.9); // straight, vibrato only blooms on the long held notes
+    } else {
+      const far = has('far'), base = far ? -9 : -3; T.push(t0, 0); B.push(t0, far ? 0.2 : 0.05); V.push(t0, 0, z, 0);
+      if (has('in')) L.push(t0, -30, t0 + Math.min(Math.floor(d / 2), ms(1.3)), base); else L.push(t0, base); // out of silence
+      if (has('fall')) { L.push(z - ms(2.5), base, z, -26); B.push(z - ms(1.6), 0.05, z, 0.3); P.push(z - ms(2.5), 0, z, -500); } // dying away in a long slow fall
+      let g = 0; if (prev && prev.m !== n.m) { const iv = prev.m - n.m; g = Math.min(Math.floor(d * 0.5), ms(Math.abs(iv) / 2.5 + 0.3)); P.push(t0, iv * 100, t0 + g, 0); } // a slow travelling glide
+      if (has('morph')) G.push(t0, -0.15, z, 0.15); else G.push(t0, 0); // the colour of her voice drifts
+      const endw = z - (has('fall') ? ms(2.5) : ms(0.1)), step = ms(1 / 5.5 / 2); let tt = t0 + g + ms(0.3), k = 0; // a slow wander and a fine wobble that grows
+      while (tt < endw) { const grow = Math.min(1, (tt - t0 - g) / ms(3)), drift = 10 * Math.sin((tt - t0) / ms(2.6) * 2 * Math.PI + i); P.push(tt, drift + (k % 2 ? 14 : -14) * grow); tt += step; k++; }
+      if (k) P.push(endw, 0);
+    } });
+  const takes = { activeTakeId: 0, takes: [{ id: 0, seedDuration: 0, seedPitch: 0, seedTimbre: 0, liked: false }] };
+  const out = ns.map((n) => ({ uuid: uid().replace(/-/g, '').slice(0, 16), musicalType: 'singing', lyrics: n.lyr, phonemes: n.ph || '', accent: '', onset: n.T, duration: n.D, pitch: n.m, detune: 0, attributes: { muted: false, evenSyllableDuration: true }, takes }));
+  const flat = () => ({ mode: 'cubic', points: [] }), params = (x) => Object.assign({ pitchDelta: flat(), vibratoEnv: flat(), loudness: flat(), tension: flat(), breathiness: flat(), voicing: flat(), gender: flat(), toneShift: flat(), mouthOpening: flat() }, x || {});
+  const voiceRef = { vocalModeInherited: true, vocalModePreset: '', vocalModeParams: {}, choirSeatingSeparation: 0.7 };
+  const db = voice === 'nyl' ? { name: 'NYL II', language: 'english', languageOverride: '', backendType: 'SVR3', version: '201' } : voice === 'moxu' ? { name: 'Mo Xu', language: 'mandarin', languageOverride: '', backendType: 'SVR3', version: '201' } : { name: '', language: 'english', languageOverride: '', backendType: '', version: '' };
+  const libId = uid(), mainId = uid(), first = out.length ? out[0].onset : 0, lastN = out[out.length - 1], scale = { type: 'Major', root: 'C' };
+  const proj = { version: 203, uuid: uid(), time: { meter: [{ index: 0, numerator: 4, denominator: 4 }], tempo: [{ position: 0, bpm }], startTimeSeconds: 0 },
+    library: [{ name: 'Voice 1', uuid: libId, parameters: params({ pitchDelta: cv(P), vibratoEnv: cv(V), loudness: cv(L), tension: cv(T), breathiness: cv(B), gender: cv(G) }), vocalModes: {}, pitchControls: [], notes: out, musicalScale: scale }],
+    tracks: [{ name: title || 'Voice', dispColor: 'ff7db235', dispOrder: 0, renderEnabled: false, mixer: { gainDecibel: -3, pan: 0, mute: false, solo: false, display: true, fxPresetName: '', fxParams: { room: { enabled: false, positionX: 0, positionY: 0, size: 15, reflectionGain: 0 }, postRoomEq: { enabled: false, filters: [{ freq: 117.7, gain: 0, q: 0.71 }, { freq: 692.8, gain: 0, q: 0.71 }], lowShelf: { freq: 25, gain: 0 } }, compressor: { enabled: false, attack: 0, ratio: 4, threshold: -10 }, reverb: { enabled: false, type: 'clean', preDelay: 0.05, decay: 1, dryWetRatio: 0.5 } } },
+      mainGroup: { name: 'main', uuid: mainId, parameters: params(), vocalModes: {}, pitchControls: [], notes: [], musicalScale: scale },
+      mainRef: { uuid: uid(), groupID: mainId, blickAbsoluteBegin: 0, blickAbsoluteEnd: -1, blickOffset: 0, pitchOffset: 0, mute: false, isInstrumental: false, database: db, dictionary: '', voice: voiceRef, voicePresetName: '', takes },
+      groups: [{ uuid: uid(), groupID: libId, blickAbsoluteBegin: first, blickAbsoluteEnd: lastN ? lastN.onset + lastN.duration : 0, blickOffset: 0, pitchOffset: 0, mute: false, isInstrumental: false,
+        database: { name: '', language: '', languageOverride: '', backendType: '', version: '-2' }, dictionary: '', voice: voiceRef, voicePresetName: '', takes }] }],
+    renderConfig: { destination: '', filename: (title || 'Vocal').replace(/[^A-Za-z0-9]+/g, ''), numChannels: 1, aspirationFormat: 'noAspiration', bitDepth: 24, sampleRate: 48000, exportMixDown: true, exportPitch: false, bypassPan: false, bypassGain: false, bypassEffects: false },
+    projectMixer: { linkRoomSettings: true }, loopBegin: 0, loopEnd: 0, loopEnabled: false };
+  return JSON.stringify(proj) + '\u0000';
+}
 function toSvp(notes, bpm, title, voice, K) {
   const BL = 705600000, PT = BL / TB, q = (t) => Math.round(t * PT), sec = (t) => t / TB * 60 / bpm, ms = (s) => Math.round(s * bpm / 60 * BL);
   const uid = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3) | 8).toString(16); });
@@ -859,7 +984,7 @@ function toSvp(notes, bpm, title, voice, K) {
   return JSON.stringify(proj) + '\u0000';
 }
 S.char = 1; document.querySelectorAll('#charSeg button').forEach((b) => { b.onclick = () => { S.char = +b.dataset.k; document.querySelectorAll('#charSeg button').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); }; });
-$('#dlSvp').onclick = () => { const r = S.result; save(new Blob([toSvp(r.notes, r.bpm, r.title, S.voice, S.char)], { type: 'application/json' }), base() + '.svp'); };
+$('#dlSvp').onclick = () => { const r = S.result; save(new Blob([r.sound !== 'words' ? toSvpSound(r.notes, r.bpm, r.title, S.voice) : toSvp(r.notes, r.bpm, r.title, S.voice, S.char)], { type: 'application/json' }), base() + '.svp'); };
 $('#dlXml').onclick = () => { const r = S.result; save(new Blob([toXml(r.notes, r.bpm, r.key, r.title)], { type: 'application/vnd.recordare.musicxml+xml' }), base() + '.musicxml'); };
 $('#dlMid').onclick = () => { const r = S.result; save(new Blob([toMidi(r.notes, r.bpm, r.title)], { type: 'audio/midi' }), base() + '.mid'); };
 $('#songFile').onchange = async () => { const f = $('#songFile').files[0]; if (!f) return; loadSong(await f.arrayBuffer(), f.name); $('#songFile').value = ''; };
